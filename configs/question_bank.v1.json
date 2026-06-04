@@ -1,0 +1,62 @@
+{
+  "version": "1.0",
+  "stages": [
+    {
+      "id": "birth_input",
+      "title": "出生基础信息",
+      "questions": [
+        { "id": "A1_birth_date", "title": "出生日期", "inputType": "date", "required": true },
+        { "id": "A2_birthplace", "title": "出生地", "inputType": "short_text", "required": true },
+        { "id": "A3_recorded_time", "title": "记录出生时间", "inputType": "time_or_range", "required": true },
+        { "id": "A4_uncertainty_range", "title": "时间不确定范围", "inputType": "single_choice", "required": true, "options": ["adjacent_1_shichen", "adjacent_2_shichen", "full_day", "auto"] },
+        { "id": "A5_boundary_flags", "title": "是否接近午夜、节气、时辰边界", "inputType": "multi_choice", "required": false, "options": ["near_midnight", "near_solar_term", "near_hour_boundary", "date_may_shift", "unknown"] },
+        { "id": "A6_chart_sex", "title": "传统排盘用性别", "inputType": "single_choice", "required": true, "options": ["male", "female", "prefer_not_to_say"] }
+      ]
+    },
+    {
+      "id": "symbol_prior",
+      "title": "传统验时辰 Symbol 问卷",
+      "questions": [
+        { "id": "B1_hair_whorl", "title": "发旋", "inputType": "single_choice", "required": false, "options": ["one_centered", "one_offset", "multiple", "unknown"] },
+        { "id": "B2_fetal_order", "title": "胎次", "inputType": "single_choice", "required": false, "specialScoring": "fetal_order_by_chart_sex", "options": ["1", "2", "3", "4", "5_plus", "unknown"] },
+        { "id": "B3_siblings", "title": "兄弟姐妹", "inputType": "single_choice", "required": false, "options": ["only_child", "one_sibling", "two_three_siblings", "four_plus_siblings", "complex_unknown"] },
+        { "id": "B4_little_finger_length", "title": "小指长度", "inputType": "single_choice", "required": false, "options": ["above", "aligned", "below", "unknown"] },
+        { "id": "B5_face_shape", "title": "脸型", "inputType": "single_choice", "required": false, "options": ["round_square", "long_rectangular", "irregular", "unknown"] },
+        { "id": "B6_sleep_posture", "title": "自然睡姿", "inputType": "single_choice", "required": false, "options": ["supine", "side", "prone", "varies_unknown"] },
+        { "id": "B7_birth_posture_if_known", "title": "出生姿势，如果知道", "inputType": "single_choice", "required": false, "options": ["face_up", "side", "face_down", "unknown"] },
+        { "id": "B8_early_family_structure", "title": "童年家庭结构", "inputType": "single_choice", "required": false, "options": ["stable", "siblings_competition", "family_structure_changed", "frequent_relocation", "unknown"] }
+      ]
+    },
+    {
+      "id": "event_backtest",
+      "title": "重大年份回测",
+      "questions": [
+        { "id": "C1_major_turning_years", "title": "1-3 个重大转折年份", "inputType": "year_event_list", "required": true, "maxItems": 3 },
+        { "id": "C2_education_years", "title": "学业 / 考试 / 留学年份", "inputType": "year_event_list", "required": false, "eventType": "education", "maxItems": 2 },
+        { "id": "C3_relocation_years", "title": "迁移年份", "inputType": "year_event_list", "required": false, "eventType": "relocation", "maxItems": 2 },
+        { "id": "C4_relationship_years", "title": "感情年份", "inputType": "year_event_list", "required": false, "eventType": "relationship", "maxItems": 2 },
+        { "id": "C5_health_or_accident_years", "title": "健康 / 意外 / 手术年份", "inputType": "year_event_list", "required": false, "eventType": "health_or_accident", "maxItems": 2 },
+        { "id": "C6_family_change_years", "title": "家庭变化年份", "inputType": "year_event_list", "required": false, "eventType": "family_change", "maxItems": 2 },
+        { "id": "C7_career_years", "title": "事业年份，条件题", "inputType": "year_event_list", "required": false, "eventType": "career", "conditional": "current_identity_is_working_or_has_work_history", "maxItems": 2 },
+        { "id": "C8_childbearing_years", "title": "子女 / 生育年份，条件题", "inputType": "year_event_list", "required": false, "eventType": "childbearing", "conditional": "childbearing_applicable", "maxItems": 2 },
+        { "id": "C9_best_and_worst_years", "title": "最好年份 / 最差年份", "inputType": "year_event_list", "required": false, "maxItems": 2 }
+      ]
+    },
+    {
+      "id": "context_box",
+      "title": "信息框：现实初始值",
+      "questions": [
+        { "id": "D1_growth_location", "title": "成长城市", "inputType": "short_text", "required": false },
+        { "id": "D2_parental_education_occupation", "title": "父母教育和职业", "inputType": "short_text", "required": false },
+        { "id": "D3_family_support_style", "title": "家庭支持方式", "inputType": "single_choice", "required": false },
+        { "id": "D4_family_values", "title": "家庭价值观", "inputType": "multi_choice", "required": false },
+        { "id": "D5_highest_education", "title": "当前最高教育经历", "inputType": "single_choice", "required": false },
+        { "id": "D6_current_identity", "title": "当前身份", "inputType": "single_choice", "required": false },
+        { "id": "D7_inner_preferred_direction", "title": "内心真正想做的方向", "inputType": "short_text", "required": false },
+        { "id": "D8_actual_path", "title": "实际走过的方向", "inputType": "short_text", "required": false },
+        { "id": "D9_desired_life_outcomes", "title": "最看重的人生结果", "inputType": "multi_choice", "required": false, "maxSelections": 2 },
+        { "id": "D10_recent_focus_or_anxiety", "title": "过去 3 年主要投入或焦虑", "inputType": "multi_choice", "required": false, "maxSelections": 2 }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,68 @@
+{
+  "candidate_score_weights": {
+    "symbol_prior_fit": 0.15,
+    "event_timing_fit": 0.55,
+    "early_life_and_family_fit": 0.1,
+    "birth_record_plausibility": 0.1,
+    "domain_trajectory_fit": 0.1
+  },
+  "contradiction_penalty_enabled": true,
+  "ai_allowed_before_candidate_ranking": false,
+  "symbol_prior_question_scores": {
+    "B1_hair_whorl": {
+      "one_centered": { "G1_zi_wu_mao_you": 1 },
+      "one_offset": { "G2_yin_shen_si_hai": 1 },
+      "multiple": { "G3_chen_xu_chou_wei": 1 },
+      "unknown": {}
+    },
+    "B3_siblings": {
+      "only_child": { "G3_chen_xu_chou_wei": 0.5 },
+      "one_sibling": {},
+      "two_three_siblings": { "G2_yin_shen_si_hai": 0.5 },
+      "four_plus_siblings": { "G1_zi_wu_mao_you": 0.5 },
+      "complex_unknown": {}
+    },
+    "B4_little_finger_length": {
+      "above": { "G1_zi_wu_mao_you": 1 },
+      "aligned": { "G2_yin_shen_si_hai": 1 },
+      "below": { "G3_chen_xu_chou_wei": 1 },
+      "unknown": {}
+    },
+    "B5_face_shape": {
+      "round_square": { "G1_zi_wu_mao_you": 0.5 },
+      "long_rectangular": { "G2_yin_shen_si_hai": 0.5 },
+      "irregular": { "G3_chen_xu_chou_wei": 0.5 },
+      "unknown": {}
+    },
+    "B6_sleep_posture": {
+      "supine": { "G1_zi_wu_mao_you": 0.5 },
+      "side": { "G2_yin_shen_si_hai": 0.5 },
+      "prone": { "G3_chen_xu_chou_wei": 0.5 },
+      "varies_unknown": {}
+    },
+    "B7_birth_posture_if_known": {
+      "face_up": { "G1_zi_wu_mao_you": 1 },
+      "side": { "G2_yin_shen_si_hai": 1 },
+      "face_down": { "G3_chen_xu_chou_wei": 1 },
+      "unknown": {}
+    }
+  },
+  "fetal_order_rules": {
+    "male": {
+      "G1_zi_wu_mao_you": [1, 4, 7],
+      "G3_chen_xu_chou_wei": [2, 5, 8],
+      "G2_yin_shen_si_hai": [3, 6, 9]
+    },
+    "female": {
+      "G2_yin_shen_si_hai": [1, 4, 7],
+      "G1_zi_wu_mao_you": [2, 5, 8],
+      "G3_chen_xu_chou_wei": [3, 6, 9]
+    }
+  },
+  "birth_record_plausibility": {
+    "recorded": 1,
+    "adjacent": 0.7,
+    "boundary_expanded": 0.55,
+    "symbol_prior_added": 0.45
+  }
+}
