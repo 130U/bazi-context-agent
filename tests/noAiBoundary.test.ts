@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 
 test("candidate ranking path has no AI provider import or calls", () => {
   const root = fileURLToPath(new URL("../src", import.meta.url));
-  const forbidden = ["openai", "anthropic", "@ai-sdk", "langchain", "llamaindex", "gemini", "openai_api_key"];
+  const forbidden = ["openai", "anthropic", "llm", "model provider", "@ai-sdk", "langchain", "llamaindex", "gemini", "openai_api_key"];
 
   function files(dir: string): string[] {
     return readdirSync(dir).flatMap((entry) => {

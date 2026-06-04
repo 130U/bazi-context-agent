@@ -29,3 +29,15 @@ test("event backtest returns stable per-candidate interface", () => {
   assert.equal(result[0].per_event_scores.length, 2);
   assert.match(result[0].warning, /deterministic stub/);
 });
+
+test("event backtest result exposes required Round 02 output fields", () => {
+  const events: LifeEvent[] = [{ year: 2020, type: "education" }];
+  const [result] = scoreEventBacktest([candidate], events);
+
+  assert.equal(typeof result.event_timing_fit, "number");
+  assert.ok(result.event_timing_fit >= 0);
+  assert.ok(result.event_timing_fit <= 1);
+  assert.equal(Array.isArray(result.matched_rules), true);
+  assert.equal(Array.isArray(result.contradictions), true);
+  assert.equal(Array.isArray(result.missing_information), true);
+});

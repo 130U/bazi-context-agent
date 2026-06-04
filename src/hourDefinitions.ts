@@ -15,11 +15,13 @@ export const BRANCH_TO_GROUP: Record<EarthlyBranch, HourGroupId> = {
   Wei: "G3_chen_xu_chou_wei"
 };
 
-export const GROUP_LABELS: Record<HourGroupId, string> = {
-  G1_zi_wu_mao_you: "Zi/Wu/Mao/You",
-  G2_yin_shen_si_hai: "Yin/Shen/Si/Hai",
-  G3_chen_xu_chou_wei: "Chen/Xu/Chou/Wei"
+export const HOUR_GROUP_LABELS: Record<HourGroupId, string> = {
+  G1_zi_wu_mao_you: "子午卯酉",
+  G2_yin_shen_si_hai: "寅申巳亥",
+  G3_chen_xu_chou_wei: "辰戌丑未"
 };
+
+export const GROUP_LABELS = HOUR_GROUP_LABELS;
 
 export const HOUR_DEFINITIONS: HourDefinition[] = [
   { branch: "Zi", hourNameCn: "子时", hourNameEn: "Zi hour", startHour: 23, endHour: 1, group: "G1_zi_wu_mao_you" },

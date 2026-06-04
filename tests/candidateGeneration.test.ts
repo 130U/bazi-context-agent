@@ -39,6 +39,24 @@ test("candidate generation handles Zi-hour boundary", () => {
   assert.equal(zi.possible_date_offset, true);
 });
 
+test("candidate generation adds adjacent hours for near hour boundary", () => {
+  const input: BirthInput = {
+    birthDate: "1990-01-01",
+    birthplace: "demo",
+    recordedTime: "08:55",
+    uncertaintyRange: "recorded_only",
+    boundaryFlags: ["near_hour_boundary"],
+    chartSex: "female"
+  };
+  const candidates = generateCandidateHours(input, prior, scoringConfig);
+  const branches = candidates.map((candidate) => candidate.branch);
+
+  assert.ok(branches.includes("Chen"));
+  assert.ok(branches.includes("Mao"));
+  assert.ok(branches.includes("Si"));
+  assert.ok(candidates.some((candidate) => candidate.source_reasons.includes("adjacent hour from uncertainty or boundary")));
+});
+
 test("candidate generation handles unknown time", () => {
   const input: BirthInput = {
     birthDate: "1990-01-01",

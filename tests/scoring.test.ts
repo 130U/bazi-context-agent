@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { generateCandidateCharts } from "../src/candidateGeneration.ts";
 import { loadScoringConfig } from "../src/config.ts";
+import { HOUR_GROUP_LABELS } from "../src/hourDefinitions.ts";
 import { rankCandidates } from "../src/ranking.ts";
 import { scoreSymbolPrior } from "../src/symbolPrior.ts";
 import type { BirthInput, ContextFact, LifeEvent, SymbolAnswer } from "../src/types.ts";
@@ -41,6 +42,19 @@ test("fetal order scoring follows chart sex rule", () => {
 
   assert.equal(strongest.group, "G2_yin_shen_si_hai");
   assert.equal(strongest.prior, 1);
+});
+
+test("symbol prior exposes Chinese G1/G2/G3 hour-group labels", () => {
+  assert.deepEqual(HOUR_GROUP_LABELS, {
+    G1_zi_wu_mao_you: "子午卯酉",
+    G2_yin_shen_si_hai: "寅申巳亥",
+    G3_chen_xu_chou_wei: "辰戌丑未"
+  });
+
+  const result = scoreSymbolPrior([{ questionId: "B1_hair_whorl", answerId: "one_centered" }], birthInput, scoringConfig);
+  assert.equal(result.entries.find((entry) => entry.group === "G1_zi_wu_mao_you")?.label, "子午卯酉");
+  assert.equal(result.entries.find((entry) => entry.group === "G2_yin_shen_si_hai")?.label, "寅申巳亥");
+  assert.equal(result.entries.find((entry) => entry.group === "G3_chen_xu_chou_wei")?.label, "辰戌丑未");
 });
 
 test("candidate ranking outputs top 3 with score formula", () => {
