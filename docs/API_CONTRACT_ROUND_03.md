@@ -70,6 +70,12 @@ Request:
 }
 ```
 
+Round 03 context rule:
+- `context_facts` may be accepted so the UI can echo them as `context_box_preview`.
+- `context_facts` must not be passed into candidate ranking.
+- Ranking score must be computed only from birth input, symbol answers/prior, candidate charts, life events, and scoring weights.
+- Context-box based prediction belongs to Stage 4, not Round 03.
+
 Response:
 
 ```json
@@ -77,7 +83,10 @@ Response:
   "top_candidates": [],
   "evidence_table": [],
   "contradictions": [],
-  "missing_information": []
+  "missing_information": [],
+  "context_box_preview": [],
+  "ranking_context_policy": "context_box_preview_only_not_used_for_ranking",
+  "context_facts_used_for_ranking": 0
 }
 ```
 
@@ -86,6 +95,8 @@ Every top candidate must include:
 - score。
 - confidence。
 - evidence。
+
+`context_facts_used_for_ranking` must remain `0` in Round 03.
 
 ## Error Shape
 

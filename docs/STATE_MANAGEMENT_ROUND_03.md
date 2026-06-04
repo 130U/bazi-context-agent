@@ -32,3 +32,10 @@ type UiSession = {
 Context facts 可以展示在 Step 4，但 Round 03 不应让 context_box 影响 candidate ranking，除非现有 deterministic ranking 已明确支持该字段。
 
 必须在 UI 中说明：context_box 用于 Round 04 之后的 AI prediction，不是 Round 03 的定盘依据。
+
+Round 03 hard rule:
+- `contextFacts` can live in the UI session for preview only.
+- `/api/ranking` can return `context_box_preview`.
+- `/api/ranking` must not pass `contextFacts` into candidate ranking.
+- Ranking components and scores must not read context-box values.
+- Context-box reasoning is reserved for Stage 4 AI prediction, explanation, and report generation.

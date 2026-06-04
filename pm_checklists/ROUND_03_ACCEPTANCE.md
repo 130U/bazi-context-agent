@@ -28,12 +28,15 @@
 - [ ] ranking output includes evidence table.
 - [ ] ranking output includes contradictions.
 - [ ] ranking output includes missing_information.
+- [ ] ranking output may include context_box_preview, but context_facts_used_for_ranking is 0.
+- [ ] context_box values do not change Top 3 candidate ids, total scores, confidence, or evidence table.
 
 ## Product Copy
 
 - [ ] UI says recorded birth time is prior, not truth.
 - [ ] UI says symbol prior is weak and cannot determine the chart alone.
 - [ ] UI says context_box is for later prediction, not Round 03 chart ranking.
+- [ ] UI/API makes clear that context_box is preview-only in Round 03 and belongs to Stage 4 prediction work.
 
 ## Tests
 

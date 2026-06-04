@@ -114,12 +114,62 @@ test("ranking API returns top 3 and evidence fields", async () => {
     assert.ok(Array.isArray(payload.contradictions));
     assert.ok(Array.isArray(payload.missing_information));
     assert.ok(Array.isArray(payload.context_box_preview));
+    assert.equal(payload.ranking_context_policy, "context_box_preview_only_not_used_for_ranking");
+    assert.equal(payload.context_facts_used_for_ranking, 0);
+  });
+});
+
+test("context box preview does not affect Round 03 ranking", async () => {
+  await withServer(async (baseUrl) => {
+    const basePayload = {
+      birth_input: {
+        birth_date: "1998-05-10",
+        birth_place: "Shanghai, China",
+        recorded_time: "22:50",
+        uncertainty_range: "auto",
+        boundary_flags: ["near_hour_boundary", "near_zi_hour"],
+        chart_sex: "female"
+      },
+      symbol_answers: [
+        { question_id: "B1_hair_whorl", value: "one_offset" },
+        { question_id: "B4_little_finger_length", value: "aligned" }
+      ],
+      life_events: [
+        { year: 2018, event_type: "education", description: "fictional education event" },
+        { year: 2021, event_type: "career", description: "fictional career event" }
+      ]
+    };
+    const postRanking = async (contextFacts: unknown[]) => {
+      const response = await fetch(`${baseUrl}/api/ranking`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ ...basePayload, context_facts: contextFacts })
+      });
+      return response.json();
+    };
+
+    const first = await postRanking([{ field: "desired_direction", value: "fictional art path", confidence: 0.1 }]);
+    const second = await postRanking([{ field: "desired_direction", value: "fictional finance path", confidence: 0.99 }]);
+
+    const stableShape = (payload: any) => ({
+      ids: payload.top_candidates.map((item: any) => item.candidate.candidate_id),
+      scores: payload.top_candidates.map((item: any) => item.totalScore),
+      confidence: payload.top_candidates.map((item: any) => item.confidence),
+      evidenceTable: payload.evidence_table
+    });
+
+    assert.deepEqual(stableShape(first), stableShape(second));
+    assert.notDeepEqual(first.context_box_preview, second.context_box_preview);
+    assert.equal(first.context_facts_used_for_ranking, 0);
+    assert.equal(second.context_facts_used_for_ranking, 0);
+    assert.equal(first.ranking_context_policy, "context_box_preview_only_not_used_for_ranking");
+    assert.equal(second.ranking_context_policy, "context_box_preview_only_not_used_for_ranking");
   });
 });
 
 test("server source has no provider imports or calls", () => {
   const source = readFileSync(fileURLToPath(new URL("../src/server.ts", import.meta.url)), "utf8").toLowerCase();
-  for (const token of ["openai", "anthropic", "llm", "model provider", "@ai-sdk", "langchain", "llamaindex", "gemini", "openai_api_key"]) {
+  for (const token of ["openai", "anthropic", "llm", "model provider", "@ai-sdk", "langchain", "llamaindex", "gemini", "openai_api_key", "anthropic_api_key"]) {
     assert.equal(source.includes(token), false, `found forbidden token: ${token}`);
   }
 });
@@ -138,4 +188,9 @@ test("project does not use heavy frontend framework dependencies or JSX", () => 
 
   const sourceFiles = files(join(root, "src"));
   assert.equal(sourceFiles.some((path) => [".tsx", ".jsx"].includes(extname(path))), false);
+
+  const source = sourceFiles.map((path) => readFileSync(path, "utf8").toLowerCase()).join("\n");
+  for (const token of ["login", "payment", "database", "sqlite", "postgres", "mysql", "prisma", "stripe"]) {
+    assert.equal(source.includes(token), false, `found scope-creep token: ${token}`);
+  }
 });

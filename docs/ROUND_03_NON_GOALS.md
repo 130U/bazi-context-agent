@@ -18,6 +18,8 @@ Round 03 的重点是 UI flow，不是产品全面扩展。
 - 风水。
 - 真人命理师 marketplace。
 - 手机 App。
+- Using context_box values to change candidate ranking.
+- Context-box based prediction; this belongs to Stage 4.
 
 ## 不要做的错事
 
@@ -26,3 +28,4 @@ Round 03 的重点是 UI flow，不是产品全面扩展。
 3. 不要让 context_box 直接改变 candidate ranking，除非 deterministic core 已支持且有测试。
 4. 不要把已知事实包装成预测。
 5. 不要把 demo fixture 写成真实用户案例。
+6. Do not pass `contextFacts` from the UI into Round 03 candidate ranking.

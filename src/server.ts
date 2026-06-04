@@ -9,12 +9,15 @@ import type {
   BirthInput,
   BoundaryFlag,
   CandidateChart,
+  CandidateRankingResult,
   ChartSex,
   ContextFact,
+  EventBacktestResult,
   HourGroupId,
   HourGroupPrior,
   HourGroupPriorResult,
   LifeEvent,
+  ScoringConfig,
   SymbolAnswer
 } from "./types.ts";
 
@@ -150,6 +153,21 @@ function priorFromPayload(payload: unknown): HourGroupPriorResult | null {
   };
 }
 
+export function rankCandidatesForRectification(input: {
+  candidates: CandidateChart[];
+  symbolPrior: HourGroupPriorResult;
+  eventBacktests: EventBacktestResult[];
+  scoringConfig: ScoringConfig;
+}): CandidateRankingResult {
+  return rankCandidates({
+    candidates: input.candidates,
+    symbol_prior_result: input.symbolPrior,
+    event_backtest_results: input.eventBacktests,
+    contextFacts: [],
+    scoringConfig: input.scoringConfig
+  }) as CandidateRankingResult;
+}
+
 function runDeterministicFlow(payload: JsonValue = {}) {
   const scoringConfig = loadScoringConfig();
   const birthInput = normalizeBirthInput(payload.birth_input ?? payload.birthInput);
@@ -159,7 +177,7 @@ function runDeterministicFlow(payload: JsonValue = {}) {
   const symbolPrior = scoreSymbolPrior({ answers: symbolAnswers, chartSex: birthInput.chartSex, scoringConfig });
   const candidates = generateCandidateHours(birthInput, symbolPrior, scoringConfig);
   const eventBacktests = scoreEventBacktest(candidates, lifeEvents);
-  const ranking = rankCandidates({ candidates, symbol_prior_result: symbolPrior, event_backtest_results: eventBacktests, contextFacts, scoringConfig });
+  const ranking = rankCandidatesForRectification({ candidates, symbolPrior, eventBacktests, scoringConfig });
   return { birthInput, symbolAnswers, lifeEvents, contextFacts, symbolPrior, candidates, eventBacktests, ranking };
 }
 
@@ -271,6 +289,8 @@ export async function handleRequest(request: IncomingMessage, response: ServerRe
         contradictions: flow.ranking.contradictions,
         missing_information: flow.ranking.missing_information,
         should_not_force_single_hour: flow.ranking.should_not_force_single_hour,
+        ranking_context_policy: "context_box_preview_only_not_used_for_ranking",
+        context_facts_used_for_ranking: 0,
         context_box_preview: flow.contextFacts,
         candidates_considered: flow.candidates,
         symbol_prior: { ...labels(flow.symbolPrior), warning: flow.symbolPrior.warning },
