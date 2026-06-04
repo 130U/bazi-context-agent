@@ -14,3 +14,5 @@ export function loadQuestionBank(): QuestionBank {
 export function loadScoringConfig(): ScoringConfig {
   return readJson<ScoringConfig>("../configs/scoring_weights.v1.json");
 }
+
+export const loadScoringWeights = loadScoringConfig;

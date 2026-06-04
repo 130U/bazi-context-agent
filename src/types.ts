@@ -5,11 +5,37 @@ export const HOUR_GROUPS = [
 ] as const;
 
 export type HourGroupId = (typeof HOUR_GROUPS)[number];
+export const EARTHLY_BRANCHES = [
+  "Zi",
+  "Chou",
+  "Yin",
+  "Mao",
+  "Chen",
+  "Si",
+  "Wu",
+  "Wei",
+  "Shen",
+  "You",
+  "Xu",
+  "Hai"
+] as const;
+
+export type EarthlyBranch = (typeof EARTHLY_BRANCHES)[number];
 
 export type ChartSex = "male" | "female" | "prefer_not_to_say";
+export type QuestionLayer = "birth_input" | "symbol_prior" | "event_backtest" | "context_box";
+export type QuestionInputType =
+  | "single_choice"
+  | "multi_choice"
+  | "short_text"
+  | "date"
+  | "time_or_range"
+  | "year_event"
+  | "year_event_list";
 
 export type BoundaryFlag =
   | "near_midnight"
+  | "near_zi_hour"
   | "near_solar_term"
   | "near_hour_boundary"
   | "date_may_shift"
@@ -25,7 +51,7 @@ export interface BirthInput {
   birthDate: string;
   birthplace: string;
   recordedTime?: string;
-  uncertaintyRange: "adjacent_1_shichen" | "adjacent_2_shichen" | "full_day" | "auto";
+  uncertaintyRange: "recorded_only" | "adjacent_1_shichen" | "adjacent_2_shichen" | "full_day" | "auto";
   boundaryFlags: BoundaryFlag[];
   chartSex: ChartSex;
 }
@@ -40,15 +66,21 @@ export interface LifeEvent {
   type:
     | "major_turning"
     | "education"
+    | "migration"
     | "relocation"
     | "relationship"
+    | "health_accident"
     | "health_or_accident"
     | "family_change"
     | "career"
+    | "career_transition"
     | "childbearing"
+    | "best_year"
     | "best"
+    | "worst_year"
     | "worst";
   description?: string;
+  confidence?: number;
 }
 
 export interface ContextFact {
@@ -72,13 +104,65 @@ export interface HourGroupPrior {
   evidence: EvidenceItem[];
 }
 
+export type HourGroupPriorMap = Record<HourGroupId, number>;
+
+export interface HourGroupPriorResult {
+  prior: HourGroupPriorMap;
+  raw_scores: HourGroupPriorMap;
+  entries: HourGroupPrior[];
+  evidence: EvidenceItem[];
+  missing_information: string[];
+  warning: string;
+}
+
+export interface SymbolPriorInput {
+  answers: SymbolAnswer[] | Record<string, unknown>;
+  chartSex: ChartSex;
+  scoringConfig: ScoringConfig;
+}
+
+export interface HourDefinition {
+  branch: EarthlyBranch;
+  hourNameCn: string;
+  hourNameEn: string;
+  startHour: number;
+  endHour: number;
+  group: HourGroupId;
+}
+
 export interface CandidateChart {
-  id: string;
-  hourBranch: string;
-  hourGroup: HourGroupId;
-  source: CandidateSource;
-  birthRecordPlausibility: number;
-  notes: string[];
+  candidate_id: string;
+  branch: EarthlyBranch;
+  hour_name_cn: string;
+  hour_group: HourGroupId;
+  source_reasons: string[];
+  symbol_prior_fit: number;
+  birth_record_plausibility: number;
+  boundary_flags: Record<string, boolean>;
+  missing_information: string[];
+  early_zi?: boolean;
+  late_zi?: boolean;
+  possible_date_offset?: boolean;
+}
+
+export type BranchRelation = "same_branch" | "clash" | "six_harmony" | "harm" | "triad_same_group";
+
+export interface PerEventScore {
+  event: LifeEvent;
+  year_branch: EarthlyBranch;
+  relations: BranchRelation[];
+  score: number;
+  rationale: string;
+}
+
+export interface EventBacktestResult {
+  candidate_id: string;
+  event_timing_fit: number;
+  per_event_scores: PerEventScore[];
+  matched_rules: string[];
+  contradictions: string[];
+  missing_information: string[];
+  warning: string;
 }
 
 export interface CandidateScore {
@@ -93,17 +177,85 @@ export interface CandidateScore {
   };
   confidence: number;
   evidence: EvidenceItem[];
-  contradictions: EvidenceItem[];
+  evidence_table: EvidenceRow[];
+  contradictions: string[];
   missing_information: string[];
+}
+
+export interface EvidenceRow {
+  candidate_id: string;
+  category:
+    | "symbol"
+    | "birth_record"
+    | "event_backtest"
+    | "early_life"
+    | "domain_trajectory"
+    | "contradiction"
+    | "missing_information";
+  label: string;
+  value: string | number;
+  weight?: number;
+  impact?: "positive" | "negative" | "neutral";
+}
+
+export interface CandidateRankingInput {
+  candidates: CandidateChart[];
+  symbol_prior_result: HourGroupPriorResult;
+  event_backtest_results: EventBacktestResult[];
+  contextFacts?: ContextFact[];
+  scoringConfig: ScoringConfig;
+}
+
+export interface CandidateRankingResult {
+  top_candidate_id: string | null;
+  candidates: CandidateScore[];
+  top_3: CandidateScore[];
+  should_not_force_single_hour: boolean;
+  evidence_table: EvidenceRow[];
+  contradictions: string[];
+  missing_information: string[];
+  warning: string;
+  weights_used: CandidateScore["components"];
 }
 
 export interface QuestionBank {
   version: string;
-  stages: Array<{
-    id: string;
+  stages: QuestionStage[];
+}
+
+export interface QuestionStage {
+    id: QuestionLayer;
     title: string;
-    questions: Array<Record<string, unknown>>;
-  }>;
+    questions: Question[];
+}
+
+export interface Question {
+  id: string;
+  title: string;
+  inputType: QuestionInputType;
+  required?: boolean;
+  options?: Array<string | { id: string; label?: string }>;
+  maxLength?: number;
+  maxItems?: number;
+  maxSelections?: number;
+  eventType?: LifeEvent["type"];
+  conditional?: string;
+  specialScoring?: string;
+}
+
+export type AnswerMap = Record<string, unknown>;
+
+export interface ValidationResult {
+  valid: boolean;
+  errors: string[];
+  normalized?: unknown;
+  skipped?: boolean;
+}
+
+export interface QuestionnaireSession {
+  bank: QuestionBank;
+  answers: AnswerMap;
+  layerOrder?: QuestionLayer[];
 }
 
 export interface ScoringConfig {

@@ -30,13 +30,14 @@ test("symbol prior scoring is deterministic", () => {
   const second = scoreSymbolPrior(answers, birthInput, scoringConfig);
 
   assert.deepEqual(first, second);
-  assert.equal(first[0].group, "G1_zi_wu_mao_you");
-  assert.equal(first[0].prior, 1);
+  assert.equal(first.entries[0].group, "G1_zi_wu_mao_you");
+  assert.equal(first.entries[0].prior, 1);
+  assert.equal(Number(Object.values(first.prior).reduce((sum, value) => sum + value, 0).toFixed(6)), 1);
 });
 
 test("fetal order scoring follows chart sex rule", () => {
   const priors = scoreSymbolPrior([{ questionId: "B2_fetal_order", answerId: "1" }], birthInput, scoringConfig);
-  const strongest = [...priors].sort((a, b) => b.prior - a.prior)[0];
+  const strongest = [...priors.entries].sort((a, b) => b.prior - a.prior)[0];
 
   assert.equal(strongest.group, "G2_yin_shen_si_hai");
   assert.equal(strongest.prior, 1);
