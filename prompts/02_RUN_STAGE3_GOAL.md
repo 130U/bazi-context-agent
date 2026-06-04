@@ -1,4 +1,14 @@
 $goal
+现在开始执行 Stage 03 / Round 03 开发。
+
+如果 Stage 03 repo 文件尚未写入，请先停止，并要求我先执行 `direct_to_codex/01_WRITE_STAGE3_FILES_TO_REPO.md`。
+
+请读取并执行 repo 文件：
+- prompts/ROUND_03_GOAL_UI_FLOW.md
+
+如果你不能直接读取该文件，请按下面同等目标执行：
+
+$goal
 现在进入第三轮开发：最小本地 UI Flow。
 
 当前前置条件：

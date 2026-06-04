@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "demo": "node src/demo.ts",
+    "ui": "node src/server.ts",
     "test": "node --test tests/*.test.ts"
   },
   "engines": {

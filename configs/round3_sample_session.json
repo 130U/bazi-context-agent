@@ -1,0 +1,48 @@
+{
+  "birth_input": {
+    "birth_date": "1998-05-10",
+    "birth_place": "Shanghai, China",
+    "recorded_time": "22:50",
+    "uncertainty_range": "auto",
+    "boundary_flags": [
+      "near_hour_boundary",
+      "near_zi_hour"
+    ],
+    "chart_sex": "female"
+  },
+  "symbol_answers": [
+    {
+      "question_id": "hair_whorl",
+      "value": "center_single"
+    },
+    {
+      "question_id": "little_finger",
+      "value": "same_level"
+    },
+    {
+      "question_id": "sleep_posture",
+      "value": "side"
+    }
+  ],
+  "life_events": [
+    {
+      "year": 2018,
+      "event_type": "education",
+      "description": "fictional overseas study event"
+    },
+    {
+      "year": 2021,
+      "event_type": "career",
+      "description": "fictional direction change"
+    }
+  ],
+  "context_facts": [
+    {
+      "category": "preference",
+      "field": "desired_direction",
+      "value": "fictional creative technology direction",
+      "source": "demo",
+      "confidence": 0.5
+    }
+  ]
+}
