@@ -1,95 +1,161 @@
 $goal
-现在进入 Stage 4B：Real OpenAI Prediction Provider behind env flag。
+进入 Stage 4B：Real OpenAI Provider Behind Env Flag。
 
-前提：Stage 4A 已经 PASS 并 commit。
+目标：
+在 Stage 4A 的 mock prediction layer 后面，新增真实 OpenAI provider。
+默认 provider 必须仍然是 mock。只有环境变量明确启用时，才允许使用 OpenAI provider。
 
-请先读取并遵守：
+请读取并遵守：
+
 - AGENTS.md
+- docs/GOAL.md
 - docs/GAME_RULES.md
 - docs/AI_POLICY.md
 - docs/STAGE_04_OVERVIEW.md
 - docs/STAGE_04B_REAL_PROVIDER.md
 - docs/OPENAI_PROVIDER_POLICY_STAGE_04B.md
-- docs/PREDICTION_OUTPUT_SCHEMA_STAGE_04A.md
-- docs/PREDICTION_POLICY_STAGE_04A.md
-- docs/STAGE_04_PRIVACY_AND_KEYS.md
-- configs/prediction_provider_policy.v1.json
+- docs/STAGE_04B_PROVIDER_SELECTION.md
+- docs/STAGE_04B_SCHEMA_VALIDATION.md
+- docs/STAGE_04B_SECURITY_AND_KEYS.md
+- docs/STAGE_04B_TESTING.md
+- docs/STAGE_04_NON_GOALS.md
+- configs/prediction_domains.v1.json
 - configs/prediction_output_schema.v1.json
+- configs/prediction_provider_policy.v1.json
+- configs/prediction_provider_policy.stage4b.json
 - pm_checklists/STAGE_04B_ACCEPTANCE.md
 
-本阶段目标：
-新增真实 OpenAI provider，但只能用于 /api/prediction，且只能在 Top 3 ranking 完成后使用。
-
 核心边界：
-1. 默认 provider 仍然是 mock。
-2. 只有 PREDICTION_PROVIDER=openai 时才允许使用 real provider。
-3. OPENAI_API_KEY 只能从环境变量读取。
-4. 不得提交真实 API key。
-5. 不得创建 .env 真实文件。
-6. 不得在浏览器端暴露 API key。
-7. real provider 不得被 /api/ranking、ranking.ts、candidate generation、symbol scoring、event backtest import 或调用。
-8. 如果 PREDICTION_PROVIDER=openai 但缺少 OPENAI_API_KEY，应返回明确 provider_config_error；不要静默成功。
-9. AI 输出必须经过 schema validation。
-10. AI 不得修改 rankingSnapshot、candidate ids、scores、confidence。
 
-任务一：Provider abstraction
+1. `/api/ranking` 仍然不得使用 AI。
+2. `/api/ranking` 仍然不得使用 context_box。
+3. `/api/ranking` 仍然不得调用 prediction provider。
+4. `/api/prediction` 可以选择 provider。
+5. 默认 provider 必须是 mock。
+6. 只有 `PREDICTION_PROVIDER=openai` 时，才允许使用 OpenAI provider。
+7. 如果 `PREDICTION_PROVIDER` 没设置，必须使用 mock。
+8. 如果 `PREDICTION_PROVIDER=openai` 但没有 `OPENAI_API_KEY`，不得崩溃，不得真实调用。
+9. API key 只能从服务端 `process.env.OPENAI_API_KEY` 读取。
+10. 不得创建真实 `.env`。
+11. 不得提交真实 API key。
+12. 不得把 API key 暴露到浏览器端 HTML/JS。
+13. 测试不得发起真实 OpenAI 网络请求。
+14. 不得让 OpenAI provider 修改 `rankingSnapshot`、candidate ids、scores、confidence。
+15. 不得做登录、支付、数据库、用户系统。
+16. 不得做紫微斗数、奇门、风水。
+17. 不得实现真实完整八字历法。
+18. 不要进入 Stage 4C。
 
-如果 Stage 4A 还没有清晰 provider interface，请整理成：
-- PredictionProvider interface
-- MockPredictionProvider
-- OpenAIPredictionProvider
-- getPredictionProvider(policy/env)
+任务一：依赖策略
 
-任务二：OpenAI provider
+检查 `package.json`。
 
-建议新增：
-- src/openaiPredictionProvider.ts 或 src/providers/openaiPredictionProvider.ts
-- src/predictionProviderFactory.ts
-- src/predictionSchemaValidation.ts
+如果尚未安装 OpenAI SDK：
+- 可以添加官方 `openai` npm package；
+- 不要引入 `langchain`、`llamaindex`、`@ai-sdk` 或大型 agent framework；
+- 如果无法安装依赖，则先实现 provider boundary 和 fake client 测试，保持默认 mock 可用。
+
+任务二：provider selection
+
+新增或更新：
+
+- `src/predictionProviderConfig.ts`
+- `src/predictionProvider.ts`
+- `src/openaiPredictionProvider.ts`
 
 要求：
-- 使用服务端代码读取 process.env.OPENAI_API_KEY。
-- 使用 process.env.OPENAI_MODEL 指定模型；如果未设置，返回配置错误或使用安全默认占位，不要硬编码不可验证模型。
-- API 响应必须转换成 PredictionResult。
-- 必须验证输出符合 configs/prediction_output_schema.v1.json。
-- 网络/API 错误必须返回明确错误，不得影响 /api/ranking。
 
-任务三：环境示例
+- 默认 provider = mock
+- `PREDICTION_PROVIDER=mock` -> mock
+- `PREDICTION_PROVIDER=openai` + `OPENAI_API_KEY` -> openai
+- `PREDICTION_PROVIDER=openai` + no key -> explicit config error or safe mock fallback
+- provider selection 只影响 `/api/prediction`
+- provider selection 不得进入 `/api/ranking`
 
-创建或更新：
-- examples/.env.stage4.example
-- 如果已有 .env.example，可只追加占位符，不要写真实 key。
+任务三：OpenAI provider
 
-包含：
-OPENAI_API_KEY=
+OpenAI provider 必须：
+
+- 接收 Stage 4A 的 `PredictionRequest`
+- 返回 `PredictionResult`
+- 不修改 ranking snapshot
+- 不修改 candidate ids、scores、confidence
+- 输出 known facts / chart signals / context adjustments / prediction 分离
+- policy 必须保持：
+  - `ai_used_for_ranking: false`
+  - `ranking_modified_by_ai: false`
+
+任务四：schema validation
+
+实现 provider output validation：
+
+- mock output 要 validate
+- OpenAI output 要 validate
+- invalid output 要拒绝
+- 不允许 silently accept invalid provider output
+- 可先手写轻量 validator，不强制引入 ajv
+
+任务五：env example
+
+只允许更新 example 文件：
+
+- `examples/stage4b.env.example`
+- 如项目已有 `examples/.env.stage4.example`，也可以只补空示例字段
+
+示例内容只能是：
+
+```text
 PREDICTION_PROVIDER=mock
+OPENAI_API_KEY=
 OPENAI_MODEL=
+```
 
-任务四：测试
+不要创建真实 `.env`。
+不要写真实 key。
 
-新增测试至少覆盖：
+任务六：更新 `/api/prediction`
+
+- 默认 mock
+- openai 只在 env flag 下启用
+- 缺 rankingSnapshot 仍返回 `MISSING_RANKING_SNAPSHOT`
+- 不重新调用 ranking
+- 不修改 ranking snapshot
+- response.policy 必须说明 provider、ranking boundary、schema validation 状态
+
+任务七：测试
+
+新增或更新测试，至少覆盖：
+
 1. 默认 provider 是 mock；
-2. PREDICTION_PROVIDER=openai 且无 OPENAI_API_KEY 时返回 provider_config_error；
-3. OpenAI provider 不会被 ranking 模块 import；
-4. /api/ranking 不受 provider env 影响；
-5. /api/prediction provider=mock 时仍通过；
-6. schema validation 能拒绝缺字段输出；
-7. 不存在真实 API key；
-8. 不存在 .env 真实文件；
-9. API key 不进入 client-side HTML/JS。
+2. `PREDICTION_PROVIDER=mock` 使用 mock；
+3. `PREDICTION_PROVIDER=openai` 但缺 key 时安全处理；
+4. OpenAI provider 使用 fake client 测试，不发真实网络；
+5. fake OpenAI valid response 通过；
+6. fake OpenAI invalid response 被拒绝；
+7. `/api/prediction` 不修改 rankingSnapshot；
+8. `/api/ranking` 没有 OpenAI provider import/call；
+9. repo 没有真实 `.env` 或真实 API key；
+10. 没有引入 `langchain`、`llamaindex`、`@ai-sdk`；
+11. 所有测试通过。
 
-重要：不要在测试里真实调用 OpenAI API。使用 mock fetch 或 provider mock。
+运行：
 
-运行 npm test。
+```powershell
+$env:Path='C:\Program Files\nodejs;' + $env:Path; npm.cmd test
+```
 
-完成后中文汇报：
+完成后用中文汇报：
 1. 修改了哪些文件；
-2. provider 是否默认 mock；
-3. openai provider 是否只在 prediction path；
-4. 是否更新了 .env example；
-5. 是否没有真实 key；
-6. 是否没有真实 API 调用测试；
-7. npm test 结果；
-8. 是否满足 pm_checklists/STAGE_04B_ACCEPTANCE.md。
+2. 是否新增 OpenAI provider；
+3. 是否安装新依赖；
+4. provider selection 规则；
+5. 默认 provider 是否仍是 mock；
+6. 是否没有真实 API key；
+7. 是否没有真实 `.env`；
+8. 测试中是否没有真实网络调用；
+9. `/api/ranking` 是否仍然完全不使用 AI；
+10. `/api/prediction` 是否仍不修改 rankingSnapshot；
+11. 测试结果；
+12. 是否满足 `pm_checklists/STAGE_04B_ACCEPTANCE.md`。
 
 不要 commit，先等我确认。

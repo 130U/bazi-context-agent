@@ -1,22 +1,23 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readdirSync, readFileSync, statSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 test("candidate ranking path has no AI provider import or calls", () => {
   const root = fileURLToPath(new URL("../src", import.meta.url));
-  const forbidden = ["openai", "anthropic", "llm", "model provider", "@ai-sdk", "langchain", "llamaindex", "gemini", "openai_api_key", "anthropic_api_key"];
+  const forbidden = ["openai", "anthropic", "llm", "model provider", "@ai-sdk", "langchain", "llamaindex", "gemini", "openai_api_key", "anthropic_api_key", "predictionprovider"];
+  const rankingPathFiles = [
+    "branchRelations.ts",
+    "candidateGeneration.ts",
+    "eventBacktest.ts",
+    "hourDefinitions.ts",
+    "ranking.ts",
+    "symbolPrior.ts"
+  ];
 
-  function files(dir: string): string[] {
-    return readdirSync(dir).flatMap((entry) => {
-      const path = join(dir, entry);
-      return statSync(path).isDirectory() ? files(path) : [path];
-    });
-  }
-
-  const source = files(root)
-    .filter((path) => path.endsWith(".ts"))
+  const source = rankingPathFiles
+    .map((file) => join(root, file))
     .map((path) => readFileSync(path, "utf8").toLowerCase())
     .join("\n");
 

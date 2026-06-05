@@ -74,6 +74,7 @@ test("mock provider returns complete Stage 4A schema", () => {
   assert.equal(result.policy.ai_used_for_ranking, false);
   assert.equal(result.policy.ranking_modified_by_ai, false);
   assert.equal(result.policy.provider, "mock");
+  assert.equal(result.policy.output_schema_validated, true);
   assert.ok(result.confidence >= 0);
   assert.ok(result.confidence <= 1);
   assert.ok(result.prediction.confidence >= 0);

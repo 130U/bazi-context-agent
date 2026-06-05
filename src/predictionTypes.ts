@@ -13,7 +13,7 @@ export const PREDICTION_DOMAINS = [
 ] as const;
 
 export type PredictionDomain = (typeof PREDICTION_DOMAINS)[number];
-export type PredictionProviderId = "mock";
+export type PredictionProviderId = "mock" | "openai";
 
 export interface RankingSnapshot {
   top_candidate_id: CandidateRankingResult["top_candidate_id"];
@@ -56,6 +56,7 @@ export interface PredictionPolicy {
   ranking_modified_by_ai: false;
   provider: PredictionProviderId;
   schema_version?: string;
+  output_schema_validated?: boolean;
 }
 
 export interface PredictionResult {
@@ -77,7 +78,7 @@ export interface PredictionResult {
 
 export interface PredictionProvider {
   id: PredictionProviderId;
-  predict(request: PredictionRequest): PredictionResult;
+  predict(request: PredictionRequest): PredictionResult | Promise<PredictionResult>;
 }
 
 export interface PredictionDomainsConfig {
@@ -93,12 +94,23 @@ export interface PredictionOutputSchemaConfig {
 }
 
 export interface PredictionProviderPolicyConfig {
-  version: string;
+  version?: string;
+  stage?: string;
   default_provider: PredictionProviderId;
+  allowed_providers?: PredictionProviderId[];
+  missing_key_behavior?: "explicit_error_or_mock_fallback" | "explicit_error" | "mock_fallback";
   prediction_may_use_context_box: boolean;
   ranking_may_use_context_box: boolean;
   prediction_may_mutate_ranking_snapshot: boolean;
   schema_path: string;
+  env?: {
+    provider?: string;
+    api_key?: string;
+    model?: string;
+  };
+  provider_env?: string;
+  api_key_env?: string;
+  model_env?: string;
 }
 
 export interface PredictionProviderInput {

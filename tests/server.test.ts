@@ -184,6 +184,54 @@ test("prediction API returns mock result without mutating rankingSnapshot", asyn
   });
 });
 
+test("prediction API handles openai provider without key safely", async () => {
+  const previousProvider = process.env.PREDICTION_PROVIDER;
+  const previousKey = process.env.OPENAI_API_KEY;
+  try {
+    process.env.PREDICTION_PROVIDER = "openai";
+    delete process.env.OPENAI_API_KEY;
+    await withServer(async (baseUrl) => {
+      const rankingResponse = await fetch(`${baseUrl}/api/ranking`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          birth_input: {
+            birth_date: "1998-05-10",
+            birth_place: "Shanghai, China",
+            recorded_time: "22:50",
+            uncertainty_range: "auto",
+            boundary_flags: ["near_hour_boundary", "near_zi_hour"],
+            chart_sex: "female"
+          },
+          symbol_answers: [{ question_id: "B1_hair_whorl", value: "one_offset" }],
+          life_events: [{ year: 2018, event_type: "education", description: "fictional event" }]
+        })
+      });
+      const ranking = await rankingResponse.json();
+      const rankingSnapshot = {
+        top_candidate_id: ranking.top_candidates[0].candidate.candidate_id,
+        top_3: ranking.top_candidates,
+        evidence_table: ranking.evidence_table,
+        contradictions: ranking.contradictions,
+        missing_information: ranking.missing_information
+      };
+      const response = await fetch(`${baseUrl}/api/prediction`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ question: "career", rankingSnapshot, contextBox: [] })
+      });
+      const payload = await response.json();
+      assert.equal(response.status, 400);
+      assert.equal(payload.error.code, "PROVIDER_CONFIG_ERROR");
+    });
+  } finally {
+    if (previousProvider === undefined) delete process.env.PREDICTION_PROVIDER;
+    else process.env.PREDICTION_PROVIDER = previousProvider;
+    if (previousKey === undefined) delete process.env.OPENAI_API_KEY;
+    else process.env.OPENAI_API_KEY = previousKey;
+  }
+});
+
 test("context box preview does not affect Round 03 ranking", async () => {
   await withServer(async (baseUrl) => {
     const basePayload = {

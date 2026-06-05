@@ -1,0 +1,29 @@
+{
+  "stage": "04B",
+  "default_provider": "mock",
+  "allowed_providers": [
+    "mock",
+    "openai"
+  ],
+  "env": {
+    "provider": "PREDICTION_PROVIDER",
+    "api_key": "OPENAI_API_KEY",
+    "model": "OPENAI_MODEL"
+  },
+  "openai_enabled_when": {
+    "PREDICTION_PROVIDER": "openai",
+    "OPENAI_API_KEY": "present"
+  },
+  "missing_key_behavior": "explicit_error_or_mock_fallback",
+  "tests_must_not_make_real_network_calls": true,
+  "api_key_exposure": {
+    "browser": false,
+    "logs": false,
+    "committed_files": false
+  },
+  "ranking_boundary": {
+    "api_ranking_uses_provider": false,
+    "api_ranking_reads_openai_key": false,
+    "api_ranking_uses_context_box": false
+  }
+}

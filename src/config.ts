@@ -29,3 +29,7 @@ export function loadPredictionOutputSchemaConfig(): PredictionOutputSchemaConfig
 export function loadPredictionProviderPolicyConfig(): PredictionProviderPolicyConfig {
   return readJson<PredictionProviderPolicyConfig>("../configs/prediction_provider_policy.v1.json");
 }
+
+export function loadStage4BPredictionProviderPolicyConfig(): PredictionProviderPolicyConfig {
+  return readJson<PredictionProviderPolicyConfig>("../configs/prediction_provider_policy.stage4b.json");
+}

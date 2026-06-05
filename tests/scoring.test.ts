@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readdirSync, readFileSync, statSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { generateCandidateCharts } from "../src/candidateGeneration.ts";
@@ -78,17 +78,18 @@ test("candidate ranking outputs top 3 with score formula", () => {
 
 test("scoring modules do not import or call AI providers", () => {
   const root = fileURLToPath(new URL("../src", import.meta.url));
-  const forbidden = ["openai", "anthropic", "@ai-sdk", "langchain", "gemini"];
+  const forbidden = ["openai", "anthropic", "@ai-sdk", "langchain", "gemini", "predictionprovider"];
+  const scoringFiles = [
+    "branchRelations.ts",
+    "candidateGeneration.ts",
+    "eventBacktest.ts",
+    "hourDefinitions.ts",
+    "ranking.ts",
+    "symbolPrior.ts"
+  ];
 
-  function files(dir: string): string[] {
-    return readdirSync(dir).flatMap((entry) => {
-      const path = join(dir, entry);
-      return statSync(path).isDirectory() ? files(path) : [path];
-    });
-  }
-
-  const source = files(root)
-    .filter((path) => path.endsWith(".ts"))
+  const source = scoringFiles
+    .map((file) => join(root, file))
     .map((path) => readFileSync(path, "utf8").toLowerCase())
     .join("\n");
 

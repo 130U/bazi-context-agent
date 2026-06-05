@@ -1,31 +1,44 @@
 # OpenAI Provider Policy Stage 4B
 
+## Provider policy
+
+Stage 4B introduces a real provider boundary, not a new decision engine.
+
+## Provider selection
+
+| Environment | Provider |
+|---|---|
+| `PREDICTION_PROVIDER` unset | `mock` |
+| `PREDICTION_PROVIDER=mock` | `mock` |
+| `PREDICTION_PROVIDER=openai` + `OPENAI_API_KEY` present | `openai` |
+| `PREDICTION_PROVIDER=openai` + missing `OPENAI_API_KEY` | explicit configuration error OR safe mock fallback, as defined in config |
+
+The implementation must make this behavior explicit and test it.
+
 ## Security
 
-1. Use environment variables for keys.
-2. Never commit `.env` or real keys.
-3. Never expose keys in browser JavaScript.
-4. Never store user private cases in fixtures.
+- Read `OPENAI_API_KEY` only on the server.
+- Never expose key to browser-side JavaScript.
+- Never commit a real `.env`.
+- Never commit a real API key.
+- Example env files may include empty placeholders only.
 
-## Structured output
+## Ranking boundary
 
-The real provider must return output that validates against `configs/prediction_output_schema.v1.json`.
+OpenAI provider is forbidden before candidate ranking is complete.
 
-If schema validation fails, return a controlled error and do not modify ranking state.
-
-## Provider isolation
-
-The real provider belongs only to prediction. It must be impossible for ranking to import it accidentally.
-
-Recommended structure:
+Forbidden:
 
 ```text
-src/prediction/
-  providers/
-    mockPredictionProvider.ts
-    openaiPredictionProvider.ts
-  predictionProviderFactory.ts
-  predictionSchemaValidation.ts
+birth input -> AI
+symbol scoring -> AI
+candidate generation -> AI
+event backtest scoring -> AI
+candidate ranking -> AI
 ```
 
-Ranking modules should not import from `src/prediction/providers/openaiPredictionProvider.ts`.
+Allowed:
+
+```text
+completed ranking snapshot + context_box + user question -> /api/prediction -> provider
+```

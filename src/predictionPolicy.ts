@@ -5,7 +5,8 @@ export function mockPredictionPolicy(provider: PredictionProviderId = "mock", sc
     ai_used_for_ranking: false,
     ranking_modified_by_ai: false,
     provider,
-    schema_version: schemaVersion
+    schema_version: schemaVersion,
+    output_schema_validated: true
   };
 }
 

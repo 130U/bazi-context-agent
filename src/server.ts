@@ -4,9 +4,8 @@ import { generateCandidateHours } from "./candidateGeneration.ts";
 import { normalizeContextBox } from "./contextBox.ts";
 import { loadQuestionBank, loadScoringConfig } from "./config.ts";
 import { scoreEventBacktest } from "./eventBacktest.ts";
-import { mockPredictionProvider } from "./mockPredictionProvider.ts";
 import { classifyPredictionDomain } from "./predictionDomain.ts";
-import { assertRankingSnapshotUnchanged, cloneRankingSnapshot } from "./predictionPolicy.ts";
+import { runPredictionWithConfiguredProvider } from "./predictionProvider.ts";
 import { rankCandidates } from "./ranking.ts";
 import { scoreSymbolPrior } from "./symbolPrior.ts";
 import type {
@@ -334,7 +333,6 @@ export async function handleRequest(request: IncomingMessage, response: ServerRe
       const snapshot = body.rankingSnapshot ?? body.ranking_snapshot;
       if (!snapshot || typeof snapshot !== "object") return error(response, 400, "MISSING_RANKING_SNAPSHOT", "Prediction requires a frozen rankingSnapshot.");
       const rankingSnapshot = snapshot as unknown as RankingSnapshot;
-      const before = cloneRankingSnapshot(rankingSnapshot);
       const question = text(body.question, "general prediction");
       const domain = text(body.domain, classifyPredictionDomain(question));
       const predictionRequest: PredictionRequest = {
@@ -344,9 +342,9 @@ export async function handleRequest(request: IncomingMessage, response: ServerRe
         contextBox: normalizeContextBox(body.contextBox ?? body.context_box),
         lifeEvents: normalizeLifeEvents(body.lifeEvents ?? body.life_events)
       };
-      const result = mockPredictionProvider.predict(predictionRequest);
-      assertRankingSnapshotUnchanged(before, rankingSnapshot);
-      return json(response, 200, result);
+      const prediction = await runPredictionWithConfiguredProvider(predictionRequest);
+      if (prediction.error) return error(response, prediction.error.code === "PROVIDER_CONFIG_ERROR" ? 400 : 502, prediction.error.code, prediction.error.message);
+      return json(response, 200, prediction.result);
     }
     return error(response, 404, "NOT_FOUND", "Route not found.");
   } catch (caught) {

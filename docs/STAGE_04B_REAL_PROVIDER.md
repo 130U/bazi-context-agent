@@ -1,36 +1,55 @@
 # Stage 4B Real Provider
 
-Stage 4B adds a real OpenAI provider behind an explicit environment flag.
+## Goal
 
-## Provider rules
+Stage 4B adds a real OpenAI prediction provider behind a strict environment flag.
 
-- Default provider is `mock`.
-- Real provider is active only when `PREDICTION_PROVIDER=openai`.
-- API key is read only from `process.env.OPENAI_API_KEY`.
-- Model is read from `process.env.OPENAI_MODEL`.
-- No API key may be committed.
-- No API key may enter client-side HTML/JS.
-- Real provider is server-side only.
+The system must still default to the mock provider. The real OpenAI provider may only be used after deterministic ranking is complete and only inside `/api/prediction`.
 
-## Failure behavior
+## Required behavior
 
-If `PREDICTION_PROVIDER=openai` but `OPENAI_API_KEY` is missing:
+- Default provider: `mock`
+- Real provider flag: `PREDICTION_PROVIDER=openai`
+- API key source: server-side `process.env.OPENAI_API_KEY`
+- Optional model env: `OPENAI_MODEL`
+- No real `.env` file may be committed.
+- No API key may be written into source, tests, docs, examples, or browser code.
+- Tests must not make real network calls.
 
-```json
-{
-  "error": "provider_config_error",
-  "message": "OPENAI_API_KEY is required when PREDICTION_PROVIDER=openai"
-}
+## Allowed path
+
+```text
+/api/prediction
+  -> provider selection
+  -> mock provider OR OpenAI provider
+  -> schema validation
+  -> PredictionResult
 ```
 
-Do not silently call mock in this explicit configuration.
+## Forbidden path
 
-## Ranking protection
+```text
+/api/ranking
+  -> OpenAI provider
+```
 
-OpenAI provider must not be imported by:
+This must never happen.
 
-- `ranking.ts`
-- candidate generation modules
-- symbol scoring modules
-- event backtest modules
-- `/api/ranking` handler
+## OpenAI provider output
+
+The OpenAI provider must return the same `PredictionResult` shape as the mock provider. It must not modify:
+
+- `rankingSnapshot`
+- candidate ids
+- ranking scores
+- confidence
+- evidence table
+- contradictions
+- missing_information
+
+The provider may use:
+
+- user question
+- ranking snapshot as read-only evidence
+- context box
+- life events
