@@ -1,0 +1,53 @@
+{
+  "question": "我适合什么行业？未来事业走向怎么样？",
+  "rankingSnapshot": {
+    "topCandidates": [
+      {
+        "candidate_id": "candidate_001",
+        "total_score": 0.82,
+        "confidence": 0.48
+      },
+      {
+        "candidate_id": "candidate_002",
+        "total_score": 0.76,
+        "confidence": 0.32
+      },
+      {
+        "candidate_id": "candidate_003",
+        "total_score": 0.68,
+        "confidence": 0.2
+      }
+    ],
+    "rankingGeneratedAt": "2026-06-05T00:00:00.000Z",
+    "aiUsedForRanking": false,
+    "contextFactsUsedForRanking": 0
+  },
+  "contextBox": [
+    {
+      "category": "family",
+      "field": "parental_education",
+      "value": "父母教育程度较高",
+      "source": "user_answer",
+      "confidence": 0.9
+    },
+    {
+      "category": "preference",
+      "field": "inner_preferred_direction",
+      "value": "长期想做 AI、产品、玄学工具结合",
+      "source": "user_answer",
+      "confidence": 0.85
+    }
+  ],
+  "lifeEvents": [
+    {
+      "year": 2018,
+      "event_type": "education",
+      "description": "出国读书"
+    },
+    {
+      "year": 2024,
+      "event_type": "career",
+      "description": "开始做 AI 产品"
+    }
+  ]
+}

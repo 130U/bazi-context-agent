@@ -1,0 +1,46 @@
+{
+  "domain": "career",
+  "conclusion": "综合看，更适合走 AI 产品、知识工具、咨询型或内容/软件结合方向。",
+  "known_facts": [
+    {
+      "fact": "用户表达了 AI、产品、玄学工具结合的长期兴趣",
+      "source": "context_box",
+      "confidence": 0.85
+    }
+  ],
+  "chart_signals": [
+    {
+      "signal": "Top candidate ranking 已完成，prediction 只读取 snapshot，不修改分数。",
+      "source_candidate_id": "candidate_001",
+      "confidence": 0.48
+    }
+  ],
+  "context_adjustments": [
+    {
+      "adjustment": "家庭教育和个人偏好会提高知识型路径的现实可行性。",
+      "basis": [
+        "parental_education",
+        "inner_preferred_direction"
+      ]
+    }
+  ],
+  "prediction": {
+    "answer": "事业方向应优先测试 AI 工具、知识产品、命理产品化、研究型内容或产品管理。",
+    "confidence": 0.72,
+    "timeframe": "未来 6–18 个月"
+  },
+  "confidence": 0.72,
+  "uncertainty": [
+    "当前仍缺少真实行业经历、收入目标、风险承受能力等信息。"
+  ],
+  "next_questions": [
+    "你更想做工具软件、咨询服务，还是内容产品？",
+    "你能接受多长时间的低收入试错期？"
+  ],
+  "policy": {
+    "ai_used_for_ranking": false,
+    "ranking_modified_by_ai": false,
+    "provider": "mock",
+    "schema_version": "1.0"
+  }
+}

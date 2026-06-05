@@ -1,0 +1,33 @@
+{
+  "examples": [
+    {
+      "category": "background",
+      "field": "growth_city",
+      "value": "一线城市",
+      "source": "user_answer",
+      "confidence": 0.8
+    },
+    {
+      "category": "family",
+      "field": "parental_occupation",
+      "value": "工程师/医生等专业职业",
+      "source": "user_answer",
+      "confidence": 0.9
+    },
+    {
+      "category": "education",
+      "field": "highest_education",
+      "value": "硕士或以上",
+      "source": "user_answer",
+      "confidence": 0.95
+    },
+    {
+      "category": "preference",
+      "field": "desired_life_outcome",
+      "value": "自由度、影响力、知识成就",
+      "source": "user_answer",
+      "confidence": 0.85
+    }
+  ],
+  "note": "Synthetic examples only. Do not commit real user data."
+}

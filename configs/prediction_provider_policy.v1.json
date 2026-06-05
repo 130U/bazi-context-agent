@@ -1,0 +1,18 @@
+{
+  "version": "1.0",
+  "default_provider": "mock",
+  "allowed_providers": [
+    "mock",
+    "openai"
+  ],
+  "real_provider_enabled_stage": "4B",
+  "provider_env": "PREDICTION_PROVIDER",
+  "api_key_env": "OPENAI_API_KEY",
+  "model_env": "OPENAI_MODEL",
+  "client_side_key_forbidden": true,
+  "ranking_import_forbidden": true,
+  "prediction_may_use_context_box": true,
+  "ranking_may_use_context_box": false,
+  "prediction_may_mutate_ranking_snapshot": false,
+  "schema_path": "configs/prediction_output_schema.v1.json"
+}

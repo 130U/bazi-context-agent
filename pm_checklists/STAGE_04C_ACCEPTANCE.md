@@ -1,0 +1,21 @@
+# Stage 4C Acceptance Checklist
+
+- [ ] Prediction UI displays conclusion.
+- [ ] Prediction UI displays known facts.
+- [ ] Prediction UI displays chart signals.
+- [ ] Prediction UI displays context adjustments.
+- [ ] Prediction UI displays prediction answer.
+- [ ] Prediction UI displays confidence.
+- [ ] Prediction UI displays uncertainty.
+- [ ] Prediction UI displays next questions.
+- [ ] Prediction UI displays policy metadata.
+- [ ] Report preview includes ranking summary.
+- [ ] Report preview includes context box summary.
+- [ ] Report preview includes prediction result.
+- [ ] Report preview includes policy boundary notice.
+- [ ] Export JSON or Markdown exists.
+- [ ] UI does not expose API key.
+- [ ] Ranking remains unchanged by prediction.
+- [ ] No React/Next/Vite/Vue/Svelte migration.
+- [ ] No login/payment/database/user system.
+- [ ] npm test passes.
