@@ -1,8 +1,12 @@
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import { pathToFileURL } from "node:url";
 import { generateCandidateHours } from "./candidateGeneration.ts";
+import { normalizeContextBox } from "./contextBox.ts";
 import { loadQuestionBank, loadScoringConfig } from "./config.ts";
 import { scoreEventBacktest } from "./eventBacktest.ts";
+import { mockPredictionProvider } from "./mockPredictionProvider.ts";
+import { classifyPredictionDomain } from "./predictionDomain.ts";
+import { assertRankingSnapshotUnchanged, cloneRankingSnapshot } from "./predictionPolicy.ts";
 import { rankCandidates } from "./ranking.ts";
 import { scoreSymbolPrior } from "./symbolPrior.ts";
 import type {
@@ -20,6 +24,7 @@ import type {
   ScoringConfig,
   SymbolAnswer
 } from "./types.ts";
+import type { PredictionRequest, RankingSnapshot } from "./predictionTypes.ts";
 
 type JsonValue = Record<string, unknown>;
 
@@ -212,8 +217,10 @@ function homePage(): string {
   <section id="event_backtest"><h2>Step 3: event_backtest</h2><div class="grid" data-layer="event_backtest"></div><pre id="candidates">Loading candidates...</pre></section>
   <section id="context_box"><h2>Step 4: context_box preview</h2><div class="grid" data-layer="context_box"></div><pre id="context-preview">Context facts preview only; not part of Round 03 ranking.</pre></section>
   <section id="ranking_result"><h2>Step 5: ranking_result</h2><button id="run">Run deterministic ranking</button><pre id="ranking">Waiting...</pre></section>
+  <section id="prediction_result"><h2>Stage 4A: mock prediction</h2><input id="prediction-question" value="What career direction fits this context?" style="width: min(100%, 520px); padding: 10px; border: 1px solid #cbd2dc; border-radius: 6px;"><button id="predict">Generate mock prediction</button><pre id="prediction">Waiting for ranking snapshot...</pre></section>
 </main>
 <script>
+let lastRanking = null;
 const sample = {
   birth_input: { birth_date: "1998-05-10", birth_place: "Shanghai, China", recorded_time: "22:50", uncertainty_range: "auto", boundary_flags: ["near_hour_boundary", "near_zi_hour"], chart_sex: "female" },
   symbol_answers: [
@@ -240,7 +247,31 @@ function renderQuestions(data) {
 }
 async function run() {
   const ranking = await post('/api/ranking', sample);
+  lastRanking = ranking;
   document.getElementById('ranking').textContent = JSON.stringify(ranking, null, 2);
+  await predict();
+}
+function rankingSnapshot() {
+  if (!lastRanking) return null;
+  return {
+    top_candidate_id: lastRanking.top_candidates?.[0]?.candidate?.candidate_id ?? null,
+    top_3: lastRanking.top_candidates ?? [],
+    evidence_table: lastRanking.evidence_table ?? [],
+    contradictions: lastRanking.contradictions ?? [],
+    missing_information: lastRanking.missing_information ?? [],
+    should_not_force_single_hour: lastRanking.should_not_force_single_hour
+  };
+}
+async function predict() {
+  const snapshot = rankingSnapshot();
+  if (!snapshot) return;
+  const prediction = await post('/api/prediction', {
+    question: document.getElementById('prediction-question').value,
+    rankingSnapshot: snapshot,
+    contextBox: sample.context_facts,
+    lifeEvents: sample.life_events
+  });
+  document.getElementById('prediction').textContent = JSON.stringify(prediction, null, 2);
 }
 async function init() {
   const questionnaire = await fetch('/api/questionnaire').then((res) => res.json());
@@ -249,6 +280,7 @@ async function init() {
   document.getElementById('candidates').textContent = JSON.stringify(await post('/api/candidates', { birth_input: sample.birth_input }), null, 2);
   document.getElementById('context-preview').textContent = JSON.stringify(sample.context_facts, null, 2);
   document.getElementById('run').addEventListener('click', run);
+  document.getElementById('predict').addEventListener('click', predict);
   run();
 }
 init();
@@ -296,6 +328,25 @@ export async function handleRequest(request: IncomingMessage, response: ServerRe
         symbol_prior: { ...labels(flow.symbolPrior), warning: flow.symbolPrior.warning },
         event_backtest: flow.eventBacktests
       });
+    }
+    if (request.method === "POST" && url.pathname === "/api/prediction") {
+      const body = await readJson(request);
+      const snapshot = body.rankingSnapshot ?? body.ranking_snapshot;
+      if (!snapshot || typeof snapshot !== "object") return error(response, 400, "MISSING_RANKING_SNAPSHOT", "Prediction requires a frozen rankingSnapshot.");
+      const rankingSnapshot = snapshot as unknown as RankingSnapshot;
+      const before = cloneRankingSnapshot(rankingSnapshot);
+      const question = text(body.question, "general prediction");
+      const domain = text(body.domain, classifyPredictionDomain(question));
+      const predictionRequest: PredictionRequest = {
+        question,
+        domain: classifyPredictionDomain(`${domain} ${question}`),
+        rankingSnapshot,
+        contextBox: normalizeContextBox(body.contextBox ?? body.context_box),
+        lifeEvents: normalizeLifeEvents(body.lifeEvents ?? body.life_events)
+      };
+      const result = mockPredictionProvider.predict(predictionRequest);
+      assertRankingSnapshotUnchanged(before, rankingSnapshot);
+      return json(response, 200, result);
     }
     return error(response, 404, "NOT_FOUND", "Route not found.");
   } catch (caught) {

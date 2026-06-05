@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import type { QuestionBank, ScoringConfig } from "./types.ts";
+import type { PredictionDomainsConfig, PredictionOutputSchemaConfig, PredictionProviderPolicyConfig } from "./predictionTypes.ts";
 
 function readJson<T>(relativePath: string): T {
   const url = new URL(relativePath, import.meta.url);
@@ -16,3 +17,15 @@ export function loadScoringConfig(): ScoringConfig {
 }
 
 export const loadScoringWeights = loadScoringConfig;
+
+export function loadPredictionDomainsConfig(): PredictionDomainsConfig {
+  return readJson<PredictionDomainsConfig>("../configs/prediction_domains.v1.json");
+}
+
+export function loadPredictionOutputSchemaConfig(): PredictionOutputSchemaConfig {
+  return readJson<PredictionOutputSchemaConfig>("../configs/prediction_output_schema.v1.json");
+}
+
+export function loadPredictionProviderPolicyConfig(): PredictionProviderPolicyConfig {
+  return readJson<PredictionProviderPolicyConfig>("../configs/prediction_provider_policy.v1.json");
+}
