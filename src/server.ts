@@ -7,6 +7,8 @@ import { scoreEventBacktest } from "./eventBacktest.ts";
 import { classifyPredictionDomain } from "./predictionDomain.ts";
 import { runPredictionWithConfiguredProvider } from "./predictionProvider.ts";
 import { rankCandidates } from "./ranking.ts";
+import { buildPredictionReport } from "./reportBuilder.ts";
+import { reportToMarkdown } from "./reportMarkdown.ts";
 import { scoreSymbolPrior } from "./symbolPrior.ts";
 import type {
   BirthInput,
@@ -23,7 +25,8 @@ import type {
   ScoringConfig,
   SymbolAnswer
 } from "./types.ts";
-import type { PredictionRequest, RankingSnapshot } from "./predictionTypes.ts";
+import type { PredictionRequest, PredictionResult, RankingSnapshot } from "./predictionTypes.ts";
+import type { ReportExportFormat } from "./reportTypes.ts";
 
 type JsonValue = Record<string, unknown>;
 
@@ -76,6 +79,10 @@ function text(value: unknown, fallback = ""): string {
 
 function arrayOfStrings(value: unknown): string[] {
   return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
+}
+
+function exportFormat(value: unknown): ReportExportFormat {
+  return value === "markdown" ? "markdown" : "json";
 }
 
 function normalizeBirthInput(input: unknown): BirthInput {
@@ -216,10 +223,15 @@ function homePage(): string {
   <section id="event_backtest"><h2>Step 3: event_backtest</h2><div class="grid" data-layer="event_backtest"></div><pre id="candidates">Loading candidates...</pre></section>
   <section id="context_box"><h2>Step 4: context_box preview</h2><div class="grid" data-layer="context_box"></div><pre id="context-preview">Context facts preview only; not part of Round 03 ranking.</pre></section>
   <section id="ranking_result"><h2>Step 5: ranking_result</h2><button id="run">Run deterministic ranking</button><pre id="ranking">Waiting...</pre></section>
-  <section id="prediction_result"><h2>Stage 4A: mock prediction</h2><input id="prediction-question" value="What career direction fits this context?" style="width: min(100%, 520px); padding: 10px; border: 1px solid #cbd2dc; border-radius: 6px;"><button id="predict">Generate mock prediction</button><pre id="prediction">Waiting for ranking snapshot...</pre></section>
+  <section id="prediction_result"><h2>Prediction display</h2><input id="prediction-question" value="What career direction fits this context?" style="width: min(100%, 520px); padding: 10px; border: 1px solid #cbd2dc; border-radius: 6px;"><button id="predict">Generate prediction</button><div id="prediction-display" class="grid"></div><pre id="prediction">Waiting for ranking snapshot...</pre></section>
+  <section id="provider_status"><h2>Provider status</h2><pre id="provider">Waiting for prediction...</pre></section>
+  <section id="report_preview"><h2>Report preview</h2><button id="report-json">Export JSON</button> <button id="report-markdown">Export Markdown</button><pre id="report">Waiting for prediction...</pre></section>
+  <section id="privacy_notice"><h2>Privacy notice</h2><p class="notice">Candidate ranking is deterministic. AI/provider does not participate in ranking. Context box is used for prediction personalization only, not ranking. Exported reports may contain user-provided personal information. API keys are never displayed or exported. This is not medical, legal, or financial certainty advice.</p></section>
 </main>
 <script>
 let lastRanking = null;
+let lastPrediction = null;
+let lastReport = null;
 const sample = {
   birth_input: { birth_date: "1998-05-10", birth_place: "Shanghai, China", recorded_time: "22:50", uncertainty_range: "auto", boundary_flags: ["near_hour_boundary", "near_zi_hour"], chart_sex: "female" },
   symbol_answers: [
@@ -270,7 +282,61 @@ async function predict() {
     contextBox: sample.context_facts,
     lifeEvents: sample.life_events
   });
+  lastPrediction = prediction;
+  renderPrediction(prediction);
   document.getElementById('prediction').textContent = JSON.stringify(prediction, null, 2);
+  await requestReport('markdown');
+}
+function renderList(items, select) {
+  return (items || []).map((item) => '<li>' + select(item) + '</li>').join('');
+}
+function renderPrediction(prediction) {
+  document.getElementById('prediction-display').innerHTML = [
+    '<div class="item"><div class="label">conclusion</div>' + prediction.conclusion + '</div>',
+    '<div class="item"><div class="label">prediction</div>' + prediction.prediction.answer + '</div>',
+    '<div class="item"><div class="label">confidence</div>' + prediction.confidence + '</div>',
+    '<div class="item"><div class="label">known_facts</div><ul>' + renderList(prediction.known_facts, (x) => x.fact) + '</ul></div>',
+    '<div class="item"><div class="label">chart_signals</div><ul>' + renderList(prediction.chart_signals, (x) => x.signal) + '</ul></div>',
+    '<div class="item"><div class="label">context_adjustments</div><ul>' + renderList(prediction.context_adjustments, (x) => x.adjustment) + '</ul></div>',
+    '<div class="item"><div class="label">uncertainty</div><ul>' + renderList(prediction.uncertainty, (x) => x) + '</ul></div>',
+    '<div class="item"><div class="label">next_questions</div><ul>' + renderList(prediction.next_questions, (x) => x) + '</ul></div>'
+  ].join('');
+  document.getElementById('provider').textContent = JSON.stringify({
+    provider: prediction.policy.provider,
+    output_schema_validated: prediction.policy.output_schema_validated,
+    ai_used_for_ranking: prediction.policy.ai_used_for_ranking,
+    ranking_modified_by_ai: prediction.policy.ranking_modified_by_ai,
+    context_box_used_for_ranking: false,
+    context_box_used_for_prediction: true
+  }, null, 2);
+}
+async function requestReport(format) {
+  const snapshot = rankingSnapshot();
+  if (!snapshot || !lastPrediction) return;
+  const result = await post('/api/report', {
+    rankingSnapshot: snapshot,
+    contextBox: sample.context_facts,
+    predictionResult: lastPrediction,
+    exportFormat: format
+  });
+  lastReport = result;
+  document.getElementById('report').textContent = format === 'markdown' ? result.markdown : JSON.stringify(result.report, null, 2);
+  return result;
+}
+function downloadText(filename, text, type) {
+  const blob = new Blob([text], { type });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+async function exportReport(format) {
+  const result = await requestReport(format);
+  if (!result) return;
+  if (format === 'markdown') downloadText('bazi-context-report.md', result.markdown, 'text/markdown');
+  else downloadText('bazi-context-report.json', JSON.stringify(result.report, null, 2), 'application/json');
 }
 async function init() {
   const questionnaire = await fetch('/api/questionnaire').then((res) => res.json());
@@ -280,6 +346,8 @@ async function init() {
   document.getElementById('context-preview').textContent = JSON.stringify(sample.context_facts, null, 2);
   document.getElementById('run').addEventListener('click', run);
   document.getElementById('predict').addEventListener('click', predict);
+  document.getElementById('report-json').addEventListener('click', () => exportReport('json'));
+  document.getElementById('report-markdown').addEventListener('click', () => exportReport('markdown'));
   run();
 }
 init();
@@ -345,6 +413,23 @@ export async function handleRequest(request: IncomingMessage, response: ServerRe
       const prediction = await runPredictionWithConfiguredProvider(predictionRequest);
       if (prediction.error) return error(response, prediction.error.code === "PROVIDER_CONFIG_ERROR" ? 400 : 502, prediction.error.code, prediction.error.message);
       return json(response, 200, prediction.result);
+    }
+    if (request.method === "POST" && url.pathname === "/api/report") {
+      const body = await readJson(request);
+      const snapshot = body.rankingSnapshot ?? body.ranking_snapshot;
+      if (!snapshot || typeof snapshot !== "object") return error(response, 400, "MISSING_RANKING_SNAPSHOT", "Report requires a frozen rankingSnapshot.");
+      const predictionResult = body.predictionResult ?? body.prediction_result;
+      if (!predictionResult || typeof predictionResult !== "object") return error(response, 400, "MISSING_PREDICTION_RESULT", "Report requires a predictionResult.");
+      const rankingSnapshot = snapshot as unknown as RankingSnapshot;
+      const report = buildPredictionReport({
+        rankingSnapshot,
+        contextBox: normalizeContextBox(body.contextBox ?? body.context_box),
+        predictionResult: predictionResult as PredictionResult,
+        exportFormat: exportFormat(body.exportFormat ?? body.export_format)
+      });
+      const format = exportFormat(body.exportFormat ?? body.export_format);
+      if (format === "markdown") return json(response, 200, { format, report, markdown: reportToMarkdown(report) });
+      return json(response, 200, { format, report });
     }
     return error(response, 404, "NOT_FOUND", "Route not found.");
   } catch (caught) {

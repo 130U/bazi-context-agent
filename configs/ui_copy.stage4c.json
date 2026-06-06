@@ -1,0 +1,22 @@
+{
+  "version": "stage4c-v1",
+  "boundary_notices": {
+    "ranking_deterministic": "候选盘排名由确定性规则生成，AI/provider 不参与排名。",
+    "context_not_for_ranking": "信息框仅用于预测个性化，不参与候选盘排名。",
+    "prediction_after_ranking": "预测在候选盘排名完成后生成，不会修改 candidate id、score 或 confidence。",
+    "privacy_export": "导出的报告可能包含你主动填写的个人信息；分享前请自行检查。",
+    "api_key_never_exported": "API key 不会在页面或报告中显示。",
+    "not_certainty": "本报告不构成医疗、法律或金融确定性建议。"
+  },
+  "buttons": {
+    "generate_report": "生成报告预览",
+    "export_json": "导出 JSON",
+    "export_markdown": "导出 Markdown"
+  },
+  "section_labels": {
+    "prediction": "预测结果",
+    "report_preview": "报告预览",
+    "provider_status": "Provider 状态",
+    "privacy_notice": "隐私与边界提示"
+  }
+}

@@ -1,16 +1,27 @@
 $goal
-请停止扩展功能，先做 Stage 4 scope guard 修复。
+停止当前越界实现，只做 Stage 4C 范围内的 Prediction UI + Report Polish。
 
-你可能违反了 Stage 4 边界。请检查并修复：
+Stage 4C 允许：
 
-1. /api/ranking 是否调用或 import 了 prediction provider；
-2. ranking.ts 是否调用或 import 了 OpenAI / Anthropic / LLM；
-3. context_box 是否回流影响 ranking；
-4. prediction 是否修改 rankingSnapshot、candidate ids、scores、confidence；
-5. 是否暴露 API key 到浏览器端；
-6. 是否提交了 .env 或真实 key；
-7. 是否引入 React/Next/Vite/Vue/Svelte；
-8. 是否新增登录、支付、数据库、用户系统；
-9. 是否扩展紫微斗数、奇门、风水。
+- prediction result 展示；
+- provider status 展示；
+- report builder；
+- JSON / Markdown export；
+- privacy notice；
+- tests；
+- vanilla HTML/JS/CSS。
 
-请移除越界内容，保留 Stage 4 合法内容，然后运行 npm test 并中文汇报。
+Stage 4C 禁止：
+
+- 修改 /api/ranking scoring；
+- 让 AI/provider/context_box 影响 ranking；
+- 新增真实数据库；
+- 登录、支付、用户系统；
+- React / Next / Vite / Vue / Svelte；
+- 创建真实 .env；
+- 写入真实 API key；
+- 在测试中发真实 OpenAI 网络请求；
+- 实现真实完整八字历法；
+- 紫微斗数、奇门、风水扩展。
+
+请检查当前改动，移除所有越界内容，只保留 Stage 4C 所需最小实现。然后运行 npm test 并汇报。

@@ -1,0 +1,91 @@
+{
+  "version": "stage4c-v1",
+  "export_formats": [
+    "json",
+    "markdown"
+  ],
+  "sections": [
+    {
+      "id": "title",
+      "label": "报告标题",
+      "required": true
+    },
+    {
+      "id": "generated_at",
+      "label": "生成时间",
+      "required": true
+    },
+    {
+      "id": "ranking_summary",
+      "label": "候选盘排名摘要",
+      "required": true
+    },
+    {
+      "id": "context_box_summary",
+      "label": "信息框摘要",
+      "required": true
+    },
+    {
+      "id": "prediction_conclusion",
+      "label": "预测结论",
+      "required": true
+    },
+    {
+      "id": "known_facts",
+      "label": "已知事实",
+      "required": true
+    },
+    {
+      "id": "chart_signals",
+      "label": "八字信号",
+      "required": true
+    },
+    {
+      "id": "context_adjustments",
+      "label": "信息框修正",
+      "required": true
+    },
+    {
+      "id": "prediction",
+      "label": "预测",
+      "required": true
+    },
+    {
+      "id": "confidence",
+      "label": "置信度",
+      "required": true
+    },
+    {
+      "id": "uncertainty",
+      "label": "不确定性",
+      "required": true
+    },
+    {
+      "id": "next_questions",
+      "label": "下一步问题",
+      "required": true
+    },
+    {
+      "id": "policy",
+      "label": "边界与策略",
+      "required": true
+    },
+    {
+      "id": "privacy_notice",
+      "label": "隐私提示",
+      "required": true
+    }
+  ],
+  "redaction": {
+    "exclude_fields": [
+      "api_key",
+      "OPENAI_API_KEY",
+      "ANTHROPIC_API_KEY",
+      "raw_provider_request",
+      "raw_provider_response",
+      "process_env",
+      "headers.authorization"
+    ],
+    "api_key_exported": false
+  }
+}

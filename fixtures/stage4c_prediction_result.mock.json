@@ -1,0 +1,44 @@
+{
+  "domain": "career",
+  "conclusion": "Mock conclusion: current context suggests a career path shaped by both ambition and resource constraints.",
+  "known_facts": [
+    {
+      "fact": "父母为专业人士",
+      "source": "context_box"
+    }
+  ],
+  "chart_signals": [
+    {
+      "signal": "候选盘显示迁移/变化信号",
+      "source_candidate_id": "candidate_001",
+      "confidence": 0.62
+    }
+  ],
+  "context_adjustments": [
+    {
+      "adjustment": "家庭教育资源上调教育/职业基线",
+      "basis": [
+        "parental_education",
+        "growth_city"
+      ]
+    }
+  ],
+  "prediction": {
+    "answer": "适合知识密集型或跨领域职业路径。",
+    "confidence": 0.68,
+    "timeframe": "next_12_24_months"
+  },
+  "confidence": 0.68,
+  "uncertainty": [
+    "出生时辰仍保留 Top 3 不确定性"
+  ],
+  "next_questions": [
+    "补充一次重大职业变化年份"
+  ],
+  "policy": {
+    "provider": "mock",
+    "ai_used_for_ranking": false,
+    "ranking_modified_by_ai": false,
+    "output_schema_validated": true
+  }
+}

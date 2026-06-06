@@ -1,41 +1,54 @@
-# Stage 4C UI and Report Polish
+# Stage 4C UI Report Polish
 
-Stage 4C improves prediction display and report export.
+## Goal
 
-## UI sections
+Stage 4C improves the product surface after Stage 4A/4B prediction is working.
 
-The prediction UI must show:
+It turns the prediction output into a readable report-style experience:
 
-1. Conclusion.
-2. Known facts.
-3. Chart signals.
-4. Context adjustments.
-5. Prediction answer.
-6. Confidence.
-7. Uncertainty.
-8. Next questions.
-9. Policy metadata.
+1. structured prediction display;
+2. provider status display;
+3. report preview;
+4. JSON / Markdown export;
+5. privacy and boundary copy.
 
-## Report preview
+## Required UI Sections
 
-The report should include:
+The prediction result UI must show:
 
-1. Ranking summary.
-2. Context box summary.
-3. Prediction result.
-4. Policy boundary notice.
-5. Generated timestamp.
+- Conclusion;
+- Known facts;
+- Chart signals;
+- Context adjustments;
+- Prediction answer;
+- Confidence;
+- Uncertainty;
+- Next questions;
+- Policy metadata.
 
-## Export
+## Required Report Area
 
-Allowed:
+After prediction result appears, the UI should show:
 
-- JSON export.
-- Markdown export.
+- report preview;
+- export JSON button;
+- export Markdown button;
+- privacy notice;
+- boundary notice.
 
-Not allowed in Stage 4C:
+## Boundary Copy
 
-- PDF generation.
-- DOCX generation.
-- Cloud storage.
-- Login/account system.
+The UI must explicitly state:
+
+- candidate ranking is deterministic;
+- AI/provider does not participate in ranking;
+- context_box does not participate in ranking;
+- context_box only affects prediction;
+- exported reports may contain user-provided personal information;
+- API keys are never exported.
+
+## Implementation Constraint
+
+Use the existing local server and vanilla HTML/JS/CSS.
+
+Do not add React, Next, Vite, Vue, Svelte, login, payment, database, or user system.
