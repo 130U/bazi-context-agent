@@ -1,0 +1,23 @@
+{
+  "hero": {
+    "eyebrow": "Deterministic BaZi structure. Context-aware forecast.",
+    "title": "From birth-time structure to personalized forecast.",
+    "subtitle": "A local-first research demo that separates BaZi-derived signals from user-controlled context before generating a future forecast."
+  },
+  "badges": [
+    "No login",
+    "Static demo",
+    "No API key",
+    "Local-first"
+  ],
+  "cta": "Try the interactive demo",
+  "public_terms": {
+    "derived_function": "BaZi-derived structure",
+    "initial_value": "user-controlled context profile"
+  },
+  "forbidden_terms": [
+    "hidden trick",
+    "unfair advantage",
+    "secret data collection"
+  ]
+}

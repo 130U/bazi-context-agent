@@ -1,0 +1,14 @@
+{
+  "description": "BaZi derived-function engine with user-controlled context profiles and context-aware forecasting.",
+  "homepage_template": "https://<owner>.github.io/bazi-context-agent/",
+  "topics": [
+    "bazi",
+    "astrology",
+    "typescript",
+    "ai",
+    "forecast",
+    "privacy",
+    "evaluation"
+  ],
+  "manual_command_template": "gh repo edit --description \"BaZi derived-function engine with user-controlled context profiles and context-aware forecasting.\" --homepage \"https://<owner>.github.io/bazi-context-agent/\" --add-topic bazi --add-topic astrology --add-topic typescript --add-topic ai --add-topic forecast --add-topic privacy --add-topic evaluation"
+}

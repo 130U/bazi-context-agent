@@ -6,7 +6,7 @@
 - Do not commit real keys.
 - Do not create `.env` with real values.
 - Do not expose keys to client-side code.
-- `examples/.env.stage4.example` may contain placeholders only.
+- `examples/stage4.env.example` may contain placeholders only.
 
 ## User data rules
 

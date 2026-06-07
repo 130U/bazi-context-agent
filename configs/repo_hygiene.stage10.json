@@ -1,0 +1,32 @@
+{
+  "root_keep": [
+    "README.md",
+    "README.en.md",
+    "README.zh-CN.md",
+    "AGENTS.md",
+    "CONTRIBUTING.md",
+    "SECURITY.md",
+    "CODE_OF_CONDUCT.md",
+    "package.json",
+    "package-lock.json",
+    "tsconfig.json",
+    ".gitignore",
+    "LICENSE"
+  ],
+  "move_rules": [
+    {
+      "from": "00_PM_README_先读我.md",
+      "to": "docs/archive/startup/00_PM_README_先读我.md"
+    },
+    {
+      "from": "START_HERE_第一次复制这个.md",
+      "to": "docs/archive/startup/START_HERE_第一次复制这个.md"
+    },
+    {
+      "from": "env.stage4.example",
+      "to": "examples/stage4.env.example"
+    }
+  ],
+  "do_not_delete": true,
+  "prefer_git_mv": true
+}

@@ -1,0 +1,40 @@
+{
+  "birth": {
+    "date": "1998-05-10",
+    "time": "22:30",
+    "location": "Shanghai",
+    "certainty": "within_1_hour"
+  },
+  "context": {
+    "growth_city": "large city",
+    "family_support": "education-oriented, high support",
+    "education": "graduate-level",
+    "preference": "international business / product / creative strategy"
+  },
+  "derived_function": {
+    "pillars": "Demo pillars hidden in public sample",
+    "day_master": "Demo",
+    "signals": [
+      "mobility signal",
+      "education pressure/opportunity signal",
+      "career transition signal"
+    ]
+  },
+  "forecast": {
+    "summary": "The demo forecast combines structural timing signals with a context profile to produce a calibrated, non-deterministic outlook.",
+    "timeline": [
+      {
+        "window": "0-6 months",
+        "theme": "clarify direction and reduce noise"
+      },
+      {
+        "window": "6-18 months",
+        "theme": "career positioning and cross-border opportunities"
+      },
+      {
+        "window": "18-36 months",
+        "theme": "deeper specialization or public-facing output"
+      }
+    ]
+  }
+}

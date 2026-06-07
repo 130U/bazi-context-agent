@@ -1,0 +1,16 @@
+{
+  "required_sections": [
+    "hero",
+    "demo_panel",
+    "derived_function",
+    "initial_value",
+    "forecast_preview",
+    "privacy_notice"
+  ],
+  "required_buttons": [
+    "Generate demo forecast",
+    "Copy report",
+    "Download JSON",
+    "Download Markdown"
+  ]
+}

@@ -8,6 +8,8 @@
 [![Tests](https://img.shields.io/badge/tests-node--test-green)](#quick-start--快速开始)
 [![AI Boundary](https://img.shields.io/badge/AI-after%20deterministic%20ranking-purple)](#ai-boundary--ai-边界)
 
+[Try the interactive demo](https://madarame87.github.io/bazi-context-agent/) / [体验交互式演示](https://madarame87.github.io/bazi-context-agent/)
+
 ---
 
 ## Why This Exists / 为什么做这个项目
@@ -118,6 +120,24 @@ AI -/-> 不进入候选盘排序或校盘
 ---
 
 ## Quick Start / 快速开始
+
+Static public demo / 静态公开演示：
+
+```text
+site/index.html
+```
+
+After GitHub Pages is enabled, the demo URL is:
+
+```text
+https://madarame87.github.io/bazi-context-agent/
+```
+
+启用 GitHub Pages 后，演示地址为：
+
+```text
+https://madarame87.github.io/bazi-context-agent/
+```
 
 ```bash
 npm install

@@ -1,0 +1,252 @@
+:root {
+  --duke-blue: #012169;
+  --duke-royal: #00539B;
+  --paper: #F8F6EF;
+  --ink: #101828;
+  --muted: #B8C5E6;
+  --line: rgba(255, 255, 255, 0.2);
+  --glass: rgba(255, 255, 255, 0.1);
+  --gold: #C99700;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: white;
+  background: linear-gradient(135deg, var(--duke-blue) 0%, #051642 58%, #071128 100%);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.shell {
+  width: min(1180px, calc(100vw - 32px));
+  margin: 0 auto;
+  padding: 56px 0;
+}
+
+.hero {
+  max-width: 840px;
+  margin-bottom: 32px;
+}
+
+.eyebrow {
+  margin: 0;
+  color: #C8D7FF;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+h1,
+h2,
+h3 {
+  font-family: Georgia, "Times New Roman", ui-serif, serif;
+  letter-spacing: 0;
+}
+
+h1 {
+  margin: 12px 0;
+  max-width: 820px;
+  font-size: 4.75rem;
+  line-height: 0.98;
+}
+
+h2 {
+  margin: 8px 0 18px;
+  font-size: 2rem;
+}
+
+h3 {
+  margin: 0 0 10px;
+  font-size: 1.3rem;
+}
+
+.hero-copy {
+  margin: 0;
+  max-width: 760px;
+  font-size: 1.12rem;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.badges span,
+.status {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #E6EDFF;
+  font-size: 0.84rem;
+}
+
+.workspace {
+  display: grid;
+  grid-template-columns: minmax(300px, 0.88fr) minmax(360px, 1.12fr);
+  gap: 18px;
+  align-items: stretch;
+}
+
+.panel {
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.07));
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(18px);
+  border-radius: 8px;
+  padding: 26px;
+}
+
+.input-panel {
+  position: relative;
+}
+
+.progress-rail {
+  position: absolute;
+  left: -18px;
+  top: 28px;
+  display: grid;
+  gap: 10px;
+}
+
+.step {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.step.is-active {
+  background: var(--gold);
+  color: #1b1600;
+}
+
+label {
+  display: grid;
+  gap: 8px;
+  margin: 16px 0;
+  color: #DDE6FF;
+  font-weight: 700;
+  font-size: 0.92rem;
+}
+
+input,
+textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 13px 14px;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  outline: none;
+  font: inherit;
+}
+
+textarea {
+  min-height: 92px;
+  resize: vertical;
+}
+
+input:focus,
+textarea:focus,
+button:focus {
+  border-color: rgba(255, 217, 96, 0.8);
+  box-shadow: 0 0 0 4px rgba(255, 217, 96, 0.14);
+}
+
+button {
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 12px 18px;
+  color: var(--duke-blue);
+  background: var(--paper);
+  cursor: pointer;
+  font-weight: 800;
+}
+
+button:hover {
+  transform: translateY(-1px);
+}
+
+.fineprint {
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+.output-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: start;
+}
+
+.report {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 18px;
+  min-height: 350px;
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.report p {
+  margin: 0 0 14px;
+}
+
+.report strong {
+  color: white;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.cards article {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 20px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+@media (max-width: 860px) {
+  h1 {
+    font-size: 3rem;
+  }
+
+  .workspace,
+  .cards {
+    grid-template-columns: 1fr;
+  }
+
+  .progress-rail {
+    display: none;
+  }
+}
