@@ -1,0 +1,13 @@
+{
+  "case_id": "stage7_case_education_001",
+  "pair": [
+    "D_selected_chart_plus_initial_value_full_system",
+    "B_initial_value_only"
+  ],
+  "winner": "D_selected_chart_plus_initial_value_full_system",
+  "reason": "More specific time horizon and better separation of derivative signals and initial value.",
+  "scores": {
+    "D_selected_chart_plus_initial_value_full_system": 0.82,
+    "B_initial_value_only": 0.7
+  }
+}

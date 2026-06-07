@@ -8,6 +8,7 @@ import { scoreEventBacktest } from "./eventBacktest.ts";
 import { classifyPredictionDomain } from "./predictionDomain.ts";
 import { buildForecastInput, ForecastInputBuildError } from "./forecastInputBuilder.ts";
 import { FutureForecastError, runFutureForecast } from "./futureForecastEngine.ts";
+import { runBenchmark } from "./benchmarkRunner.ts";
 import { runPredictionWithConfiguredProvider } from "./predictionProvider.ts";
 import { rankCandidates } from "./ranking.ts";
 import { buildPredictionReport } from "./reportBuilder.ts";
@@ -34,6 +35,7 @@ import type { PredictionRequest, PredictionResult, RankingSnapshot } from "./pre
 import type { RectificationLifeEvent, RectificationV2Request } from "./rectificationTypes.ts";
 import type { ReportExportFormat } from "./reportTypes.ts";
 import type { RecordedBirthTime } from "./baziTypes.ts";
+import type { EvalCase, EvaluationModeId, ModeOutput } from "./evalTypes.ts";
 
 type JsonValue = Record<string, unknown>;
 
@@ -539,6 +541,26 @@ export async function handleRequest(request: IncomingMessage, response: ServerRe
         if (caught instanceof FutureForecastError) return error(response, 400, caught.code, caught.message);
         throw caught;
       }
+    }
+    if (request.method === "POST" && url.pathname === "/api/benchmark") {
+      const body = await readJson(request);
+      const cases = Array.isArray(body.cases) ? (body.cases as EvalCase[]) : [];
+      if (cases.length === 0) return error(response, 400, "MISSING_EVAL_CASES", "Benchmark requires cases.");
+      const modeOutputs =
+        body.mode_outputs && typeof body.mode_outputs === "object"
+          ? (body.mode_outputs as Record<string, Partial<Record<EvaluationModeId, ModeOutput>>>)
+          : undefined;
+      return json(response, 200, {
+        benchmark_result: runBenchmark({ cases, mode_outputs: modeOutputs }),
+        metadata: {
+          stage: "7",
+          ai_used: false,
+          real_network_used: false,
+          ranking_modified: false,
+          rectification_modified: false,
+          forecast_input_modified: false
+        }
+      });
     }
     if (request.method === "POST" && url.pathname === "/api/prediction") {
       const body = await readJson(request);

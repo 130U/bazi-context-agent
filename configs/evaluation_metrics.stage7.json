@@ -1,0 +1,64 @@
+{
+  "schema_version": "stage7.v1",
+  "metrics": {
+    "domain_accuracy": {
+      "weight": 0.2,
+      "range": [
+        0,
+        1
+      ]
+    },
+    "time_window_overlap": {
+      "weight": 0.15,
+      "range": [
+        0,
+        1
+      ]
+    },
+    "directional_correctness": {
+      "weight": 0.15,
+      "range": [
+        0,
+        1
+      ]
+    },
+    "specificity": {
+      "weight": 0.1,
+      "range": [
+        0,
+        1
+      ]
+    },
+    "calibration": {
+      "weight": 0.1,
+      "range": [
+        0,
+        1
+      ]
+    },
+    "evidence_separation": {
+      "weight": 0.15,
+      "range": [
+        0,
+        1
+      ]
+    },
+    "actionability": {
+      "weight": 0.05,
+      "range": [
+        0,
+        1
+      ]
+    },
+    "leakage_penalty": {
+      "weight": -0.3,
+      "range": [
+        0,
+        1
+      ]
+    }
+  },
+  "minimum_cases_for_claim": 30,
+  "minimum_high_quality_cases_for_claim": 10,
+  "default_conclusion_if_underpowered": "insufficient_data"
+}

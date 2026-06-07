@@ -1,0 +1,36 @@
+{
+  "benchmark_id": "benchmark_stage7_mock_001",
+  "schema_version": "stage7.v1",
+  "case_count": 2,
+  "mode_scores": {
+    "A_derivative_only": {
+      "average_total_score": 0.48,
+      "case_count": 2
+    },
+    "B_initial_value_only": {
+      "average_total_score": 0.61,
+      "case_count": 2
+    },
+    "C_default_chart_plus_initial_value": {
+      "average_total_score": 0.67,
+      "case_count": 2
+    },
+    "D_selected_chart_plus_initial_value_full_system": {
+      "average_total_score": 0.74,
+      "case_count": 2
+    }
+  },
+  "pairwise_win_rates": {
+    "D_over_A": 1.0,
+    "D_over_B": 1.0,
+    "D_over_C": 0.5
+  },
+  "leakage_summary": {
+    "violations": 0,
+    "invalid_cases": 0
+  },
+  "conclusion": "insufficient_data",
+  "warnings": [
+    "Sample fixture is too small to support a product claim."
+  ]
+}

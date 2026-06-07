@@ -1,0 +1,22 @@
+{
+  "schema_version": "stage7.v1",
+  "judge_modes": [
+    "deterministic",
+    "mock_llm"
+  ],
+  "default_judge_mode": "deterministic",
+  "dimensions": [
+    "domain_accuracy",
+    "time_window_overlap",
+    "directional_correctness",
+    "specificity",
+    "calibration",
+    "evidence_separation",
+    "leakage"
+  ],
+  "pairwise_rules": {
+    "higher_total_score_wins": true,
+    "leakage_violation_auto_loses": true,
+    "tie_threshold": 0.03
+  }
+}

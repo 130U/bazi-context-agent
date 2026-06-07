@@ -1,0 +1,27 @@
+{
+  "schema_version": "stage7.v1",
+  "scan_fields": [
+    "allowed_inputs",
+    "mode_inputs",
+    "forecast_prompt",
+    "forecast_output"
+  ],
+  "violation_types": [
+    "direct",
+    "semantic",
+    "temporal",
+    "metadata"
+  ],
+  "direct_match_case_insensitive": true,
+  "year_after_cutoff_is_temporal_leakage": true,
+  "penalty": {
+    "direct": 1.0,
+    "semantic": 0.75,
+    "temporal": 0.75,
+    "metadata": 1.0
+  },
+  "allowed_occurrences": [
+    "docs and prompts may mention leakage terms as rules",
+    "fixtures may include hidden targets only in hidden_targets, not allowed_inputs"
+  ]
+}

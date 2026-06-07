@@ -1,0 +1,154 @@
+{
+  "schema_version": "stage7.v1",
+  "cases": [
+    {
+      "case_id": "stage7_case_education_001",
+      "schema_version": "stage7.v1",
+      "anonymized": true,
+      "cutoff_date": "2016-06-01",
+      "forecast_horizon": "3_years",
+      "target_domains": [
+        "education"
+      ],
+      "hidden_targets": [
+        {
+          "target_id": "education_elite_graduate",
+          "domain": "education",
+          "label": "elite graduate education by 2019",
+          "occurred": true,
+          "year": 2019,
+          "confidence": 0.95,
+          "acceptable_answers": [
+            "graduate school",
+            "elite education",
+            "top university",
+            "overseas graduate"
+          ],
+          "unacceptable_leakage_terms": [
+            "Ivy",
+            "Stanford MBA",
+            "elite graduate education by 2019"
+          ]
+        }
+      ],
+      "allowed_inputs": {
+        "user_question": "未来三年学业/教育路径会怎样？",
+        "derivative_profile": {
+          "profile_id": "derived_001",
+          "day_master": "甲",
+          "source_libraries": [
+            "fixture"
+          ],
+          "calculation_mode": "recorded_time"
+        },
+        "context_box": [
+          {
+            "category": "family",
+            "field": "parental_education",
+            "value": "parents are highly educated",
+            "source": "user_answer",
+            "confidence": 0.9
+          },
+          {
+            "category": "background",
+            "field": "growth_location",
+            "value": "major city",
+            "source": "user_answer",
+            "confidence": 0.8
+          }
+        ],
+        "known_life_events": [
+          {
+            "year": 2014,
+            "event_type": "education",
+            "description": "entered a competitive high school"
+          }
+        ]
+      },
+      "redaction_policy": {
+        "redacted_fields": [
+          "highest_education",
+          "school_name"
+        ],
+        "redacted_terms": [
+          "Ivy",
+          "Stanford",
+          "MBA"
+        ],
+        "post_cutoff_events_removed": true
+      },
+      "metadata": {
+        "source": "synthetic",
+        "quality": "medium",
+        "notes": [
+          "sample only"
+        ]
+      }
+    },
+    {
+      "case_id": "stage7_case_career_001",
+      "schema_version": "stage7.v1",
+      "anonymized": true,
+      "cutoff_date": "2020-01-01",
+      "forecast_horizon": "3_years",
+      "target_domains": [
+        "career",
+        "migration"
+      ],
+      "hidden_targets": [
+        {
+          "target_id": "career_transition_2021",
+          "domain": "career",
+          "label": "career transition in 2021",
+          "occurred": true,
+          "year": 2021,
+          "confidence": 0.9,
+          "acceptable_answers": [
+            "career transition",
+            "job change",
+            "industry pivot"
+          ],
+          "unacceptable_leakage_terms": [
+            "transitioned in 2021",
+            "career transition in 2021"
+          ]
+        }
+      ],
+      "allowed_inputs": {
+        "user_question": "未来三年事业和迁移方向如何？",
+        "context_box": [
+          {
+            "category": "preference",
+            "field": "desired_life_outcome",
+            "value": "international lifestyle and autonomy",
+            "source": "user_answer",
+            "confidence": 0.8
+          }
+        ],
+        "known_life_events": [
+          {
+            "year": 2018,
+            "event_type": "migration",
+            "description": "moved abroad for study"
+          }
+        ]
+      },
+      "redaction_policy": {
+        "redacted_fields": [
+          "career_transition_year"
+        ],
+        "redacted_terms": [
+          "2021 career transition"
+        ],
+        "post_cutoff_events_removed": true
+      },
+      "metadata": {
+        "source": "synthetic",
+        "quality": "medium",
+        "notes": [
+          "sample only"
+        ]
+      }
+    }
+  ]
+}

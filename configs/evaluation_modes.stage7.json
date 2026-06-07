@@ -1,0 +1,42 @@
+{
+  "schema_version": "stage7.v1",
+  "modes": [
+    {
+      "mode": "A_derivative_only",
+      "label": "Derivative only",
+      "uses_derivative_function": true,
+      "uses_initial_value": false,
+      "uses_default_chart": false,
+      "uses_selected_chart": true,
+      "description": "BaziDerivedProfile without questionnaire initial value."
+    },
+    {
+      "mode": "B_initial_value_only",
+      "label": "Initial value only",
+      "uses_derivative_function": false,
+      "uses_initial_value": true,
+      "uses_default_chart": false,
+      "uses_selected_chart": false,
+      "description": "Questionnaire context without BaZi derivative function."
+    },
+    {
+      "mode": "C_default_chart_plus_initial_value",
+      "label": "Default chart + initial value",
+      "uses_derivative_function": true,
+      "uses_initial_value": true,
+      "uses_default_chart": true,
+      "uses_selected_chart": false,
+      "description": "User-recorded-time chart plus initial value."
+    },
+    {
+      "mode": "D_selected_chart_plus_initial_value_full_system",
+      "label": "Selected chart + initial value",
+      "uses_derivative_function": true,
+      "uses_initial_value": true,
+      "uses_default_chart": false,
+      "uses_selected_chart": true,
+      "description": "Full system with selected/rectified chart and questionnaire initial value."
+    }
+  ],
+  "full_system_mode": "D_selected_chart_plus_initial_value_full_system"
+}

@@ -1,0 +1,24 @@
+{
+  "schema_version": "stage7.v1",
+  "default_cutoff_strategy": "case_defined",
+  "remove_post_cutoff_events": true,
+  "redact_hidden_targets": true,
+  "redact_synonyms": true,
+  "invalid_if_direct_leakage": true,
+  "invalid_if_missing_ground_truth": true,
+  "allowed_target_domains": [
+    "education",
+    "career",
+    "wealth",
+    "relationship",
+    "health",
+    "migration",
+    "family",
+    "personality"
+  ],
+  "minimum_major_events_for_rectification_eval": 3,
+  "notes": [
+    "The benchmark must simulate what was known before the hidden outcome.",
+    "Current/future outcome labels must not appear in the prompt input."
+  ]
+}

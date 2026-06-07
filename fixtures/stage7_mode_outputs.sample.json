@@ -1,0 +1,57 @@
+{
+  "case_id": "stage7_case_education_001",
+  "mode_outputs": {
+    "A_derivative_only": {
+      "domain_forecasts": [
+        {
+          "domain": "education",
+          "prediction": "academic pressure and possible study change",
+          "confidence": 0.55
+        }
+      ],
+      "policy": {
+        "provider": "mock",
+        "ai_used_for_ranking": false
+      }
+    },
+    "B_initial_value_only": {
+      "domain_forecasts": [
+        {
+          "domain": "education",
+          "prediction": "high probability of advanced education due to family resources",
+          "confidence": 0.7
+        }
+      ],
+      "policy": {
+        "provider": "mock",
+        "ai_used_for_ranking": false
+      }
+    },
+    "C_default_chart_plus_initial_value": {
+      "domain_forecasts": [
+        {
+          "domain": "education",
+          "prediction": "graduate education likely, with overseas possibility",
+          "confidence": 0.75
+        }
+      ],
+      "policy": {
+        "provider": "mock",
+        "ai_used_for_ranking": false
+      }
+    },
+    "D_selected_chart_plus_initial_value_full_system": {
+      "domain_forecasts": [
+        {
+          "domain": "education",
+          "prediction": "elite or overseas graduate education likely within 3 years",
+          "confidence": 0.82
+        }
+      ],
+      "policy": {
+        "provider": "mock",
+        "ai_used_for_ranking": false
+      }
+    }
+  }
+}

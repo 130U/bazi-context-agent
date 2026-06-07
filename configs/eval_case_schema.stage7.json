@@ -1,0 +1,31 @@
+{
+  "schema_version": "stage7.v1",
+  "required_fields": [
+    "case_id",
+    "cutoff_date",
+    "forecast_horizon",
+    "target_domains",
+    "hidden_targets",
+    "allowed_inputs",
+    "redaction_policy",
+    "metadata"
+  ],
+  "hidden_target_required_fields": [
+    "target_id",
+    "domain",
+    "label",
+    "confidence",
+    "acceptable_answers",
+    "unacceptable_leakage_terms"
+  ],
+  "quality_levels": [
+    "low",
+    "medium",
+    "high"
+  ],
+  "source_types": [
+    "synthetic",
+    "user_contributed",
+    "curated_private"
+  ]
+}
