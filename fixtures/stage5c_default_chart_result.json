@@ -1,0 +1,37 @@
+{
+  "default_chart": {
+    "chart_id": "default_19980510_2235",
+    "chart_role": "default",
+    "source": "recorded_birth_time",
+    "recorded_time_prior_score": 1.0,
+    "boundary_flags": [],
+    "assumptions": [
+      "recorded_time_is_user_provided"
+    ],
+    "warnings": [],
+    "fixed_pillars": {
+      "year": {
+        "stem": "戊",
+        "branch": "寅"
+      },
+      "month": {
+        "stem": "丁",
+        "branch": "巳"
+      },
+      "day": {
+        "stem": "丁",
+        "branch": "巳"
+      },
+      "hour": {
+        "stem": "辛",
+        "branch": "亥"
+      }
+    }
+  },
+  "metadata": {
+    "ai_used": false,
+    "context_box_used": false,
+    "ranking_performed": false,
+    "stage": "5C"
+  }
+}

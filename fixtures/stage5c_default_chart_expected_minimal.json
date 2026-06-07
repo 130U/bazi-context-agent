@@ -1,0 +1,11 @@
+{
+  "chart_id": "default_chart",
+  "source": "recorded_time",
+  "is_default": true,
+  "recorded_time_prior_score": 1.0,
+  "boundary_flags": [],
+  "assumptions": [
+    "recorded_time_used_as_default_chart"
+  ],
+  "warnings": []
+}

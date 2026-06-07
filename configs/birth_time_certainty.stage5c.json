@@ -1,0 +1,40 @@
+{
+  "version": "stage5c.v1",
+  "certainty_levels": [
+    {
+      "id": "exact_to_minute",
+      "label": "精确到分钟",
+      "description": "记录时间可信，除非接近边界，否则只生成默认盘。"
+    },
+    {
+      "id": "within_1_hour",
+      "label": "约 1 小时内",
+      "description": "生成默认盘和相邻时辰候选。"
+    },
+    {
+      "id": "approximate_hour",
+      "label": "大概某个小时",
+      "description": "生成默认盘和相邻时辰候选。"
+    },
+    {
+      "id": "time_range",
+      "label": "时间范围",
+      "description": "生成范围内全部候选。"
+    },
+    {
+      "id": "part_of_day",
+      "label": "上午/下午/晚上",
+      "description": "生成该时段候选。"
+    },
+    {
+      "id": "unknown_time",
+      "label": "只知道日期",
+      "description": "生成全天十二时辰候选。"
+    },
+    {
+      "id": "unknown_date",
+      "label": "日期也不确定",
+      "description": "日期扩展并输出低置信 warning。"
+    }
+  ]
+}

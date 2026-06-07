@@ -1,0 +1,32 @@
+[
+  {
+    "case_id": "near_zi_hour",
+    "birth_time": "23:05",
+    "flags": [
+      "near_zi_hour"
+    ],
+    "expected": "include zi variants and adjacent hai/chou"
+  },
+  {
+    "case_id": "near_hour_boundary",
+    "birth_time": "08:59",
+    "flags": [
+      "near_hour_boundary"
+    ],
+    "expected": "include previous and next hour branch"
+  },
+  {
+    "case_id": "near_solar_term",
+    "birth_time": "10:00",
+    "flags": [
+      "near_solar_term"
+    ],
+    "expected": "return solar term warning or stub"
+  },
+  {
+    "case_id": "unknown_time",
+    "birth_time": "unknown",
+    "flags": [],
+    "expected": "generate full day candidates or policy capped candidates"
+  }
+]

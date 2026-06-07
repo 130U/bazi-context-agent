@@ -1,0 +1,51 @@
+{
+  "modes": [
+    {
+      "id": "exact",
+      "description": "User gives a specific recorded time."
+    },
+    {
+      "id": "approximate",
+      "description": "User gives an approximate time, e.g. around 22:30."
+    },
+    {
+      "id": "time_range",
+      "description": "User gives a range, e.g. 21:00-23:00."
+    },
+    {
+      "id": "part_of_day",
+      "description": "User only knows morning/afternoon/evening/night."
+    },
+    {
+      "id": "unknown_time",
+      "description": "User only knows date."
+    },
+    {
+      "id": "date_uncertain",
+      "description": "User date may be off by one day."
+    }
+  ],
+  "part_of_day_mapping": {
+    "morning": [
+      "卯",
+      "辰",
+      "巳"
+    ],
+    "afternoon": [
+      "午",
+      "未",
+      "申"
+    ],
+    "evening": [
+      "酉",
+      "戌",
+      "亥"
+    ],
+    "night": [
+      "子",
+      "丑",
+      "寅"
+    ]
+  },
+  "default_mode": "exact"
+}

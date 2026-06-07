@@ -1,0 +1,71 @@
+{
+  "exact": {
+    "calendar_type": "solar",
+    "birth_date": "1998-05-10",
+    "birth_time": "22:35",
+    "timezone": "Asia/Shanghai",
+    "location": {
+      "country": "China",
+      "city": "Shanghai"
+    },
+    "sex_for_traditional_chart": "unspecified",
+    "certainty": "exact_to_minute",
+    "boundary_flags": [],
+    "assumptions": [
+      "recorded_time_is_user_provided"
+    ]
+  },
+  "near_zi": {
+    "calendar_type": "solar",
+    "birth_date": "1998-05-10",
+    "birth_time": "23:05",
+    "timezone": "Asia/Shanghai",
+    "location": {
+      "country": "China",
+      "city": "Shanghai"
+    },
+    "sex_for_traditional_chart": "unspecified",
+    "certainty": "within_1_hour",
+    "boundary_flags": [
+      "near_zi_hour"
+    ],
+    "assumptions": [
+      "zi_hour_boundary_requires_variants"
+    ]
+  },
+  "time_range": {
+    "calendar_type": "solar",
+    "birth_date": "1998-05-10",
+    "birth_time": "21:00-01:00",
+    "timezone": "Asia/Shanghai",
+    "location": {
+      "country": "China",
+      "city": "Shanghai"
+    },
+    "sex_for_traditional_chart": "unspecified",
+    "certainty": "time_range",
+    "boundary_flags": [
+      "near_zi_hour",
+      "near_date_boundary"
+    ],
+    "assumptions": [
+      "range_crosses_midnight"
+    ]
+  },
+  "unknown_time": {
+    "calendar_type": "solar",
+    "birth_date": "1998-05-10",
+    "birth_time": "unknown",
+    "timezone": "Asia/Shanghai",
+    "location": {
+      "country": "China",
+      "city": "Shanghai"
+    },
+    "sex_for_traditional_chart": "unspecified",
+    "certainty": "unknown_time",
+    "boundary_flags": [],
+    "assumptions": [
+      "full_day_candidates_required"
+    ]
+  }
+}

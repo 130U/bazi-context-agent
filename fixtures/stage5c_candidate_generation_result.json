@@ -1,0 +1,56 @@
+{
+  "default_chart_id": "default_19980510_2305",
+  "candidates": [
+    {
+      "candidate_id": "candidate_default_zi",
+      "chart_role": "candidate",
+      "source": "recorded_time",
+      "recorded_time_prior_score": 0.85,
+      "generation_reasons": [
+        "recorded time near zi hour"
+      ],
+      "boundary_flags": [
+        "near_zi_hour"
+      ],
+      "warnings": [
+        "zi_hour_day_boundary_assumption_required"
+      ]
+    },
+    {
+      "candidate_id": "candidate_prev_hai",
+      "chart_role": "candidate",
+      "source": "adjacent_hour",
+      "recorded_time_prior_score": 0.7,
+      "generation_reasons": [
+        "near_zi_hour includes previous hai hour"
+      ],
+      "boundary_flags": [
+        "near_zi_hour"
+      ],
+      "warnings": []
+    },
+    {
+      "candidate_id": "candidate_next_chou",
+      "chart_role": "candidate",
+      "source": "adjacent_hour",
+      "recorded_time_prior_score": 0.7,
+      "generation_reasons": [
+        "near_zi_hour includes next chou hour"
+      ],
+      "boundary_flags": [
+        "near_zi_hour"
+      ],
+      "warnings": []
+    }
+  ],
+  "generation_summary": {
+    "candidate_count": 3,
+    "uncertainty_level": "within_1_hour",
+    "boundary_flags": [
+      "near_zi_hour"
+    ],
+    "warnings": [
+      "zi_hour_day_boundary_assumption_required"
+    ]
+  }
+}

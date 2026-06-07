@@ -1,0 +1,40 @@
+{
+  "version": "stage5c.v1",
+  "boundary_flags": [
+    {
+      "id": "near_zi_hour",
+      "label": "接近子时",
+      "required_behavior": "include zi-hour variants and adjacent hai/chou when applicable"
+    },
+    {
+      "id": "near_hour_boundary",
+      "label": "接近换时辰边界",
+      "required_behavior": "include previous and next hour branch"
+    },
+    {
+      "id": "near_date_boundary",
+      "label": "日期边界风险",
+      "required_behavior": "include date -1/date +1 variants or return warning if capped"
+    },
+    {
+      "id": "near_solar_term",
+      "label": "节气边界风险",
+      "required_behavior": "return solar-term warning or stub in Stage 5C"
+    },
+    {
+      "id": "possible_timezone_issue",
+      "label": "时区问题",
+      "required_behavior": "return timezone warning"
+    },
+    {
+      "id": "possible_dst_issue",
+      "label": "夏令时问题",
+      "required_behavior": "return dst warning"
+    },
+    {
+      "id": "manual_expand",
+      "label": "用户主动扩大范围",
+      "required_behavior": "expand according to policy"
+    }
+  ]
+}

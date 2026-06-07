@@ -1,6 +1,7 @@
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import { pathToFileURL } from "node:url";
 import { generateCandidateHours } from "./candidateGeneration.ts";
+import { createDefaultChart, generateCandidateChartsV2 } from "./chartGenerationStage5C.ts";
 import { normalizeContextBox } from "./contextBox.ts";
 import { loadQuestionBank, loadScoringConfig } from "./config.ts";
 import { scoreEventBacktest } from "./eventBacktest.ts";
@@ -27,6 +28,7 @@ import type {
 } from "./types.ts";
 import type { PredictionRequest, PredictionResult, RankingSnapshot } from "./predictionTypes.ts";
 import type { ReportExportFormat } from "./reportTypes.ts";
+import type { RecordedBirthTime } from "./baziTypes.ts";
 
 type JsonValue = Record<string, unknown>;
 
@@ -132,6 +134,26 @@ function normalizeContextFacts(input: unknown): ContextFact[] {
       confidence: typeof item.confidence === "number" ? item.confidence : 0.5,
       factType: "known_user_fact" as const
     }));
+}
+
+function normalizeRecordedBirthTime(input: unknown): RecordedBirthTime {
+  if (!input || typeof input !== "object" || Array.isArray(input)) {
+    throw new Error("recorded_birth_time is required.");
+  }
+  const record = input as JsonValue;
+  const birthDate = text(record.birth_date ?? record.date);
+  if (!birthDate) throw new Error("recorded_birth_time.birth_date is required.");
+  const birthTime = typeof (record.birth_time ?? record.time) === "string" ? text(record.birth_time ?? record.time) : undefined;
+  return {
+    ...(record as unknown as RecordedBirthTime),
+    birth_date: birthDate,
+    date: birthDate,
+    birth_time: birthTime,
+    time: birthTime,
+    certainty: text(record.certainty, "exact_to_minute") as RecordedBirthTime["certainty"],
+    boundary_flags: arrayOfStrings(record.boundary_flags),
+    assumptions: arrayOfStrings(record.assumptions)
+  };
 }
 
 function labels(prior: HourGroupPriorResult): Record<"G1" | "G2" | "G3", { label: string; score: number }> {
@@ -378,6 +400,28 @@ export async function handleRequest(request: IncomingMessage, response: ServerRe
       const prior = priorFromPayload(body.hour_group_prior) ?? scoreSymbolPrior({ answers: DEFAULT_SYMBOL_ANSWERS, chartSex: birthInput.chartSex, scoringConfig });
       const candidates = generateCandidateHours(birthInput, prior, scoringConfig);
       return json(response, 200, { candidates });
+    }
+    if (request.method === "POST" && url.pathname === "/api/default-chart") {
+      const body = await readJson(request);
+      const recordedBirthTime = normalizeRecordedBirthTime(body.recorded_birth_time ?? body.recordedBirthTime);
+      const defaultChart = await createDefaultChart(recordedBirthTime);
+      return json(response, 200, {
+        default_chart: defaultChart,
+        metadata: {
+          ai_used: false,
+          context_box_used: false,
+          ranking_performed: false,
+          stage: "5C"
+        }
+      });
+    }
+    if (request.method === "POST" && url.pathname === "/api/candidate-charts-v2") {
+      const body = await readJson(request);
+      const recordedBirthTime = normalizeRecordedBirthTime(body.recorded_birth_time ?? body.recordedBirthTime);
+      const result = await generateCandidateChartsV2({
+        recorded_birth_time: recordedBirthTime
+      });
+      return json(response, 200, result);
     }
     if (request.method === "POST" && url.pathname === "/api/ranking") {
       const flow = runDeterministicFlow(await readJson(request));

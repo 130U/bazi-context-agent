@@ -1,0 +1,96 @@
+{
+  "policy_version": "stage5c.v1",
+  "hour_branches": [
+    {
+      "branch": "子",
+      "start": "23:00",
+      "end": "00:59"
+    },
+    {
+      "branch": "丑",
+      "start": "01:00",
+      "end": "02:59"
+    },
+    {
+      "branch": "寅",
+      "start": "03:00",
+      "end": "04:59"
+    },
+    {
+      "branch": "卯",
+      "start": "05:00",
+      "end": "06:59"
+    },
+    {
+      "branch": "辰",
+      "start": "07:00",
+      "end": "08:59"
+    },
+    {
+      "branch": "巳",
+      "start": "09:00",
+      "end": "10:59"
+    },
+    {
+      "branch": "午",
+      "start": "11:00",
+      "end": "12:59"
+    },
+    {
+      "branch": "未",
+      "start": "13:00",
+      "end": "14:59"
+    },
+    {
+      "branch": "申",
+      "start": "15:00",
+      "end": "16:59"
+    },
+    {
+      "branch": "酉",
+      "start": "17:00",
+      "end": "18:59"
+    },
+    {
+      "branch": "戌",
+      "start": "19:00",
+      "end": "20:59"
+    },
+    {
+      "branch": "亥",
+      "start": "21:00",
+      "end": "22:59"
+    }
+  ],
+  "candidate_limits": {
+    "exact_no_boundary": 1,
+    "approximate_max": 3,
+    "time_range_max": 8,
+    "part_of_day_max": 6,
+    "unknown_time_max": 12,
+    "date_uncertain_max": 36
+  },
+  "recorded_time_prior_scores": {
+    "default": 1.0,
+    "adjacent_hour": 0.75,
+    "boundary_expansion": 0.65,
+    "uncertain_range": 0.55,
+    "part_of_day": 0.45,
+    "unknown_time": 0.35,
+    "date_expansion": 0.25
+  },
+  "boundary_flags": [
+    "near_zi_boundary",
+    "near_hour_boundary",
+    "near_solar_term",
+    "near_date_boundary",
+    "date_uncertain",
+    "timezone_uncertain",
+    "true_solar_time_requested"
+  ],
+  "metadata_policy": {
+    "context_box_used": false,
+    "ai_used": false,
+    "ranking_modified": false
+  }
+}

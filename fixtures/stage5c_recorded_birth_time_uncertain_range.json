@@ -1,0 +1,27 @@
+{
+  "recorded_birth_time": {
+    "calendar_type": "solar",
+    "birth_date": "1998-05-10",
+    "birth_time": "22:30",
+    "timezone": "Asia/Shanghai",
+    "location": {
+      "country": "China",
+      "region": "Shanghai",
+      "city": "Shanghai"
+    },
+    "sex_for_traditional_chart": "unspecified",
+    "assumptions": [
+      "recorded_time_used_as_default_chart"
+    ]
+  },
+  "uncertainty": {
+    "mode": "time_range",
+    "time_range": {
+      "start": "21:00",
+      "end": "23:30"
+    },
+    "boundary_flags": [
+      "near_zi_boundary"
+    ]
+  }
+}
