@@ -127,6 +127,12 @@ Static public demo / 静态公开演示：
 site/index.html
 ```
 
+Local preview:
+
+```text
+Open site/index.html in a browser, or serve site/ with a simple static server.
+```
+
 After GitHub Pages is enabled, the demo URL is:
 
 ```text

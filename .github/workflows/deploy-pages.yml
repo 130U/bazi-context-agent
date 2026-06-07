@@ -1,4 +1,4 @@
-name: Deploy GitHub Pages Demo
+name: Deploy GitHub Pages demo
 
 on:
   push:
@@ -29,13 +29,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Pages
+      - name: Configure Pages
         uses: actions/configure-pages@v5
 
-      - name: Upload site artifact
+      - name: Upload static site artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: "site"
+          path: ./site
 
       - name: Deploy to GitHub Pages
         id: deployment
