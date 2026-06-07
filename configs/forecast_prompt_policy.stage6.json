@@ -1,0 +1,34 @@
+{
+  "schema_version": "stage6.prompt_policy.v1",
+  "default_language": "zh-CN",
+  "required_sections": [
+    "task",
+    "current_date",
+    "forecast_horizon",
+    "selected_chart",
+    "derivative_function",
+    "initial_value",
+    "known_life_events",
+    "user_question",
+    "output_schema",
+    "policy_constraints"
+  ],
+  "must_separate": [
+    "known_facts",
+    "derivative_signals",
+    "initial_value_adjustments",
+    "actual_predictions"
+  ],
+  "forbidden_claims": [
+    "guaranteed outcome",
+    "medical diagnosis",
+    "investment advice",
+    "legal certainty",
+    "AI changed ranking",
+    "AI changed rectification"
+  ],
+  "style": {
+    "tone": "calibrated, specific, non-deterministic",
+    "format": "structured JSON when provider supports schema output"
+  }
+}

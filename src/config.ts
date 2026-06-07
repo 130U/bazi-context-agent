@@ -3,6 +3,13 @@ import { fileURLToPath } from "node:url";
 import type { QuestionBank, ScoringConfig } from "./types.ts";
 import type { PredictionDomainsConfig, PredictionOutputSchemaConfig, PredictionProviderPolicyConfig } from "./predictionTypes.ts";
 import type { ForecastDomainMappingConfig, ForecastHorizonsConfig, ForecastInputPolicyConfig } from "./forecastInputTypes.ts";
+import type {
+  FutureForecastDomainPolicyConfig,
+  FutureForecastPromptPolicyConfig,
+  FutureForecastSafetyPolicyConfig,
+  FutureForecastSchemaConfig,
+  FutureForecastTimeWindowPolicyConfig
+} from "./futureForecastTypes.ts";
 
 function readJson<T>(relativePath: string): T {
   const url = new URL(relativePath, import.meta.url);
@@ -45,4 +52,24 @@ export function loadForecastDomainMappingConfig(): ForecastDomainMappingConfig {
 
 export function loadForecastInputPolicyConfig(): ForecastInputPolicyConfig {
   return readJson<ForecastInputPolicyConfig>("../configs/forecast_input_policy.stage5e.json");
+}
+
+export function loadFutureForecastSchemaConfig(): FutureForecastSchemaConfig {
+  return readJson<FutureForecastSchemaConfig>("../configs/future_forecast_schema.stage6.json");
+}
+
+export function loadFutureForecastDomainPolicyConfig(): FutureForecastDomainPolicyConfig {
+  return readJson<FutureForecastDomainPolicyConfig>("../configs/forecast_domain_policy.stage6.json");
+}
+
+export function loadFutureForecastPromptPolicyConfig(): FutureForecastPromptPolicyConfig {
+  return readJson<FutureForecastPromptPolicyConfig>("../configs/forecast_prompt_policy.stage6.json");
+}
+
+export function loadFutureForecastSafetyPolicyConfig(): FutureForecastSafetyPolicyConfig {
+  return readJson<FutureForecastSafetyPolicyConfig>("../configs/forecast_safety_policy.stage6.json");
+}
+
+export function loadFutureForecastTimeWindowPolicyConfig(): FutureForecastTimeWindowPolicyConfig {
+  return readJson<FutureForecastTimeWindowPolicyConfig>("../configs/forecast_time_window_policy.stage6.json");
 }

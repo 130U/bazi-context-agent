@@ -1,0 +1,75 @@
+{
+  "forecast_result_id": "future_forecast_demo_001",
+  "schema_version": "stage6.v1",
+  "generated_at": "2026-06-07T00:00:00.000Z",
+  "current_date": "2026-06-07",
+  "forecast_horizon": "1_year",
+  "executive_summary": "未来一年更适合把职业方向聚焦在跨领域产品、国际化和高信息密度场景；机会存在，但需要避免同时开太多线。",
+  "domain_forecasts": [
+    {
+      "domain": "career",
+      "conclusion": "事业方向有收束和重新定位倾向。",
+      "forecast": "更适合把现有教育和国际化经验转化为产品、咨询或AI相关项目。",
+      "confidence": 0.72,
+      "derivative_basis": [
+        "day_master=戊",
+        "fixture derivative signals"
+      ],
+      "initial_value_basis": [
+        "highly_educated family",
+        "international business preference"
+      ],
+      "time_windows": [
+        "2026 H2",
+        "2027 H1"
+      ],
+      "caveats": [
+        "fixture output only"
+      ]
+    }
+  ],
+  "timeline_windows": [],
+  "opportunity_windows": [],
+  "risk_windows": [],
+  "recommended_actions": [
+    {
+      "action": "选择一个主线方向，不要同时推进过多分支。",
+      "priority": "high",
+      "timeframe": "next_3_months"
+    }
+  ],
+  "uncertainty": [
+    "该结果基于 fixture，不是最终预测。"
+  ],
+  "known_facts_used": [
+    {
+      "fact": "用户有国际化职业偏好",
+      "source": "context_box"
+    }
+  ],
+  "derivative_signals_used": [
+    {
+      "signal": "fixture derivative profile",
+      "source": "BaziDerivedProfile"
+    }
+  ],
+  "initial_value_adjustments": [
+    {
+      "adjustment": "教育与家庭资源提高职业起点假设",
+      "basis": [
+        "parental_education"
+      ]
+    }
+  ],
+  "policy": {
+    "provider": "mock",
+    "ai_used_for_forecast": true,
+    "ai_used_for_ranking": false,
+    "ai_used_for_rectification": false,
+    "ranking_modified": false,
+    "rectification_modified": false,
+    "selected_chart_modified": false,
+    "output_schema_validated": true,
+    "secrets_included": false
+  }
+}

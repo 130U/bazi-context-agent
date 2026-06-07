@@ -7,6 +7,7 @@ import { loadQuestionBank, loadScoringConfig } from "./config.ts";
 import { scoreEventBacktest } from "./eventBacktest.ts";
 import { classifyPredictionDomain } from "./predictionDomain.ts";
 import { buildForecastInput, ForecastInputBuildError } from "./forecastInputBuilder.ts";
+import { FutureForecastError, runFutureForecast } from "./futureForecastEngine.ts";
 import { runPredictionWithConfiguredProvider } from "./predictionProvider.ts";
 import { rankCandidates } from "./ranking.ts";
 import { buildPredictionReport } from "./reportBuilder.ts";
@@ -512,6 +513,30 @@ export async function handleRequest(request: IncomingMessage, response: ServerRe
         });
       } catch (caught) {
         if (caught instanceof ForecastInputBuildError) return error(response, 400, caught.code, caught.message);
+        throw caught;
+      }
+    }
+    if (request.method === "POST" && url.pathname === "/api/future-forecast") {
+      const body = await readJson(request);
+      try {
+        const forecastInput = body.forecast_input;
+        if (!forecastInput || typeof forecastInput !== "object") return error(response, 400, "MISSING_FORECAST_INPUT", "Future forecast requires forecast_input.");
+        const result = await runFutureForecast({
+          forecast_input: forecastInput as Parameters<typeof runFutureForecast>[0]["forecast_input"],
+          options: body.options && typeof body.options === "object" ? (body.options as Parameters<typeof runFutureForecast>[0]["options"]) : undefined
+        });
+        return json(response, 200, {
+          forecast_result: result,
+          metadata: {
+            stage: "6",
+            schema_validated: true,
+            ai_used_for_forecast: result.policy.ai_used_for_forecast,
+            ai_used_for_ranking: false,
+            ai_used_for_rectification: false
+          }
+        });
+      } catch (caught) {
+        if (caught instanceof FutureForecastError) return error(response, 400, caught.code, caught.message);
         throw caught;
       }
     }

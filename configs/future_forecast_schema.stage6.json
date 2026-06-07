@@ -1,0 +1,186 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "FutureForecastResult Stage 6",
+  "type": "object",
+  "required": [
+    "forecast_result_id",
+    "schema_version",
+    "generated_at",
+    "current_date",
+    "forecast_horizon",
+    "executive_summary",
+    "domain_forecasts",
+    "timeline_windows",
+    "opportunity_windows",
+    "risk_windows",
+    "recommended_actions",
+    "uncertainty",
+    "known_facts_used",
+    "derivative_signals_used",
+    "initial_value_adjustments",
+    "policy"
+  ],
+  "properties": {
+    "forecast_result_id": {
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "stage6.v1"
+    },
+    "generated_at": {
+      "type": "string"
+    },
+    "current_date": {
+      "type": "string"
+    },
+    "forecast_horizon": {
+      "enum": [
+        "3_months",
+        "6_months",
+        "1_year",
+        "3_years",
+        "10_years"
+      ]
+    },
+    "executive_summary": {
+      "type": "string"
+    },
+    "domain_forecasts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "domain",
+          "conclusion",
+          "forecast",
+          "confidence",
+          "derivative_basis",
+          "initial_value_basis",
+          "time_windows",
+          "caveats"
+        ],
+        "properties": {
+          "domain": {
+            "enum": [
+              "career",
+              "wealth",
+              "relationship",
+              "education",
+              "migration",
+              "health",
+              "family",
+              "personal_growth",
+              "general"
+            ]
+          },
+          "conclusion": {
+            "type": "string"
+          },
+          "forecast": {
+            "type": "string"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "derivative_basis": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "initial_value_basis": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "time_windows": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "caveats": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "timeline_windows": {
+      "type": "array"
+    },
+    "opportunity_windows": {
+      "type": "array"
+    },
+    "risk_windows": {
+      "type": "array"
+    },
+    "recommended_actions": {
+      "type": "array"
+    },
+    "uncertainty": {
+      "type": "array"
+    },
+    "known_facts_used": {
+      "type": "array"
+    },
+    "derivative_signals_used": {
+      "type": "array"
+    },
+    "initial_value_adjustments": {
+      "type": "array"
+    },
+    "policy": {
+      "type": "object",
+      "required": [
+        "provider",
+        "ai_used_for_forecast",
+        "ai_used_for_ranking",
+        "ai_used_for_rectification",
+        "ranking_modified",
+        "rectification_modified",
+        "selected_chart_modified",
+        "output_schema_validated",
+        "secrets_included"
+      ],
+      "properties": {
+        "provider": {
+          "enum": [
+            "mock",
+            "openai",
+            "mock_fallback"
+          ]
+        },
+        "ai_used_for_forecast": {
+          "type": "boolean"
+        },
+        "ai_used_for_ranking": {
+          "const": false
+        },
+        "ai_used_for_rectification": {
+          "const": false
+        },
+        "ranking_modified": {
+          "const": false
+        },
+        "rectification_modified": {
+          "const": false
+        },
+        "selected_chart_modified": {
+          "const": false
+        },
+        "output_schema_validated": {
+          "type": "boolean"
+        },
+        "secrets_included": {
+          "const": false
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,139 @@
+{
+  "forecast_input_id": "forecast_input_demo_001",
+  "schema_version": "stage5e.v1",
+  "current_date": "2026-06-07",
+  "timezone": "Asia/Singapore",
+  "forecast_request": {
+    "user_question": "未来一年我的事业和迁移机会如何？",
+    "forecast_horizon": "1_year",
+    "forecast_domains": [
+      "career",
+      "migration",
+      "wealth",
+      "personal_growth"
+    ]
+  },
+  "selected_chart": {
+    "chart_id": "default_chart_001",
+    "chart_role": "default",
+    "fixed_pillars": {
+      "year": {
+        "stem": "甲",
+        "branch": "子"
+      },
+      "month": {
+        "stem": "丙",
+        "branch": "寅"
+      },
+      "day": {
+        "stem": "戊",
+        "branch": "辰"
+      },
+      "hour": {
+        "stem": "壬",
+        "branch": "戌"
+      }
+    },
+    "confidence": 0.74,
+    "selection_source": "default_chart"
+  },
+  "derivative_function": {
+    "profile_id": "bazi_profile_001",
+    "source_chart_id": "default_chart_001",
+    "source_libraries": [
+      "static_adapter_stage5b"
+    ],
+    "calculation_mode": "recorded_time",
+    "pillars": {
+      "year": {
+        "stem": "甲",
+        "branch": "子"
+      },
+      "month": {
+        "stem": "丙",
+        "branch": "寅"
+      },
+      "day": {
+        "stem": "戊",
+        "branch": "辰"
+      },
+      "hour": {
+        "stem": "壬",
+        "branch": "戌"
+      }
+    },
+    "day_master": "戊",
+    "five_elements": {
+      "wood": 1,
+      "fire": 1,
+      "earth": 2,
+      "metal": 0,
+      "water": 2
+    },
+    "ten_gods": [],
+    "hidden_stems": [],
+    "nayin": [],
+    "stars": [],
+    "shensha": [],
+    "relations": {
+      "clashes": [],
+      "combinations": [],
+      "punishments": [],
+      "harms": []
+    },
+    "assumptions": [
+      "fixture only"
+    ],
+    "warnings": []
+  },
+  "initial_value": {
+    "context_facts": [
+      {
+        "category": "family",
+        "field": "parental_education",
+        "value": "highly_educated",
+        "source": "user_answer",
+        "confidence": 0.9
+      },
+      {
+        "category": "career",
+        "field": "preferred_direction",
+        "value": "international business / AI products",
+        "source": "user_answer",
+        "confidence": 0.8
+      }
+    ],
+    "known_life_events": [
+      {
+        "year": 2018,
+        "event_type": "education",
+        "description": "出国读书"
+      },
+      {
+        "year": 2024,
+        "event_type": "career",
+        "description": "职业方向重新选择"
+      }
+    ],
+    "current_state_summary": "高教育背景，关注职业方向和国际化机会。",
+    "warnings": []
+  },
+  "rectification_summary": {
+    "recommendation": "use_default_chart",
+    "confidence": 0.74,
+    "selected_chart_id": "default_chart_001",
+    "default_chart_protected": true,
+    "context_box_used_for_rectification": false,
+    "ai_used_for_rectification": false
+  },
+  "data_provenance": [],
+  "boundaries": {
+    "ai_used_to_build_forecast_input": false,
+    "ai_allowed_in_stage6_forecast": true,
+    "ranking_modified": false,
+    "rectification_modified": false,
+    "context_box_used_for_rectification": false,
+    "secrets_included": false
+  },
+  "warnings": []
+}

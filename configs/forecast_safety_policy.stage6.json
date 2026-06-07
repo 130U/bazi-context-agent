@@ -1,0 +1,22 @@
+{
+  "schema_version": "stage6.safety_policy.v1",
+  "must_not_include": [
+    "OPENAI_API_KEY",
+    "ANTHROPIC_API_KEY",
+    "GITHUB_TOKEN",
+    ".env content",
+    "local absolute paths"
+  ],
+  "medical": {
+    "diagnosis_allowed": false,
+    "treatment_recommendation_allowed": false
+  },
+  "financial": {
+    "investment_advice_allowed": false,
+    "guaranteed_return_claim_allowed": false
+  },
+  "legal": {
+    "legal_advice_allowed": false
+  },
+  "must_include_policy_metadata": true
+}

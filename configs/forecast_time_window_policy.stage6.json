@@ -1,0 +1,16 @@
+{
+  "schema_version": "stage6.time_window_policy.v1",
+  "allowed_horizons": [
+    "3_months",
+    "6_months",
+    "1_year",
+    "3_years",
+    "10_years"
+  ],
+  "default_horizon": "1_year",
+  "precision_policy": {
+    "exact_dates_allowed": false,
+    "broad_windows_preferred": true,
+    "use_forecast_input_current_date": true
+  }
+}

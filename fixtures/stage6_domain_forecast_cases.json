@@ -1,0 +1,34 @@
+{
+  "cases": [
+    {
+      "question": "未来一年事业如何？",
+      "expected_domains": [
+        "career"
+      ]
+    },
+    {
+      "question": "我会不会出国或搬家？",
+      "expected_domains": [
+        "migration"
+      ]
+    },
+    {
+      "question": "未来财运怎么样？",
+      "expected_domains": [
+        "wealth"
+      ]
+    },
+    {
+      "question": "感情什么时候稳定？",
+      "expected_domains": [
+        "relationship"
+      ]
+    },
+    {
+      "question": "我适合继续读书吗？",
+      "expected_domains": [
+        "education"
+      ]
+    }
+  ]
+}
