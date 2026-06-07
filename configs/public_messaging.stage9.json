@@ -1,0 +1,23 @@
+{
+  "allowed_terms": [
+    "deterministic chart derivation",
+    "context-aware forecast",
+    "user-controlled context profile",
+    "local-first privacy",
+    "holdout benchmark",
+    "AI boundary"
+  ],
+  "avoid_terms": [
+    "hidden trick",
+    "unfair advantage",
+    "secret questionnaire reuse",
+    "guaranteed accuracy",
+    "medical certainty",
+    "financial certainty"
+  ],
+  "must_disclose": [
+    "User-provided context can personalize forecast output.",
+    "AI does not participate in chart ranking.",
+    "This is a research prototype."
+  ]
+}

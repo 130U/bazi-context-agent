@@ -1,0 +1,32 @@
+name: Bug report
+描述: 报告 bug / Report a bug
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please do not include real API keys, private user data, or sensitive birth information.
+        请不要包含真实 API key、私人用户数据或敏感出生信息。
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary / 概述
+      description: What happened?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Reproduction steps / 复现步骤
+      description: How can we reproduce it?
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior / 预期行为
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / 日志
+      description: Redact secrets before pasting logs.

@@ -1,0 +1,23 @@
+{
+  "root_files": [
+    "README.md",
+    "README.zh-CN.md",
+    "README.en.md",
+    "CONTRIBUTING.md",
+    "SECURITY.md",
+    "CODE_OF_CONDUCT.md"
+  ],
+  "docs": [
+    "docs/ARCHITECTURE.md",
+    "docs/AI_BOUNDARY.md",
+    "docs/PRIVACY.md",
+    "docs/EVALUATION.md",
+    "docs/LICENSE_DECISION.md"
+  ],
+  "github": [
+    ".github/PULL_REQUEST_TEMPLATE.md",
+    ".github/ISSUE_TEMPLATE/bug_report.md",
+    ".github/ISSUE_TEMPLATE/feature_request.md",
+    ".github/ISSUE_TEMPLATE/research_note.md"
+  ]
+}

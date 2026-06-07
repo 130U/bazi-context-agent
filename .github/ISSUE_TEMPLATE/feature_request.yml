@@ -1,0 +1,27 @@
+name: Feature request
+描述: 功能建议 / Suggest a feature
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / 问题
+      description: What user problem does this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal / 方案
+    validations:
+      required: true
+  - type: dropdown
+    id: boundary
+    attributes:
+      label: Does this affect deterministic chart ranking? / 是否影响确定性定盘？
+      options:
+        - No / 不影响
+        - Unsure / 不确定
+        - Yes / 会影响，需要先讨论
+    validations:
+      required: true

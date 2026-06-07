@@ -1,0 +1,14 @@
+{
+  "required_sections": [
+    "Why this project exists / 为什么做这个项目",
+    "The core idea / 核心公式",
+    "What makes it different / 它和普通八字工具有什么不同",
+    "Architecture / 架构",
+    "Tech stack / 技术栈",
+    "AI boundary / AI 边界",
+    "Quick start / 快速开始",
+    "Evaluation modes / 评估模式",
+    "Privacy / 隐私",
+    "Limitations / 局限"
+  ]
+}

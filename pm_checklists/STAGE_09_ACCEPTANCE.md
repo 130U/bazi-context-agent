@@ -1,0 +1,22 @@
+# Stage 09 Acceptance Checklist
+
+- [ ] README.md is bilingual English/Chinese.
+- [ ] README highlights uniqueness clearly.
+- [ ] README mentions tech stack.
+- [ ] README includes architecture diagram or text diagram.
+- [ ] README explains AI boundary.
+- [ ] README explains privacy/local-first behavior.
+- [ ] README does not reveal proprietary internal heuristics.
+- [ ] README does not describe questionnaire use as a hidden trick.
+- [ ] README does not claim guaranteed accuracy.
+- [ ] CONTRIBUTING.md exists.
+- [ ] SECURITY.md exists.
+- [ ] Issue templates exist.
+- [ ] LICENSE decision is documented.
+- [ ] Docs include public messaging guide.
+- [ ] Docs include evaluation explanation.
+- [ ] `.env` remains ignored.
+- [ ] Example env files contain no real keys.
+- [ ] npm test passes.
+- [ ] No source code behavior is changed except docs/release metadata unless necessary.
+- [ ] Stage 9 does not enter new feature work.

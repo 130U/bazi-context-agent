@@ -1,0 +1,26 @@
+{
+  "required_sections": [
+    "title",
+    "tagline",
+    "why",
+    "differentiators",
+    "architecture",
+    "capabilities",
+    "tech_stack",
+    "quick_start",
+    "environment",
+    "evaluation",
+    "privacy",
+    "non_goals",
+    "repo_map",
+    "development_rules",
+    "contributing",
+    "license"
+  ],
+  "bilingual": true,
+  "main_readme": "README.md",
+  "companion_files": [
+    "README.zh-CN.md",
+    "README.en.md"
+  ]
+}

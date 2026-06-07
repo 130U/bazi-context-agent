@@ -1,0 +1,28 @@
+{
+  "terms": [
+    {
+      "zh": "导函数",
+      "en": "Derivative function",
+      "definition_zh": "八字八变量及其派生运势结构",
+      "definition_en": "BaZi variables and derived fortune structure"
+    },
+    {
+      "zh": "初始值",
+      "en": "Initial value",
+      "definition_zh": "问卷得到的现实初始状态",
+      "definition_en": "Structured real-world context from questionnaire"
+    },
+    {
+      "zh": "确定性优先",
+      "en": "Deterministic first",
+      "definition_zh": "定盘、校盘、评分优先使用确定性代码",
+      "definition_en": "Chart selection and scoring are deterministic wherever possible"
+    },
+    {
+      "zh": "上下文增强预测",
+      "en": "Context-aware forecasting",
+      "definition_zh": "预测层读取结构化现实上下文",
+      "definition_en": "Forecasting uses structured real-world context"
+    }
+  ]
+}
