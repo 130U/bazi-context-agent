@@ -1,0 +1,16 @@
+{
+  "version": "stage5d.v1",
+  "candidate_rectification_score_weights": {
+    "recorded_time_prior": 0.35,
+    "event_timing_fit": 0.45,
+    "symbol_prior_fit": 0.1,
+    "chart_profile_fit": 0.1
+  },
+  "contradiction_penalty_enabled": true,
+  "clamp_scores_to": [
+    0,
+    1
+  ],
+  "context_box_allowed_for_rectification": false,
+  "ai_allowed_for_rectification": false
+}

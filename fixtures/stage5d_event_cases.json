@@ -1,0 +1,25 @@
+{
+  "events": [
+    {
+      "event_id": "event_2018_education",
+      "year": 2018,
+      "event_type": "education",
+      "description": "出国读书",
+      "importance": "high"
+    },
+    {
+      "event_id": "event_2021_career",
+      "year": 2021,
+      "event_type": "career",
+      "description": "职业转向",
+      "importance": "medium"
+    },
+    {
+      "event_id": "event_2024_family",
+      "year": 2024,
+      "event_type": "family",
+      "description": "家庭重大变化",
+      "importance": "high"
+    }
+  ]
+}

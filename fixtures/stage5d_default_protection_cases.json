@@ -1,0 +1,33 @@
+{
+  "cases": [
+    {
+      "name": "fewer_than_3_events",
+      "event_count": 2,
+      "default_score": 0.6,
+      "top_alternative_score": 0.9,
+      "expected": "insufficient_evidence"
+    },
+    {
+      "name": "lead_within_5_percent",
+      "event_count": 3,
+      "default_score": 0.7,
+      "top_alternative_score": 0.74,
+      "expected": "use_default_chart"
+    },
+    {
+      "name": "lead_between_5_and_15_percent",
+      "event_count": 3,
+      "default_score": 0.7,
+      "top_alternative_score": 0.82,
+      "expected": "default_protected_uncertain"
+    },
+    {
+      "name": "strong_lead_with_events",
+      "event_count": 4,
+      "default_score": 0.65,
+      "top_alternative_score": 0.84,
+      "high_importance_matches": 3,
+      "expected": "candidate_preferred"
+    }
+  ]
+}

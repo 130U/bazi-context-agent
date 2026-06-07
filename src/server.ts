@@ -10,6 +10,7 @@ import { runPredictionWithConfiguredProvider } from "./predictionProvider.ts";
 import { rankCandidates } from "./ranking.ts";
 import { buildPredictionReport } from "./reportBuilder.ts";
 import { reportToMarkdown } from "./reportMarkdown.ts";
+import { runRectificationV2 } from "./rectificationV2.ts";
 import { scoreSymbolPrior } from "./symbolPrior.ts";
 import type {
   BirthInput,
@@ -27,6 +28,7 @@ import type {
   SymbolAnswer
 } from "./types.ts";
 import type { PredictionRequest, PredictionResult, RankingSnapshot } from "./predictionTypes.ts";
+import type { RectificationLifeEvent, RectificationV2Request } from "./rectificationTypes.ts";
 import type { ReportExportFormat } from "./reportTypes.ts";
 import type { RecordedBirthTime } from "./baziTypes.ts";
 
@@ -119,6 +121,21 @@ function normalizeLifeEvents(input: unknown): LifeEvent[] {
       type: text(item.type ?? item.event_type, "major_turning") as LifeEvent["type"],
       description: typeof item.description === "string" ? item.description : undefined,
       confidence: typeof item.confidence === "number" ? item.confidence : undefined
+    }))
+    .filter((item) => Number.isInteger(item.year));
+}
+
+function normalizeRectificationLifeEvents(input: unknown): RectificationLifeEvent[] {
+  if (!Array.isArray(input)) return [];
+  return input
+    .filter((item): item is JsonValue => Boolean(item) && typeof item === "object" && !Array.isArray(item))
+    .map((item, index) => ({
+      event_id: text(item.event_id, `event_${item.year ?? index + 1}`),
+      year: Number(item.year),
+      month: typeof item.month === "number" ? item.month : undefined,
+      event_type: text(item.event_type ?? item.type, "major_turning_point"),
+      description: typeof item.description === "string" ? item.description : undefined,
+      importance: text(item.importance, "medium") as RectificationLifeEvent["importance"]
     }))
     .filter((item) => Number.isInteger(item.year));
 }
@@ -438,6 +455,27 @@ export async function handleRequest(request: IncomingMessage, response: ServerRe
         candidates_considered: flow.candidates,
         symbol_prior: { ...labels(flow.symbolPrior), warning: flow.symbolPrior.warning },
         event_backtest: flow.eventBacktests
+      });
+    }
+    if (request.method === "POST" && url.pathname === "/api/rectification-v2") {
+      const body = await readJson(request);
+      if (!body.default_chart || typeof body.default_chart !== "object") return error(response, 400, "MISSING_DEFAULT_CHART", "Rectification v2 requires default_chart.");
+      const rectificationRequest: RectificationV2Request = {
+        default_chart: body.default_chart as RectificationV2Request["default_chart"],
+        candidates: Array.isArray(body.candidates) ? (body.candidates as RectificationV2Request["candidates"]) : [],
+        life_events: normalizeRectificationLifeEvents(body.life_events ?? body.lifeEvents),
+        symbol_prior: body.symbol_prior,
+        bazi_derived_profiles: Array.isArray(body.bazi_derived_profiles) ? (body.bazi_derived_profiles as RectificationV2Request["bazi_derived_profiles"]) : undefined,
+        options: body.options && typeof body.options === "object" ? (body.options as RectificationV2Request["options"]) : undefined
+      };
+      return json(response, 200, {
+        result: runRectificationV2(rectificationRequest),
+        metadata: {
+          stage: "5D",
+          ai_used: false,
+          context_box_used_for_rectification: false,
+          ranking_modified_by_ai: false
+        }
       });
     }
     if (request.method === "POST" && url.pathname === "/api/prediction") {

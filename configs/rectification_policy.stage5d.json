@@ -1,0 +1,32 @@
+{
+  "version": "stage5d.v1",
+  "stage": "5D",
+  "purpose": "Rectification v2 scoring only.",
+  "allowed_inputs": [
+    "default_chart",
+    "candidates",
+    "life_events",
+    "symbol_prior",
+    "recorded_time_prior",
+    "bazi_derived_profile"
+  ],
+  "forbidden_inputs_for_scoring": [
+    "context_box",
+    "prediction_result",
+    "api_key",
+    "ai_provider_output"
+  ],
+  "metadata_required": {
+    "ai_used": false,
+    "context_box_used_for_rectification": false,
+    "ranking_modified_by_ai": false
+  },
+  "non_goals": [
+    "future_forecast",
+    "new_ai_provider",
+    "ui_framework",
+    "database",
+    "login",
+    "payment"
+  ]
+}
