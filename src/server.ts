@@ -6,12 +6,14 @@ import { normalizeContextBox } from "./contextBox.ts";
 import { loadQuestionBank, loadScoringConfig } from "./config.ts";
 import { scoreEventBacktest } from "./eventBacktest.ts";
 import { classifyPredictionDomain } from "./predictionDomain.ts";
+import { buildForecastInput, ForecastInputBuildError } from "./forecastInputBuilder.ts";
 import { runPredictionWithConfiguredProvider } from "./predictionProvider.ts";
 import { rankCandidates } from "./ranking.ts";
 import { buildPredictionReport } from "./reportBuilder.ts";
 import { reportToMarkdown } from "./reportMarkdown.ts";
 import { runRectificationV2 } from "./rectificationV2.ts";
 import { scoreSymbolPrior } from "./symbolPrior.ts";
+import { validateForecastInput } from "./forecastInputValidator.ts";
 import type {
   BirthInput,
   BoundaryFlag,
@@ -477,6 +479,41 @@ export async function handleRequest(request: IncomingMessage, response: ServerRe
           ranking_modified_by_ai: false
         }
       });
+    }
+    if (request.method === "POST" && url.pathname === "/api/forecast-input") {
+      const body = await readJson(request);
+      try {
+        const forecastInput = buildForecastInput({
+          current_date: typeof body.current_date === "string" ? body.current_date : undefined,
+          timezone: typeof body.timezone === "string" ? body.timezone : undefined,
+          user_question: typeof body.user_question === "string" ? body.user_question : undefined,
+          forecast_horizon: typeof body.forecast_horizon === "string" ? body.forecast_horizon : undefined,
+          forecast_domains: Array.isArray(body.forecast_domains) ? body.forecast_domains.map(String) : undefined,
+          selected_chart: body.selected_chart as Parameters<typeof buildForecastInput>[0]["selected_chart"],
+          rectification_result: body.rectification_result as Parameters<typeof buildForecastInput>[0]["rectification_result"],
+          derivative_profile: body.derivative_profile as Parameters<typeof buildForecastInput>[0]["derivative_profile"],
+          context_box: Array.isArray(body.context_box) ? body.context_box : [],
+          known_life_events: Array.isArray(body.known_life_events) ? body.known_life_events : [],
+          current_state: body.current_state,
+          preferences: body.preferences
+        });
+        const validation = validateForecastInput(forecastInput);
+        if (!validation.valid) return error(response, 400, "INVALID_FORECAST_INPUT_SCHEMA", validation.errors.join("; "));
+        return json(response, 200, {
+          forecast_input: forecastInput,
+          validation,
+          metadata: {
+            stage: "5E",
+            ai_used: false,
+            ready_for_stage6: true,
+            selected_chart_modified: false,
+            rectification_result_modified: false
+          }
+        });
+      } catch (caught) {
+        if (caught instanceof ForecastInputBuildError) return error(response, 400, caught.code, caught.message);
+        throw caught;
+      }
     }
     if (request.method === "POST" && url.pathname === "/api/prediction") {
       const body = await readJson(request);

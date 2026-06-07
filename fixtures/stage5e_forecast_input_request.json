@@ -1,0 +1,188 @@
+{
+  "current_date": "2026-06-07",
+  "timezone": "Asia/Singapore",
+  "user_question": "未来一年我的事业走势如何？",
+  "forecast_horizon": "1_year",
+  "forecast_domains": [
+    "career",
+    "wealth"
+  ],
+  "selected_chart": {
+    "chart_id": "default_chart_001",
+    "chart_role": "default",
+    "fixed_pillars": {
+      "year": {
+        "stem": "甲",
+        "branch": "子"
+      },
+      "month": {
+        "stem": "丙",
+        "branch": "寅"
+      },
+      "day": {
+        "stem": "戊",
+        "branch": "辰"
+      },
+      "hour": {
+        "stem": "壬",
+        "branch": "戌"
+      }
+    },
+    "confidence": 0.64
+  },
+  "rectification_result": {
+    "selected_chart_id": "default_chart_001",
+    "selected_chart_role": "default",
+    "recommendation": "use_default_chart",
+    "scores": [
+      {
+        "candidate_id": "default_chart_001",
+        "chart_role": "default",
+        "total_score": 0.82,
+        "confidence": 0.64
+      }
+    ],
+    "top_alternatives": [],
+    "evidence_table": [],
+    "default_chart_protection": {
+      "default_chart_protected": true,
+      "reason": "alternative_not_stronger_enough"
+    },
+    "metadata": {
+      "stage": "5D",
+      "ai_used": false,
+      "context_box_used_for_rectification": false,
+      "weights_source": "configs/rectification_weights.stage5d.json"
+    }
+  },
+  "derivative_profile": {
+    "profile_id": "profile_stage5e_demo",
+    "source_chart_id": "default_chart_001",
+    "source_libraries": [
+      "static-stage5b-demo"
+    ],
+    "calculation_mode": "recorded_time",
+    "pillars": {
+      "year": {
+        "stem": "甲",
+        "branch": "子"
+      },
+      "month": {
+        "stem": "丙",
+        "branch": "寅"
+      },
+      "day": {
+        "stem": "戊",
+        "branch": "辰"
+      },
+      "hour": {
+        "stem": "壬",
+        "branch": "戌"
+      }
+    },
+    "day_master": "戊",
+    "five_elements": {
+      "wood": 2,
+      "fire": 1,
+      "earth": 3,
+      "metal": 0,
+      "water": 2
+    },
+    "ten_gods": [
+      {
+        "pillar": "year",
+        "god": "偏财"
+      },
+      {
+        "pillar": "month",
+        "god": "偏印"
+      }
+    ],
+    "hidden_stems": [
+      {
+        "branch": "辰",
+        "stems": [
+          "戊",
+          "乙",
+          "癸"
+        ]
+      }
+    ],
+    "nayin": [
+      {
+        "pillar": "year",
+        "value": "海中金"
+      }
+    ],
+    "stars": [],
+    "shensha": [],
+    "relations": {
+      "clashes": [],
+      "combinations": [],
+      "punishments": [],
+      "harms": []
+    },
+    "luck_cycles": [
+      {
+        "start_age": 8,
+        "label": "demo_luck_cycle"
+      }
+    ],
+    "annual_fortunes": [
+      {
+        "year": 2026,
+        "label": "demo_annual_fortune"
+      }
+    ],
+    "assumptions": [
+      "demo profile for Stage 5E fixture"
+    ],
+    "warnings": [],
+    "raw": null
+  },
+  "context_box": [
+    {
+      "fact_id": "ctx_family_001",
+      "category": "family",
+      "field": "parental_education",
+      "value": "highly_educated",
+      "source": "questionnaire",
+      "confidence": 0.9,
+      "fact_type": "direct_fact"
+    },
+    {
+      "fact_id": "ctx_pref_001",
+      "category": "preference",
+      "field": "inner_preferred_direction",
+      "value": "创业、AI 产品、跨境机会",
+      "source": "questionnaire",
+      "confidence": 0.85,
+      "fact_type": "direct_fact"
+    },
+    {
+      "fact_id": "ctx_path_001",
+      "category": "career",
+      "field": "actual_path",
+      "value": "教育背景强，职业路径偏国际化",
+      "source": "questionnaire",
+      "confidence": 0.8,
+      "fact_type": "inferred_fact"
+    }
+  ],
+  "known_life_events": [
+    {
+      "event_id": "ev_2018_edu",
+      "year": 2018,
+      "event_type": "education",
+      "description": "出国读书",
+      "confidence": 0.9
+    },
+    {
+      "event_id": "ev_2024_career",
+      "year": 2024,
+      "event_type": "career",
+      "description": "职业方向变化",
+      "confidence": 0.8
+    }
+  ]
+}

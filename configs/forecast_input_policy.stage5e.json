@@ -1,0 +1,12 @@
+{
+  "schema_version": "stage5e.v1",
+  "stage": "5E",
+  "ai_allowed_to_build_forecast_input": false,
+  "ai_allowed_in_stage6_forecast": true,
+  "context_box_allowed_in_initial_value": true,
+  "context_box_allowed_in_rectification": false,
+  "ranking_modification_allowed": false,
+  "rectification_modification_allowed": false,
+  "secret_redaction_required": true,
+  "production_date_policy": "current_date must be supplied by request or computed at runtime; do not hard-code a fixed date in production logic."
+}

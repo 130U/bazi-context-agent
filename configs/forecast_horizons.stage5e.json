@@ -1,0 +1,36 @@
+{
+  "schema_version": "stage5e.v1",
+  "default_horizon": "1_year",
+  "allowed_horizons": [
+    {
+      "id": "3_months",
+      "label": "未来 3 个月",
+      "approx_days": 90
+    },
+    {
+      "id": "6_months",
+      "label": "未来 6 个月",
+      "approx_days": 180
+    },
+    {
+      "id": "1_year",
+      "label": "未来 1 年",
+      "approx_days": 365
+    },
+    {
+      "id": "3_years",
+      "label": "未来 3 年",
+      "approx_days": 1095
+    },
+    {
+      "id": "5_years",
+      "label": "未来 5 年",
+      "approx_days": 1825
+    },
+    {
+      "id": "10_years",
+      "label": "未来 10 年",
+      "approx_days": 3650
+    }
+  ]
+}

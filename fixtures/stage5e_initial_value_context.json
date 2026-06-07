@@ -1,0 +1,47 @@
+{
+  "context_box": [
+    {
+      "fact_id": "ctx_family_001",
+      "category": "family",
+      "field": "parental_education",
+      "value": "highly_educated",
+      "source": "questionnaire",
+      "confidence": 0.9,
+      "fact_type": "direct_fact"
+    },
+    {
+      "fact_id": "ctx_pref_001",
+      "category": "preference",
+      "field": "inner_preferred_direction",
+      "value": "创业、AI 产品、跨境机会",
+      "source": "questionnaire",
+      "confidence": 0.85,
+      "fact_type": "direct_fact"
+    },
+    {
+      "fact_id": "ctx_path_001",
+      "category": "career",
+      "field": "actual_path",
+      "value": "教育背景强，职业路径偏国际化",
+      "source": "questionnaire",
+      "confidence": 0.8,
+      "fact_type": "inferred_fact"
+    }
+  ],
+  "known_life_events": [
+    {
+      "event_id": "ev_2018_edu",
+      "year": 2018,
+      "event_type": "education",
+      "description": "出国读书",
+      "confidence": 0.9
+    },
+    {
+      "event_id": "ev_2024_career",
+      "year": 2024,
+      "event_type": "career",
+      "description": "职业方向变化",
+      "confidence": 0.8
+    }
+  ]
+}

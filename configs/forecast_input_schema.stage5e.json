@@ -1,0 +1,128 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.local/schemas/forecast_input.stage5e.json",
+  "title": "ForecastInput Stage 5E",
+  "type": "object",
+  "required": [
+    "forecast_input_id",
+    "schema_version",
+    "current_date",
+    "forecast_request",
+    "selected_chart",
+    "derivative_function",
+    "initial_value",
+    "rectification_summary",
+    "data_provenance",
+    "boundaries",
+    "warnings"
+  ],
+  "properties": {
+    "forecast_input_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "schema_version": {
+      "const": "stage5e.v1"
+    },
+    "current_date": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+    },
+    "timezone": {
+      "type": "string"
+    },
+    "forecast_request": {
+      "type": "object",
+      "required": [
+        "user_question",
+        "forecast_horizon",
+        "forecast_domains"
+      ],
+      "properties": {
+        "user_question": {
+          "type": "string",
+          "minLength": 1
+        },
+        "forecast_horizon": {
+          "enum": [
+            "3_months",
+            "6_months",
+            "1_year",
+            "3_years",
+            "5_years",
+            "10_years"
+          ]
+        },
+        "forecast_domains": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "education",
+              "career",
+              "wealth",
+              "relationship",
+              "health",
+              "migration",
+              "family",
+              "personality",
+              "general"
+            ]
+          },
+          "minItems": 1
+        }
+      }
+    },
+    "selected_chart": {
+      "type": "object"
+    },
+    "derivative_function": {
+      "type": "object"
+    },
+    "initial_value": {
+      "type": "object"
+    },
+    "rectification_summary": {
+      "type": "object"
+    },
+    "data_provenance": {
+      "type": "array"
+    },
+    "boundaries": {
+      "type": "object",
+      "required": [
+        "ai_used_to_build_forecast_input",
+        "ai_allowed_in_stage6_forecast",
+        "ranking_modified",
+        "rectification_modified",
+        "context_box_used_for_rectification",
+        "secrets_included"
+      ],
+      "properties": {
+        "ai_used_to_build_forecast_input": {
+          "const": false
+        },
+        "ai_allowed_in_stage6_forecast": {
+          "const": true
+        },
+        "ranking_modified": {
+          "const": false
+        },
+        "rectification_modified": {
+          "const": false
+        },
+        "context_box_used_for_rectification": {
+          "const": false
+        },
+        "secrets_included": {
+          "const": false
+        }
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

@@ -1,0 +1,84 @@
+{
+  "schema_version": "stage5e.v1",
+  "default_domains": [
+    "general"
+  ],
+  "allowed_domains": [
+    "education",
+    "career",
+    "wealth",
+    "relationship",
+    "health",
+    "migration",
+    "family",
+    "personality",
+    "general"
+  ],
+  "keyword_mapping": {
+    "education": [
+      "学历",
+      "学习",
+      "考试",
+      "升学",
+      "留学",
+      "学校",
+      "博士",
+      "硕士",
+      "本科"
+    ],
+    "career": [
+      "事业",
+      "职业",
+      "工作",
+      "行业",
+      "创业",
+      "转行",
+      "升职",
+      "职场"
+    ],
+    "wealth": [
+      "财运",
+      "钱",
+      "收入",
+      "资产",
+      "投资",
+      "财富"
+    ],
+    "relationship": [
+      "感情",
+      "婚姻",
+      "恋爱",
+      "分手",
+      "结婚",
+      "伴侣"
+    ],
+    "health": [
+      "健康",
+      "压力",
+      "生病",
+      "手术",
+      "意外"
+    ],
+    "migration": [
+      "出国",
+      "迁移",
+      "搬家",
+      "移民",
+      "签证",
+      "海外"
+    ],
+    "family": [
+      "家庭",
+      "父母",
+      "子女",
+      "兄弟姐妹"
+    ],
+    "personality": [
+      "性格",
+      "人格",
+      "天赋",
+      "偏好",
+      "内心"
+    ]
+  }
+}

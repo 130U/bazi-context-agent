@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import type { QuestionBank, ScoringConfig } from "./types.ts";
 import type { PredictionDomainsConfig, PredictionOutputSchemaConfig, PredictionProviderPolicyConfig } from "./predictionTypes.ts";
+import type { ForecastDomainMappingConfig, ForecastHorizonsConfig, ForecastInputPolicyConfig } from "./forecastInputTypes.ts";
 
 function readJson<T>(relativePath: string): T {
   const url = new URL(relativePath, import.meta.url);
@@ -32,4 +33,16 @@ export function loadPredictionProviderPolicyConfig(): PredictionProviderPolicyCo
 
 export function loadStage4BPredictionProviderPolicyConfig(): PredictionProviderPolicyConfig {
   return readJson<PredictionProviderPolicyConfig>("../configs/prediction_provider_policy.stage4b.json");
+}
+
+export function loadForecastHorizonsConfig(): ForecastHorizonsConfig {
+  return readJson<ForecastHorizonsConfig>("../configs/forecast_horizons.stage5e.json");
+}
+
+export function loadForecastDomainMappingConfig(): ForecastDomainMappingConfig {
+  return readJson<ForecastDomainMappingConfig>("../configs/forecast_domain_mapping.stage5e.json");
+}
+
+export function loadForecastInputPolicyConfig(): ForecastInputPolicyConfig {
+  return readJson<ForecastInputPolicyConfig>("../configs/forecast_input_policy.stage5e.json");
 }

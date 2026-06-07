@@ -1,0 +1,25 @@
+{
+  "selected_chart_id": "default_chart_001",
+  "selected_chart_role": "default",
+  "recommendation": "use_default_chart",
+  "scores": [
+    {
+      "candidate_id": "default_chart_001",
+      "chart_role": "default",
+      "total_score": 0.82,
+      "confidence": 0.64
+    }
+  ],
+  "top_alternatives": [],
+  "evidence_table": [],
+  "default_chart_protection": {
+    "default_chart_protected": true,
+    "reason": "alternative_not_stronger_enough"
+  },
+  "metadata": {
+    "stage": "5D",
+    "ai_used": false,
+    "context_box_used_for_rectification": false,
+    "weights_source": "configs/rectification_weights.stage5d.json"
+  }
+}
