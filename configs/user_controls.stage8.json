@@ -1,0 +1,35 @@
+{
+  "schema_version": "stage8.user_controls.v1",
+  "controls": [
+    {
+      "id": "hide_from_forecast",
+      "label": "不用于未来预测",
+      "effect": "exclude_from_forecast_input"
+    },
+    {
+      "id": "hide_from_export",
+      "label": "不导出",
+      "effect": "redact_from_export"
+    },
+    {
+      "id": "delete_fact",
+      "label": "删除事实",
+      "effect": "remove_value"
+    },
+    {
+      "id": "clear_all_local_data",
+      "label": "清空本地数据",
+      "effect": "clear_storage_and_memory"
+    },
+    {
+      "id": "export_session",
+      "label": "导出 session JSON",
+      "effect": "generate_redacted_export"
+    },
+    {
+      "id": "import_session",
+      "label": "导入 session JSON",
+      "effect": "validate_then_replace_session"
+    }
+  ]
+}

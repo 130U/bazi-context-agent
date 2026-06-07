@@ -1,0 +1,77 @@
+{
+  "session_id": "stage8-session-001",
+  "schema_version": "stage8.session.v1",
+  "created_at": "2026-06-07T00:00:00.000Z",
+  "updated_at": "2026-06-07T00:01:00.000Z",
+  "birth_input": {
+    "birth_date": "1998-05-10",
+    "birth_time": "22:30",
+    "location": "Shanghai"
+  },
+  "context_box": [
+    {
+      "fact_id": "family_001",
+      "category": "family",
+      "field": "parental_education",
+      "value": "highly_educated",
+      "source": "questionnaire",
+      "confidence": 0.9,
+      "fact_type": "direct_fact",
+      "visibility": {
+        "use_in_forecast": true,
+        "include_in_export": true,
+        "include_in_report": true
+      },
+      "deleted_at": null
+    },
+    {
+      "fact_id": "health_001",
+      "category": "health",
+      "field": "private_detail",
+      "value": "private health detail",
+      "source": "questionnaire",
+      "confidence": 0.8,
+      "fact_type": "direct_fact",
+      "visibility": {
+        "use_in_forecast": true,
+        "include_in_export": false,
+        "include_in_report": false
+      },
+      "deleted_at": null
+    }
+  ],
+  "known_life_events": [
+    {
+      "year": 2018,
+      "event_type": "education",
+      "description": "studied abroad"
+    }
+  ],
+  "forecast_input": {
+    "forecast_input_id": "forecast-input-001",
+    "boundaries": {
+      "secrets_included": false
+    }
+  },
+  "future_forecast_result": {
+    "forecast_result_id": "forecast-001",
+    "policy": {
+      "secrets_included": false
+    }
+  },
+  "user_controls": {
+    "persistent_storage_enabled": false,
+    "export_redaction_enabled": true,
+    "report_redaction_enabled": true,
+    "hidden_fact_ids": [
+      "health_001"
+    ],
+    "deleted_fact_ids": []
+  },
+  "privacy_metadata": {
+    "local_only": true,
+    "cloud_sync_enabled": false,
+    "secrets_included": false,
+    "api_keys_included": false
+  }
+}

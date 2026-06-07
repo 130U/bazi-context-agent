@@ -1,0 +1,9 @@
+{
+  "schema_version": "stage8.export_import_policy.v1",
+  "export_schema_version": "stage8.export.v1",
+  "import_requires_schema_version": true,
+  "reject_malformed_json": true,
+  "reject_secrets": true,
+  "reject_unsupported_schema_without_warning": true,
+  "replace_current_session_only_after_validation": true
+}

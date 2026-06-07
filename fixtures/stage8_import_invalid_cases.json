@@ -1,0 +1,26 @@
+{
+  "cases": [
+    {
+      "id": "malformed_json",
+      "input": "{bad json",
+      "expected_error": "INVALID_JSON"
+    },
+    {
+      "id": "missing_schema",
+      "input": {
+        "session": {}
+      },
+      "expected_error": "MISSING_SCHEMA_VERSION"
+    },
+    {
+      "id": "contains_secret",
+      "input": {
+        "export_schema_version": "stage8.export.v1",
+        "session": {
+          "secret": "sk-test-placeholder"
+        }
+      },
+      "expected_error": "SECRET_DETECTED"
+    }
+  ]
+}

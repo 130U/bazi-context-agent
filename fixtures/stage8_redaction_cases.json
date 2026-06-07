@@ -1,0 +1,19 @@
+{
+  "cases": [
+    {
+      "id": "api_key_like",
+      "input": "OPENAI_API_KEY=sk-test-placeholder",
+      "expected_contains": "[REDACTED:api_key]"
+    },
+    {
+      "id": "hidden_fact",
+      "fact_id": "health_001",
+      "expected_value": "[REDACTED:hidden_context_fact]"
+    },
+    {
+      "id": "local_path",
+      "input": "C:/Users/theod/private/file.txt",
+      "expected_contains": "[REDACTED:local_path]"
+    }
+  ]
+}

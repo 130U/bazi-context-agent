@@ -1,0 +1,15 @@
+{
+  "schema_version": "stage8.redaction.v1",
+  "redact_api_keys": true,
+  "redact_env_content": true,
+  "redact_hidden_export_facts": true,
+  "remove_deleted_fact_values": true,
+  "redact_local_file_paths": true,
+  "metadata_required": true,
+  "placeholder_map": {
+    "api_key": "[REDACTED:api_key]",
+    "hidden_context_fact": "[REDACTED:hidden_context_fact]",
+    "env_content": "[REDACTED:env_content]",
+    "local_path": "[REDACTED:local_path]"
+  }
+}

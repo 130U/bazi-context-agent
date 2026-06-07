@@ -1,0 +1,8 @@
+{
+  "schema_version": "stage8.retention.v1",
+  "default_retention": "until_user_clears_local_data",
+  "auto_expiry_enabled": false,
+  "clear_all_required": true,
+  "deleted_fact_value_retention": "none",
+  "audit_log_value_retention": "none"
+}

@@ -1,0 +1,19 @@
+{
+  "schema_version": "stage8.session_schema.v1",
+  "required": [
+    "session_id",
+    "schema_version",
+    "created_at",
+    "updated_at",
+    "context_box",
+    "user_controls",
+    "privacy_metadata"
+  ],
+  "session_schema_version": "stage8.session.v1",
+  "privacy_metadata": {
+    "local_only": true,
+    "cloud_sync_enabled": false,
+    "secrets_included": false,
+    "api_keys_included": false
+  }
+}

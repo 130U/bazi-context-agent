@@ -1,0 +1,18 @@
+{
+  "schema_version": "stage8.storage_policy.v1",
+  "default_storage_mode": "memory",
+  "allowed_storage_modes": [
+    "memory",
+    "sessionStorage",
+    "localStorage"
+  ],
+  "persistent_storage_requires_user_action": true,
+  "storage_key": "bazi-context-agent.session.v1",
+  "disallowed_storage_values": [
+    "api_keys",
+    "env_content",
+    "github_tokens",
+    "raw_provider_secrets"
+  ],
+  "tests_use_memory_storage": true
+}

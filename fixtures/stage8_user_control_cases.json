@@ -1,0 +1,27 @@
+{
+  "cases": [
+    {
+      "id": "hide_from_forecast",
+      "fact_id": "family_001",
+      "control": "hide_from_forecast",
+      "expected_use_in_forecast": false
+    },
+    {
+      "id": "hide_from_export",
+      "fact_id": "family_001",
+      "control": "hide_from_export",
+      "expected_include_in_export": false
+    },
+    {
+      "id": "delete_fact",
+      "fact_id": "family_001",
+      "control": "delete_fact",
+      "expected_value": null
+    },
+    {
+      "id": "clear_all",
+      "control": "clear_all_local_data",
+      "expected_session": null
+    }
+  ]
+}

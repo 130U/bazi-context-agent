@@ -270,6 +270,7 @@ function homePage(): string {
   <section id="prediction_result"><h2>Prediction display</h2><input id="prediction-question" value="What career direction fits this context?" style="width: min(100%, 520px); padding: 10px; border: 1px solid #cbd2dc; border-radius: 6px;"><button id="predict">Generate prediction</button><div id="prediction-display" class="grid"></div><pre id="prediction">Waiting for ranking snapshot...</pre></section>
   <section id="provider_status"><h2>Provider status</h2><pre id="provider">Waiting for prediction...</pre></section>
   <section id="report_preview"><h2>Report preview</h2><button id="report-json">Export JSON</button> <button id="report-markdown">Export Markdown</button><pre id="report">Waiting for prediction...</pre></section>
+  <section id="session_controls"><h2>Privacy and local session controls</h2><p class="notice">Session storage is local-first. No account, server-side data store, remote sync, or telemetry is used. Context box still does not participate in ranking, and AI does not participate in rectification.</p><div class="grid"><button id="save-session">Save Session</button><button id="load-session">Load Session</button><button id="export-session">Export Session JSON</button><button id="import-session">Import Session JSON</button><button id="clear-session">Clear All Local Data</button></div><div id="fact-controls" class="grid"></div><pre id="session-status">No session action yet.</pre><input id="import-session-file" type="file" accept="application/json" hidden></section>
   <section id="privacy_notice"><h2>Privacy notice</h2><p class="notice">Candidate ranking is deterministic. AI/provider does not participate in ranking. Context box is used for prediction personalization only, not ranking. Exported reports may contain user-provided personal information. API keys are never displayed or exported. This is not medical, legal, or financial certainty advice.</p></section>
 </main>
 <script>
@@ -287,8 +288,84 @@ const sample = {
     { year: 2018, event_type: "education", description: "fictional education event" },
     { year: 2021, event_type: "career", description: "fictional direction change" }
   ],
-  context_facts: [{ field: "desired_direction", value: "fictional creative technology direction", confidence: 0.5 }]
+  context_facts: [{ id: "desired_direction", category: "preference", field: "desired_direction", value: "fictional creative technology direction", source: "demo", confidence: 0.5, visibility: { use_in_forecast: true, include_in_export: true, include_in_report: true }, deleted_at: null }]
 };
+const sessionKey = 'bazi-context-agent:session:v1';
+function sessionState() {
+  return {
+    session_id: 'browser-demo-session',
+    schema_version: 'stage8.session.v1',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    birth_input: sample.birth_input,
+    context_box: sample.context_facts.map((fact) => ({
+      fact_id: fact.id || fact.field,
+      category: fact.category || 'context',
+      field: fact.field,
+      value: fact.value,
+      source: fact.source || 'demo',
+      confidence: fact.confidence,
+      fact_type: 'direct_fact',
+      visibility: fact.visibility || { use_in_forecast: true, include_in_export: true, include_in_report: true },
+      deleted_at: fact.deleted_at || null
+    })),
+    known_life_events: sample.life_events,
+    forecast_input: null,
+    future_forecast_result: null,
+    reports: lastReport ? [lastReport] : [],
+    user_controls: {
+      persistent_storage_enabled: true,
+      export_redaction_enabled: true,
+      report_redaction_enabled: true,
+      hidden_fact_ids: sample.context_facts.filter((fact) => fact.visibility && (!fact.visibility.use_in_forecast || !fact.visibility.include_in_export)).map((fact) => fact.id || fact.field),
+      deleted_fact_ids: sample.context_facts.filter((fact) => fact.deleted_at).map((fact) => fact.id || fact.field)
+    },
+    privacy_metadata: { local_only: true, cloud_sync_enabled: false, secrets_included: false, api_keys_included: false }
+  };
+}
+function redactSessionForBrowserExport(session) {
+  const copy = JSON.parse(JSON.stringify(session));
+  let count = 0;
+  copy.context_box = copy.context_box.map((fact) => {
+    if (fact.deleted_at) { count++; return { ...fact, value: null }; }
+    if (!fact.visibility.include_in_export) { count++; return { ...fact, value: '[REDACTED:hidden_context_fact]' }; }
+    return fact;
+  });
+  return {
+    schema_version: 'stage8.session_export.v1',
+    exported_at: new Date().toISOString(),
+    session_id: session.session_id,
+    session: copy,
+    redaction_metadata: { redaction_applied: count > 0, redacted_fields_count: count, secrets_included: false, redaction_policy_version: 'stage8.redaction.v1', redacted_fact_ids: copy.context_box.filter((fact) => fact.value === '[REDACTED:hidden_context_fact]').map((fact) => fact.fact_id), removed_deleted_fact_values: copy.context_box.filter((fact) => fact.deleted_at).length }
+  };
+}
+function visibleContextFactsForForecast() {
+  return sample.context_facts.filter((fact) => (!fact.visibility || fact.visibility.use_in_forecast) && !fact.deleted_at);
+}
+function setSessionStatus(message) {
+  document.getElementById('session-status').textContent = message;
+}
+function renderFactControls() {
+  document.getElementById('fact-controls').innerHTML = sample.context_facts.map((fact) => {
+    const hiddenForecast = fact.visibility && !fact.visibility.use_in_forecast;
+    const hiddenExport = fact.visibility && !fact.visibility.include_in_export;
+    const deleted = Boolean(fact.deleted_at);
+    return '<div class="item"><div class="label">' + (fact.id || fact.field) + '</div><div>' + fact.field + ': ' + (deleted ? '[deleted]' : fact.value) + '</div><button data-action="hide-forecast" data-id="' + (fact.id || fact.field) + '">' + (hiddenForecast ? 'Show in Forecast' : 'Hide from Forecast') + '</button> <button data-action="hide-export" data-id="' + (fact.id || fact.field) + '">' + (hiddenExport ? 'Show in Export' : 'Hide from Export') + '</button> <button data-action="delete" data-id="' + (fact.id || fact.field) + '">Delete Fact</button></div>';
+  }).join('');
+}
+function updateFactControl(id, action) {
+  sample.context_facts = sample.context_facts.map((fact) => {
+    const factId = fact.id || fact.field;
+    if (factId !== id) return fact;
+    const visibility = fact.visibility || { use_in_forecast: true, include_in_export: true, include_in_report: true };
+    if (action === 'hide-forecast') return { ...fact, visibility: { ...visibility, use_in_forecast: !visibility.use_in_forecast } };
+    if (action === 'hide-export') return { ...fact, visibility: { ...visibility, include_in_export: !visibility.include_in_export, include_in_report: !visibility.include_in_report } };
+    if (action === 'delete') return { ...fact, value: null, deleted_at: new Date().toISOString(), visibility: { use_in_forecast: false, include_in_export: false, include_in_report: false } };
+    return fact;
+  });
+  renderFactControls();
+  setSessionStatus('Updated fact control: ' + action);
+}
 async function post(url, body) {
   const res = await fetch(url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
   return res.json();
@@ -323,7 +400,7 @@ async function predict() {
   const prediction = await post('/api/prediction', {
     question: document.getElementById('prediction-question').value,
     rankingSnapshot: snapshot,
-    contextBox: sample.context_facts,
+    contextBox: visibleContextFactsForForecast(),
     lifeEvents: sample.life_events
   });
   lastPrediction = prediction;
@@ -376,6 +453,44 @@ function downloadText(filename, text, type) {
   a.click();
   URL.revokeObjectURL(url);
 }
+function saveSession() {
+  localStorage.setItem(sessionKey, JSON.stringify(sessionState()));
+  setSessionStatus('Session saved locally.');
+}
+function loadSession() {
+  const raw = localStorage.getItem(sessionKey);
+  if (!raw) return setSessionStatus('No local session found.');
+  const loaded = JSON.parse(raw);
+  sample.context_facts = (loaded.context_box || []).map((fact) => ({ id: fact.fact_id, category: fact.category, field: fact.field, value: fact.value, source: fact.source, confidence: fact.confidence, visibility: fact.visibility, deleted_at: fact.deleted_at }));
+  renderFactControls();
+  setSessionStatus('Session loaded locally.');
+}
+function exportSession() {
+  const exported = redactSessionForBrowserExport(sessionState());
+  downloadText('bazi-context-session.json', JSON.stringify(exported, null, 2), 'application/json');
+  setSessionStatus('Redacted session JSON exported.');
+}
+function importSessionFile(file) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const parsed = JSON.parse(String(reader.result));
+      if (parsed.schema_version !== 'stage8.session_export.v1' || !parsed.session) throw new Error('Unsupported session export schema.');
+      sample.context_facts = (parsed.session.context_box || []).map((fact) => ({ id: fact.fact_id, category: fact.category, field: fact.field, value: fact.value, source: fact.source, confidence: fact.confidence, visibility: fact.visibility, deleted_at: fact.deleted_at }));
+      renderFactControls();
+      setSessionStatus('Session imported from JSON.');
+    } catch (error) {
+      setSessionStatus('Import rejected: ' + error.message);
+    }
+  };
+  reader.readAsText(file);
+}
+function clearSession() {
+  localStorage.removeItem(sessionKey);
+  sample.context_facts = [];
+  renderFactControls();
+  setSessionStatus('All local session data cleared.');
+}
 async function exportReport(format) {
   const result = await requestReport(format);
   if (!result) return;
@@ -392,6 +507,17 @@ async function init() {
   document.getElementById('predict').addEventListener('click', predict);
   document.getElementById('report-json').addEventListener('click', () => exportReport('json'));
   document.getElementById('report-markdown').addEventListener('click', () => exportReport('markdown'));
+  document.getElementById('save-session').addEventListener('click', saveSession);
+  document.getElementById('load-session').addEventListener('click', loadSession);
+  document.getElementById('export-session').addEventListener('click', exportSession);
+  document.getElementById('import-session').addEventListener('click', () => document.getElementById('import-session-file').click());
+  document.getElementById('import-session-file').addEventListener('change', (event) => event.target.files && event.target.files[0] && importSessionFile(event.target.files[0]));
+  document.getElementById('clear-session').addEventListener('click', clearSession);
+  document.getElementById('fact-controls').addEventListener('click', (event) => {
+    const target = event.target;
+    if (target && target.dataset && target.dataset.action) updateFactControl(target.dataset.id, target.dataset.action);
+  });
+  renderFactControls();
   run();
 }
 init();

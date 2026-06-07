@@ -1,0 +1,18 @@
+{
+  "schema_version": "stage8.privacy.v1",
+  "local_first": true,
+  "cloud_sync_enabled": false,
+  "database_enabled": false,
+  "telemetry_enabled": false,
+  "legal_compliance_claims_allowed": false,
+  "privacy_notice_required": true,
+  "user_controls_required": [
+    "export_session",
+    "import_session",
+    "hide_from_forecast",
+    "hide_from_export",
+    "delete_fact",
+    "clear_all_local_data"
+  ],
+  "boundary_copy_required": true
+}

@@ -1,0 +1,21 @@
+{
+  "schema_version": "stage8.sensitive_fields.v1",
+  "sensitive_patterns": [
+    "OPENAI_API_KEY",
+    "ANTHROPIC_API_KEY",
+    "GITHUB_TOKEN",
+    "sk-",
+    "ghp_",
+    ".env",
+    "password",
+    "secret"
+  ],
+  "sensitive_context_categories": [
+    "health",
+    "relationship",
+    "identity",
+    "exact_address",
+    "contact"
+  ],
+  "redaction_placeholder_prefix": "[REDACTED:"
+}
