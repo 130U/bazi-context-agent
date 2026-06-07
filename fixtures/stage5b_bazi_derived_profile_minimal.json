@@ -1,0 +1,53 @@
+{
+  "profile_id": "profile_fixture_001",
+  "source_chart_id": "fixture_fixed_pillars_001",
+  "source_libraries": [
+    "static-adapter"
+  ],
+  "calculation_mode": "fixed_pillars",
+  "pillars": {
+    "year": {
+      "stem": "甲",
+      "branch": "子"
+    },
+    "month": {
+      "stem": "丙",
+      "branch": "寅"
+    },
+    "day": {
+      "stem": "戊",
+      "branch": "辰"
+    },
+    "hour": {
+      "stem": "壬",
+      "branch": "戌"
+    }
+  },
+  "day_master": "戊",
+  "five_elements": {
+    "wood": null,
+    "fire": null,
+    "earth": null,
+    "metal": null,
+    "water": null
+  },
+  "ten_gods": [],
+  "hidden_stems": [],
+  "nayin": [],
+  "stars": [],
+  "shensha": [],
+  "relations": {
+    "clashes": [],
+    "combinations": [],
+    "punishments": [],
+    "harms": []
+  },
+  "luck_cycles": [],
+  "annual_fortunes": [],
+  "assumptions": [
+    "static adapter fixture"
+  ],
+  "warnings": [
+    "static adapter does not compute full luck cycles"
+  ]
+}

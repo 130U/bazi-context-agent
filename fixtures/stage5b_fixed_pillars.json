@@ -1,0 +1,21 @@
+{
+  "chart_id": "fixture_fixed_pillars_001",
+  "fixed_pillars": {
+    "year": {
+      "stem": "甲",
+      "branch": "子"
+    },
+    "month": {
+      "stem": "丙",
+      "branch": "寅"
+    },
+    "day": {
+      "stem": "戊",
+      "branch": "辰"
+    },
+    "hour": {
+      "stem": "壬",
+      "branch": "戌"
+    }
+  }
+}

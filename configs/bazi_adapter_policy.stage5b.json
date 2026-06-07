@@ -1,0 +1,30 @@
+{
+  "stage": "5B",
+  "name": "BaziEngineAdapter Policy",
+  "default_adapter_priority": [
+    "lunar-javascript",
+    "static-adapter"
+  ],
+  "fallback_required": true,
+  "allow_external_dependency_install": true,
+  "allowed_external_dependencies": [
+    "lunar-javascript"
+  ],
+  "forbidden_dependencies": [
+    "langchain",
+    "llamaindex",
+    "@ai-sdk",
+    "openai",
+    "@anthropic-ai/sdk"
+  ],
+  "adapter_must_not": [
+    "modify_ranking",
+    "read_context_box",
+    "call_ai_provider",
+    "read_api_keys",
+    "make_network_requests",
+    "select_final_chart",
+    "forecast_future"
+  ],
+  "required_output_shape": "configs/bazi_derived_profile.schema.stage5b.json"
+}

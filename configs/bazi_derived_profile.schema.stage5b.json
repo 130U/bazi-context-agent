@@ -1,0 +1,148 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "BaziDerivedProfile Stage 5B",
+  "type": "object",
+  "required": [
+    "profile_id",
+    "source_chart_id",
+    "source_libraries",
+    "calculation_mode",
+    "pillars",
+    "day_master",
+    "five_elements",
+    "ten_gods",
+    "hidden_stems",
+    "nayin",
+    "stars",
+    "shensha",
+    "relations",
+    "assumptions",
+    "warnings"
+  ],
+  "properties": {
+    "profile_id": {
+      "type": "string"
+    },
+    "source_chart_id": {
+      "type": "string"
+    },
+    "source_libraries": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "calculation_mode": {
+      "type": "string",
+      "enum": [
+        "recorded_time",
+        "candidate_time",
+        "fixed_pillars",
+        "static_fallback"
+      ]
+    },
+    "pillars": {
+      "type": "object",
+      "required": [
+        "year",
+        "month",
+        "day",
+        "hour"
+      ],
+      "properties": {
+        "year": {
+          "$ref": "#/$defs/pillar"
+        },
+        "month": {
+          "$ref": "#/$defs/pillar"
+        },
+        "day": {
+          "$ref": "#/$defs/pillar"
+        },
+        "hour": {
+          "$ref": "#/$defs/pillar"
+        }
+      }
+    },
+    "day_master": {
+      "type": "string"
+    },
+    "five_elements": {
+      "type": "object"
+    },
+    "ten_gods": {
+      "type": "array"
+    },
+    "hidden_stems": {
+      "type": "array"
+    },
+    "nayin": {
+      "type": "array"
+    },
+    "stars": {
+      "type": "array"
+    },
+    "shensha": {
+      "type": "array"
+    },
+    "relations": {
+      "type": "object",
+      "required": [
+        "clashes",
+        "combinations",
+        "punishments",
+        "harms"
+      ],
+      "properties": {
+        "clashes": {
+          "type": "array"
+        },
+        "combinations": {
+          "type": "array"
+        },
+        "punishments": {
+          "type": "array"
+        },
+        "harms": {
+          "type": "array"
+        }
+      }
+    },
+    "luck_cycles": {
+      "type": "array"
+    },
+    "annual_fortunes": {
+      "type": "array"
+    },
+    "assumptions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "raw": {}
+  },
+  "$defs": {
+    "pillar": {
+      "type": "object",
+      "required": [
+        "stem",
+        "branch"
+      ],
+      "properties": {
+        "stem": {
+          "type": "string"
+        },
+        "branch": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

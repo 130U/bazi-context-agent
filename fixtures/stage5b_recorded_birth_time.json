@@ -1,0 +1,18 @@
+{
+  "chart_id": "fixture_recorded_birth_001",
+  "recorded_birth_time": {
+    "calendar_type": "solar",
+    "birth_date": "1998-05-10",
+    "birth_time": "22:30",
+    "timezone": "Asia/Shanghai",
+    "location": {
+      "country": "China",
+      "city": "Shanghai"
+    },
+    "sex_for_traditional_chart": "unspecified",
+    "assumptions": [
+      "recorded time used as initial DefaultChart input",
+      "true solar time not applied in Stage 5B"
+    ]
+  }
+}

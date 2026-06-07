@@ -1,0 +1,54 @@
+{
+  "candidate_charts_v2": [
+    {
+      "candidate_id": "default_001",
+      "source": "recorded_time",
+      "recorded_time_prior_score": 1.0,
+      "birth_input": {
+        "calendar_type": "solar",
+        "birth_date": "1998-05-10",
+        "birth_time": "22:30",
+        "timezone": "Asia/Shanghai",
+        "location": {
+          "country": "China",
+          "city": "Shanghai"
+        },
+        "sex_for_traditional_chart": "unspecified",
+        "assumptions": [
+          "recorded time used as initial DefaultChart input",
+          "true solar time not applied in Stage 5B"
+        ]
+      },
+      "boundary_flags": [],
+      "assumptions": [
+        "default chart from user recorded time"
+      ]
+    },
+    {
+      "candidate_id": "adjacent_hour_001",
+      "source": "adjacent_hour",
+      "recorded_time_prior_score": 0.75,
+      "birth_input": {
+        "calendar_type": "solar",
+        "birth_date": "1998-05-10",
+        "birth_time": "20:30",
+        "timezone": "Asia/Shanghai",
+        "location": {
+          "country": "China",
+          "city": "Shanghai"
+        },
+        "sex_for_traditional_chart": "unspecified",
+        "assumptions": [
+          "recorded time used as initial DefaultChart input",
+          "true solar time not applied in Stage 5B"
+        ]
+      },
+      "boundary_flags": [
+        "adjacent_hour"
+      ],
+      "assumptions": [
+        "candidate generated from adjacent hour"
+      ]
+    }
+  ]
+}
