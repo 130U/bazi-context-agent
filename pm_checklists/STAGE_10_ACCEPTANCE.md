@@ -17,8 +17,9 @@
 - [ ] Demo has guided input panel.
 - [ ] Demo has live preview/report panel.
 - [ ] Demo has export/copy controls.
-- [ ] Demo uses Duke Blue `#012169`.
-- [ ] Demo uses serif display typography.
+- [ ] Demo uses the editorial palette (`#F4F0E8`, `#20211E`, `#A65F3F`, `#5D7265`).
+- [ ] Demo uses system typography with readable tracking and leading.
+- [ ] Demo respects reduced-motion preferences.
 - [ ] Demo is static/local-only.
 - [ ] Demo does not require login.
 - [ ] Demo does not call real OpenAI.
