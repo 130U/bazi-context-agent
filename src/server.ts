@@ -244,24 +244,35 @@ function homePage(): string {
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>BaZi Context Agent</title>
   <style>
-    :root { color-scheme: light; font-family: Arial, "Microsoft YaHei", sans-serif; background: #f6f7f9; color: #1f2933; }
-    body { margin: 0; }
-    main { max-width: 1040px; margin: 0 auto; padding: 28px 20px 48px; }
-    h1 { margin: 0 0 8px; font-size: 32px; }
-    h2 { font-size: 19px; margin: 0 0 12px; }
-    section { border-top: 1px solid #d9dee7; padding: 22px 0; }
-    .notice { padding: 12px 14px; border-left: 4px solid #2f6fed; background: #eef4ff; }
+    :root { color-scheme: light; font: 100%/1.6 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif; background: #f4f0e8; color: #20211e; --paper: #f4f0e8; --surface: #fffdf8; --ink: #20211e; --muted: #686861; --line: #d7d0c4; --copper: #a65f3f; --green: #5d7265; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: radial-gradient(circle at 88% 2%, rgba(166, 95, 63, .09), transparent 24rem), var(--paper); }
+    main { width: min(1100px, calc(100vw - 32px)); margin: 0 auto; padding: clamp(44px, 7vw, 80px) 0; }
+    .local-hero { max-width: 760px; margin-bottom: 32px; }
+    .eyebrow { margin: 0; color: #7b412b; font-size: 12px; font-weight: 750; letter-spacing: .11em; text-transform: uppercase; }
+    h1 { margin: 8px 0 12px; max-width: 700px; font-size: clamp(42px, 7vw, 72px); line-height: .98; letter-spacing: -.055em; }
+    h2 { font-size: 19px; letter-spacing: -.018em; margin: 0 0 12px; }
+    section { margin-top: 14px; border: 1px solid var(--line); border-radius: 12px; padding: clamp(18px, 3vw, 28px); background: rgba(255, 253, 248, .78); box-shadow: 0 14px 38px rgba(54, 45, 34, .06); }
+    .notice { padding: 12px 14px; border-left: 3px solid var(--green); background: rgba(223, 231, 223, .56); color: #43554a; }
     .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; }
-    .item { border: 1px solid #d9dee7; border-radius: 8px; background: white; padding: 12px; }
-    .label { font-size: 12px; color: #52606d; margin-bottom: 6px; }
-    pre { overflow: auto; white-space: pre-wrap; background: #111827; color: #f9fafb; border-radius: 8px; padding: 14px; }
-    button { border: 0; border-radius: 6px; padding: 10px 14px; background: #1f6feb; color: white; cursor: pointer; }
+    .item { border: 1px solid var(--line); border-radius: 9px; background: var(--surface); padding: 12px; }
+    .label { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+    input, select, textarea { max-width: 100%; border: 1px solid #bdb4a7; border-radius: 8px; padding: 10px 11px; color: var(--ink); background: var(--surface); font: inherit; }
+    pre { overflow: auto; white-space: pre-wrap; background: #252621; color: #f8f3e9; border-radius: 9px; padding: 14px; }
+    button { min-height: 42px; border: 1px solid var(--ink); border-radius: 8px; padding: 10px 14px; background: var(--ink); color: var(--surface); cursor: pointer; font: inherit; font-weight: 700; transition: transform 120ms ease-out, border-color 150ms ease, background-color 150ms ease; }
+    button:hover { border-color: var(--copper); }
+    button:active { transform: scale(.98); transition-duration: 70ms; }
+    :focus-visible { outline: 3px solid rgba(166, 95, 63, .28); outline-offset: 3px; }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; } }
   </style>
 </head>
 <body>
 <main>
-  <h1>BaZi Context Agent</h1>
-  <p class="notice">Recorded birth time is a prior, not truth. Symbol prior is weak and cannot determine the chart alone. Context box is saved for later prediction review and is not used for Round 03 chart ranking.</p>
+  <header class="local-hero">
+    <p class="eyebrow">Local deterministic workspace</p>
+    <h1>BaZi Context Agent</h1>
+    <p class="notice">Recorded birth time is a prior, not truth. Symbol prior is weak and cannot determine the chart alone. Context box is saved for later prediction review and is not used for Round 03 chart ranking.</p>
+  </header>
   <section id="birth_input"><h2>Step 1: birth_input</h2><div class="grid" data-layer="birth_input"></div></section>
   <section id="symbol_prior"><h2>Step 2: symbol_prior</h2><div class="grid" data-layer="symbol_prior"></div><pre id="prior">Loading prior...</pre></section>
   <section id="event_backtest"><h2>Step 3: event_backtest</h2><div class="grid" data-layer="event_backtest"></div><pre id="candidates">Loading candidates...</pre></section>

@@ -3,6 +3,7 @@ const birthDateEl = document.getElementById("birthDate");
 const birthTimeEl = document.getElementById("birthTime");
 const contextEl = document.getElementById("contextProfile");
 const questionEl = document.getElementById("forecastQuestion");
+const actionStatusEl = document.getElementById("actionStatus");
 
 let latestPayload = null;
 
@@ -20,8 +21,8 @@ function buildPayload() {
       recorded_time: birthTime
     },
     derivative_function: {
-      source: "static_demo",
-      summary: "Demo BaZi-derived structure generated from the recorded-time placeholder.",
+      source: "illustrative_fixture",
+      summary: "Illustrative derived-profile fixture; no chart calculation runs in this static page.",
       signals: [
         "timing structure",
         "mobility and transition signal",
@@ -34,7 +35,7 @@ function buildPayload() {
     },
     forecast_question: question,
     forecast_preview: {
-      summary: "Over the selected horizon, the demo suggests focusing on clearer prioritization, fewer parallel tracks, and stronger alignment between actual path and preferred direction.",
+      summary: "This fixture demonstrates where a bounded forecast summary would appear after deterministic rectification and explicit context review.",
       opportunity_windows: [
         "0-6 months: clarity and consolidation",
         "6-18 months: positioning and collaboration"
@@ -47,6 +48,7 @@ function buildPayload() {
     },
     policy: {
       static_demo: true,
+      fixture_based: true,
       no_login: true,
       no_api_key: true,
       ai_used_for_ranking: false,
@@ -57,13 +59,33 @@ function buildPayload() {
 
 function renderReport(payload) {
   reportEl.innerHTML = `
-    <p><strong>Question:</strong> ${escapeHtml(payload.forecast_question)}</p>
-    <p><strong>Birth input:</strong> ${escapeHtml(payload.birth_input.birth_date)} / ${escapeHtml(payload.birth_input.recorded_time)}</p>
-    <p><strong>Derived function:</strong> ${escapeHtml(payload.derivative_function.summary)}</p>
-    <p><strong>Initial value:</strong> ${escapeHtml(payload.initial_value.context_profile)}</p>
-    <p><strong>Forecast preview:</strong> ${escapeHtml(payload.forecast_preview.summary)}</p>
-    <p><strong>Opportunity windows:</strong> ${payload.forecast_preview.opportunity_windows.map(escapeHtml).join("; ")}</p>
-    <p><strong>Boundary:</strong> Static demo; no login; no API key; no data leaves browser.</p>
+    <div class="report-lead">
+      <p>Illustrative fixture · not a personal prediction</p>
+      <h3>${escapeHtml(payload.forecast_question)}</h3>
+    </div>
+    <dl>
+      <div>
+        <dt>Birth input</dt>
+        <dd>${escapeHtml(payload.birth_input.birth_date)} · ${escapeHtml(payload.birth_input.recorded_time)}</dd>
+      </div>
+      <div>
+        <dt>Derived structure</dt>
+        <dd>${escapeHtml(payload.derivative_function.summary)}</dd>
+      </div>
+      <div>
+        <dt>User context</dt>
+        <dd>${escapeHtml(payload.initial_value.context_profile)}</dd>
+      </div>
+      <div>
+        <dt>Output position</dt>
+        <dd>${escapeHtml(payload.forecast_preview.summary)}</dd>
+      </div>
+      <div>
+        <dt>Example windows</dt>
+        <dd>${payload.forecast_preview.opportunity_windows.map(escapeHtml).join(" · ")}</dd>
+      </div>
+    </dl>
+    <div class="report-boundary">Static fixture · no login · no API key · no data leaves this browser</div>
   `;
 }
 
@@ -87,8 +109,33 @@ function download(filename, content, type) {
   URL.revokeObjectURL(url);
 }
 
+function setActionStatus(message, tone = "") {
+  actionStatusEl.textContent = message;
+  actionStatusEl.dataset.tone = tone;
+}
+
+async function copyText(value) {
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(value);
+    return;
+  }
+
+  const field = document.createElement("textarea");
+  field.value = value;
+  field.setAttribute("readonly", "");
+  field.style.position = "fixed";
+  field.style.opacity = "0";
+  document.body.appendChild(field);
+  field.select();
+  const copied = document.execCommand("copy");
+  field.remove();
+  if (!copied) throw new Error("Copy command was unavailable.");
+}
+
 function toMarkdown(payload) {
-  return `# BaZi Context Agent Demo Report
+  return `# BaZi Context Agent — Illustrative Demo Report
+
+> Fixture-based public walkthrough. This is not a calculated chart or personal prediction.
 
 ## Question
 ${payload.forecast_question}
@@ -108,6 +155,7 @@ ${payload.forecast_preview.summary}
 
 ## Policy
 - Static demo: ${payload.policy.static_demo}
+- Fixture based: ${payload.policy.fixture_based}
 - No login: ${payload.policy.no_login}
 - No API key: ${payload.policy.no_api_key}
 - Data leaves browser: ${payload.policy.data_leaves_browser}
@@ -119,21 +167,31 @@ function generate() {
   renderReport(latestPayload);
 }
 
-document.getElementById("generateBtn").addEventListener("click", generate);
+document.getElementById("generateBtn").addEventListener("click", () => {
+  generate();
+  setActionStatus("Illustrative report refreshed.", "success");
+});
 
 document.getElementById("copyBtn").addEventListener("click", async () => {
   if (!latestPayload) generate();
-  await navigator.clipboard.writeText(toMarkdown(latestPayload));
+  try {
+    await copyText(toMarkdown(latestPayload));
+    setActionStatus("Markdown copied to the clipboard.", "success");
+  } catch {
+    setActionStatus("Copy was unavailable. Download the Markdown file instead.", "error");
+  }
 });
 
 document.getElementById("jsonBtn").addEventListener("click", () => {
   if (!latestPayload) generate();
   download("bazi-context-demo.json", JSON.stringify(latestPayload, null, 2), "application/json");
+  setActionStatus("JSON download prepared.", "success");
 });
 
 document.getElementById("mdBtn").addEventListener("click", () => {
   if (!latestPayload) generate();
   download("bazi-context-demo.md", toMarkdown(latestPayload), "text/markdown");
+  setActionStatus("Markdown download prepared.", "success");
 });
 
 generate();

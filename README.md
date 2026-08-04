@@ -1,14 +1,31 @@
 # BaZi Context Agent / 八字上下文预测引擎
 
-> **EN** - A local-first BaZi research prototype for deterministic chart derivation, candidate rectification, user-controlled context, structured forecasting, and holdout evaluation.
->
-> **中文** - 一个 local-first 的八字研究型原型系统：先用确定性流程完成排盘、候选盘和校盘，再使用用户可控上下文生成结构化预测和报告。
+**An evidence-first BaZi rectification and context-aware forecasting research prototype.**
 
-[![Stage](https://img.shields.io/badge/stage-research%20prototype-blue)](#roadmap--开发路线)
-[![Tests](https://img.shields.io/badge/tests-node--test-green)](#quick-start--快速开始)
-[![AI Boundary](https://img.shields.io/badge/AI-after%20deterministic%20ranking-purple)](#ai-boundary--ai-边界)
+**一个把「确定性校盘」「用户上下文」「AI 预测」严格分层的本地优先研究原型。**
 
-[Try the interactive demo](https://madarame87.github.io/bazi-context-agent/) / [体验交互式演示](https://madarame87.github.io/bazi-context-agent/)
+[![Test](https://github.com/130U/bazi-context-agent/actions/workflows/test.yml/badge.svg)](https://github.com/130U/bazi-context-agent/actions/workflows/test.yml)
+[![Pages](https://github.com/130U/bazi-context-agent/actions/workflows/deploy-pages.yml/badge.svg)](https://github.com/130U/bazi-context-agent/actions/workflows/deploy-pages.yml)
+![Node 24+](https://img.shields.io/badge/Node-24%2B-5D7265)
+![Local first](https://img.shields.io/badge/privacy-local--first-A65F3F)
+
+[**Open the public walkthrough →**](https://130u.github.io/bazi-context-agent/) · [Architecture](docs/ARCHITECTURE.md) · [AI boundary](docs/AI_BOUNDARY.md) · [Evaluation](docs/EVALUATION.md)
+
+> **Demo scope / 演示范围** — The public page is a fixture-based walkthrough of the information contract and export flow. It makes no network request, performs no real chart calculation, and produces no personal prediction. / 公开页面是基于样例数据的信息契约与导出流程演示；不发起网络请求、不进行真实排盘，也不输出个人预测。
+
+Recorded birth time is treated as evidence, not ground truth. The system preserves uncertainty, generates and ranks candidates with deterministic code, compares them against dated life events, and only then allows user-controlled context to inform downstream forecasting.
+
+本项目不把记录出生时间当作绝对真值：先保留不确定性，用确定性代码生成和排序候选盘，以有日期的人生事件进行校盘；完成上游证据流程后，才允许用户可控上下文进入下游预测。
+
+## 60-second tour / 60 秒速览
+
+| Question / 问题 | Design answer / 设计回答 | Verifiable evidence / 可验证证据 |
+|---|---|---|
+| Can AI decide the chart? / AI 能定盘吗？ | No. Candidate generation, ranking, and rectification are deterministic. | [`tests/noAiBoundary.test.ts`](tests/noAiBoundary.test.ts), [`tests/rectificationV2.test.ts`](tests/rectificationV2.test.ts) |
+| Can context leak into ranking? / 上下文会回流到排序吗？ | No. `context_box` enters `ForecastInput` only after the chart evidence is fixed. | [`src/forecastInputBuilder.ts`](src/forecastInputBuilder.ts), [`tests/forecastInput.test.ts`](tests/forecastInput.test.ts) |
+| Is user data controllable? / 用户能控制数据吗？ | Sessions are local-first; facts can be hidden, redacted, deleted, exported, or cleared. | [`src/sessionStore.ts`](src/sessionStore.ts), [`tests/stage8Session.test.ts`](tests/stage8Session.test.ts) |
+| Is the forecast layer evaluated? / 预测层有评估吗？ | Offline A/B/C/D modes isolate derivative, context, default-chart, and selected-chart inputs. | [`src/benchmarkRunner.ts`](src/benchmarkRunner.ts), [`tests/stage7Evaluation.test.ts`](tests/stage7Evaluation.test.ts) |
+| Can the result be reproduced? / 结果能复现吗？ | The repository contains 120+ automated checks and a zero-dependency Node test path. | [`tests/`](tests/), [`package.json`](package.json) |
 
 ---
 
@@ -61,45 +78,30 @@ This public README intentionally describes the high-level architecture, not priv
 
 ## Architecture / 架构
 
-```text
-Birth input / 出生信息
-  |
-  v
-DefaultChart + CandidateChartV2 / 默认盘 + 候选盘
-  |
-  v
-BaziEngineAdapter / 八字引擎适配层
-  |
-  v
-BaziDerivedProfile / 八字导函数
-  |
-  v
-RectificationResultV2 / 事件回测校盘
-  |
-  v
-ForecastInput / 预测输入
-  |
-  v
-FutureForecastResult / 未来预测结果
-  |
-  v
-Report + Export + Evaluation / 报告、导出、评估
+```mermaid
+flowchart LR
+  subgraph upstream["Deterministic upstream / 确定性上游 · AI prohibited"]
+    birth["Birth input<br/>出生信息"] --> charts["Default + candidate charts<br/>默认盘 + 候选盘"]
+    charts --> adapter["BaziEngineAdapter<br/>引擎适配层"]
+    adapter --> profile["BaziDerivedProfile<br/>派生结构"]
+    profile --> rectify["Event-backed rectification<br/>事件回测校盘"]
+  end
+
+  context["User-controlled context<br/>用户可控上下文"] --> forecastInput["ForecastInput<br/>预测输入"]
+  rectify --> forecastInput
+
+  subgraph downstream["Bounded downstream / 有边界的下游"]
+    forecastInput --> engine["FutureForecastEngine<br/>mock by default"]
+    engine --> output["Report · Export · Evaluation<br/>报告 · 导出 · 评估"]
+  end
 ```
 
-Important boundary:
+Important boundary / 关键边界：
 
 ```text
-context_box -> ForecastInput only
-context_box -/-> ranking or rectification
-AI -/-> ranking or rectification
-```
-
-关键边界：
-
-```text
-信息框 -> 只进入预测输入
-信息框 -/-> 不进入候选盘排序或校盘
-AI -/-> 不进入候选盘排序或校盘
+context_box -> ForecastInput only / 信息框只进入预测输入
+context_box -/-> ranking or rectification / 不进入排序或校盘
+AI -/-> ranking or rectification / AI 不参与排序或校盘
 ```
 
 ---
@@ -121,46 +123,31 @@ AI -/-> 不进入候选盘排序或校盘
 
 ## Quick Start / 快速开始
 
-Static public demo / 静态公开演示：
-
-```text
-site/index.html
-```
-
-Local preview:
-
-```text
-Open site/index.html in a browser, or serve site/ with a simple static server.
-```
-
-After GitHub Pages is enabled, the demo URL is:
-
-```text
-https://madarame87.github.io/bazi-context-agent/
-```
-
-启用 GitHub Pages 后，演示地址为：
-
-```text
-https://madarame87.github.io/bazi-context-agent/
-```
+Requirements / 环境要求：**Node.js 24+**. The project has no runtime dependencies, so no install step is required for the test and local-demo paths below. / 项目无运行时依赖，以下测试与本地演示无需安装依赖。
 
 ```bash
-npm install
+git clone https://github.com/130U/bazi-context-agent.git
+cd bazi-context-agent
 npm test
 npm run ui
 ```
 
-PowerShell fallback:
+Then open [`http://127.0.0.1:3000`](http://127.0.0.1:3000). The local workspace exercises the deterministic ranking, forecast, report, evaluation, and privacy-control surfaces with fictional fixtures.
+
+然后打开 [`http://127.0.0.1:3000`](http://127.0.0.1:3000)。本地工作台使用虚构样例，覆盖确定性排序、预测、报告、评估与隐私控制界面。
+
+Windows PowerShell:
 
 ```powershell
-$env:Path='C:\Program Files\nodejs;' + $env:Path; npm.cmd test
-$env:Path='C:\Program Files\nodejs;' + $env:Path; npm.cmd run ui
+npm.cmd test
+npm.cmd run ui
 ```
 
-The local UI is a demo/prototype surface. It does not require login, payment, a database, or cloud sync.
+Public static walkthrough / 公开静态演示：
 
-本地 UI 是原型演示界面，不需要登录、支付、数据库或云同步。
+- Live / 在线：<https://130u.github.io/bazi-context-agent/>
+- Source / 源文件：[`site/index.html`](site/index.html)
+- Scope / 范围：fixture-based, browser-only, no login, no API key, no model call / 基于样例、仅浏览器端、无需登录或密钥、不调用模型
 
 ---
 
@@ -251,7 +238,8 @@ This framework supports comparative evaluation under holdout conditions. It does
 | 6 | Future forecast engine | 未来预测引擎 | Done |
 | 7 | Evaluation benchmark | 评估基准 | Done |
 | 8 | Privacy/storage/user control | 隐私、存储、用户控制 | Done |
-| 9 | GitHub release polish | GitHub 发布包装 | Current |
+| 9 | GitHub release polish | GitHub 发布包装 | Done |
+| 10 | Public demo + repository hygiene | 公开演示与仓库整理 | Done |
 
 ---
 

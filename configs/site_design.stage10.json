@@ -1,26 +1,27 @@
 {
   "stage": "10",
-  "design_name": "Duke Blue AI Workspace",
+  "design_name": "Editorial Intelligence Workspace",
   "colors": {
-    "duke_navy_blue": "#012169",
-    "duke_royal_blue": "#00539B",
-    "paper": "#F8F6EF",
-    "ink": "#101828",
-    "muted": "#667085",
-    "gold": "#C99700"
+    "paper": "#F4F0E8",
+    "surface": "#FFFDF8",
+    "ink": "#20211E",
+    "muted": "#686861",
+    "copper": "#A65F3F",
+    "green": "#5D7265"
   },
   "typography": {
-    "display": "Georgia, 'Times New Roman', ui-serif, serif",
-    "body": "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+    "display": "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+    "body": "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
   },
   "layout": {
-    "pattern": "split AI workspace",
-    "left": "guided input wizard",
-    "right": "live report preview",
-    "nav": "progress rail"
+    "pattern": "editorial split workspace",
+    "left": "fixture input review",
+    "right": "illustrative report contract",
+    "nav": "four-stage pipeline"
   },
   "must_not_use": [
     "external font files",
+    "opaque demo claims",
     "real API key",
     "login",
     "database"

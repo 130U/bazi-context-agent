@@ -2,28 +2,25 @@
 
 ## Design direction
 
-Use a modern AI product interface:
+Use a restrained editorial-intelligence interface:
 
-- deep Duke Blue background;
-- glassmorphism panels;
-- serif display headline;
-- restrained sans-serif UI labels;
-- right-side live preview;
-- subtle gradients;
+- warm-white canvas with graphite text;
+- copper accents and low-saturation green status cues;
+- system typography with compact display tracking and comfortable body leading;
+- evidence-first hierarchy with minimal, purposeful depth;
+- right-side report-contract preview;
 - high contrast;
 - no ornamental metaphysics clichés.
 
 ## Color tokens
 
 ```css
---duke-blue: #012169;
---duke-royal: #00539B;
---paper: #F8F6EF;
---ink: #101828;
---muted: #667085;
---line: rgba(255,255,255,0.18);
---glass: rgba(255,255,255,0.10);
---gold: #C99700;
+--paper: #F4F0E8;
+--surface: #FFFDF8;
+--ink: #20211E;
+--muted: #686861;
+--copper: #A65F3F;
+--green: #5D7265;
 ```
 
 ## Typography
@@ -31,16 +28,10 @@ Use a modern AI product interface:
 Use local/system fonts only:
 
 ```css
-font-family: Georgia, "Times New Roman", ui-serif, serif;
+font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 ```
 
-for hero headings, and:
-
-```css
-font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-```
-
-for body/UI.
+Use tighter tracking for large headings and comfortable leading for body/UI.
 
 Do not load paid fonts or external font files.
 
@@ -48,15 +39,17 @@ Do not load paid fonts or external font files.
 
 Borrow general patterns, not proprietary assets:
 
-- AI workspace split layout;
-- conversational input + structured output;
+- editorial split workspace;
+- explicit fixture input + structured report contract;
 - cards with progressive disclosure;
-- “Try demo” CTA above the fold;
-- status badges for deterministic / local / no-key demo.
+- “Explore the walkthrough” CTA above the fold;
+- four-stage pipeline and status strip for deterministic / local / no-key demo.
 
 ## Accessibility
 
 - Maintain text contrast.
 - Use visible focus states.
 - Buttons must be keyboard reachable.
+- Buttons should respond immediately on press.
+- Respect `prefers-reduced-motion`, `prefers-reduced-transparency`, and `prefers-contrast`.
 - Avoid tiny low-contrast text.

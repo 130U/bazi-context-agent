@@ -3,100 +3,172 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>BaZi Context Agent Demo</title>
-  <meta name="description" content="A static, local-first demo for BaZi-derived structure and context-aware forecasting." />
+  <title>BaZi Context Agent — Evidence-first rectification</title>
+  <meta name="description" content="A local-first research prototype that keeps BaZi rectification deterministic, context user-controlled, and AI downstream." />
+  <meta name="theme-color" content="#f4f0e8" />
+  <meta property="og:title" content="BaZi Context Agent" />
+  <meta property="og:description" content="Deterministic rectification. User-controlled context. AI only downstream." />
+  <meta property="og:type" content="website" />
   <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
+  <a class="skip-link" href="#demo">Skip to interactive walkthrough</a>
+
+  <header class="site-header">
+    <a class="brand" href="#top" aria-label="BaZi Context Agent home">
+      <span class="brand-mark" aria-hidden="true">八</span>
+      <span>BaZi Context Agent</span>
+    </a>
+    <nav aria-label="Primary navigation">
+      <a href="#method">Method</a>
+      <a href="https://github.com/130U/bazi-context-agent" target="_blank" rel="noreferrer">Source <span aria-hidden="true">↗</span></a>
+    </nav>
+  </header>
+
   <main class="shell">
-    <section class="hero" aria-labelledby="hero-title">
-      <p class="eyebrow">Deterministic BaZi structure + user-controlled context</p>
-      <h1 id="hero-title">From birth-time structure to a context-aware forecast.</h1>
-      <p class="hero-copy">
-        A static public demo showing how a BaZi-derived function and a user-controlled
-        context profile can be separated, reviewed, and combined for a structured forecast.
-      </p>
-      <div class="badges" aria-label="Demo status">
-        <span>No login</span>
-        <span>No API key</span>
-        <span>Static demo</span>
-        <span>Local-first</span>
+    <section class="hero" id="top" aria-labelledby="hero-title">
+      <div class="hero-main">
+        <p class="eyebrow">Evidence-first BaZi research prototype</p>
+        <h1 id="hero-title">Test uncertainty before interpretation.</h1>
+        <p class="hero-copy">
+          Recorded birth time is evidence, not ground truth. This prototype keeps chart
+          derivation and rectification deterministic, gives people control over context,
+          and permits AI only after the upstream evidence is fixed.
+        </p>
+        <p class="hero-copy hero-copy-zh" lang="zh-CN">
+          先处理出生时间的不确定性，再进入解释：校盘由确定性代码完成，上下文由用户控制，AI 只在下游工作。
+        </p>
+        <div class="hero-actions">
+          <a class="button primary" href="#demo">Explore the walkthrough</a>
+          <a class="button secondary" href="https://github.com/130U/bazi-context-agent#architecture--架构" target="_blank" rel="noreferrer">Read the architecture</a>
+        </div>
       </div>
+
+      <aside class="principle-card" aria-label="System principle">
+        <p class="eyebrow">Operating principle</p>
+        <blockquote>“Recorded time is a prior, not truth.”</blockquote>
+        <dl>
+          <div><dt>Upstream</dt><dd>Deterministic only</dd></div>
+          <div><dt>Context</dt><dd>User-controlled</dd></div>
+          <div><dt>Forecast</dt><dd>Downstream, bounded</dd></div>
+        </dl>
+      </aside>
     </section>
 
-    <section class="workspace" aria-label="Interactive public demo">
-      <aside class="panel input-panel">
-        <nav class="progress-rail" aria-label="Demo progress">
-          <span class="step is-active">1</span>
-          <span class="step is-active">2</span>
-          <span class="step">3</span>
-          <span class="step">4</span>
-        </nav>
+    <ol class="pipeline" aria-label="System pipeline">
+      <li><span>01</span><strong>Derive</strong><small>structured chart data</small></li>
+      <li><span>02</span><strong>Rectify</strong><small>dated-event evidence</small></li>
+      <li><span>03</span><strong>Context</strong><small>user-controlled facts</small></li>
+      <li><span>04</span><strong>Forecast</strong><small>bounded downstream use</small></li>
+    </ol>
 
+    <div class="trust-strip" aria-label="Demo status">
+      <span><i aria-hidden="true"></i> No login</span>
+      <span><i aria-hidden="true"></i> No API key</span>
+      <span><i aria-hidden="true"></i> No network request</span>
+      <span><i aria-hidden="true"></i> Fixture-based demo</span>
+    </div>
+
+    <section class="demo-intro" aria-labelledby="demo-title">
+      <div>
+        <p class="eyebrow">Interactive public walkthrough</p>
+        <h2 id="demo-title">Inspect the separation of evidence and context.</h2>
+      </div>
+      <p>
+        This page demonstrates the information contract and export flow with an illustrative
+        fixture. It does not calculate a real chart or make a personal prediction.
+      </p>
+    </section>
+
+    <section class="workspace" id="demo" aria-label="Interactive public walkthrough">
+      <aside class="panel input-panel">
         <div class="panel-heading">
-          <p class="eyebrow">Try the demo</p>
-          <h2>Guided input</h2>
+          <p class="eyebrow">01 · Inputs</p>
+          <h2>Review the fixture</h2>
+          <p>Change the values to see how user inputs remain explicit in the report contract.</p>
         </div>
 
-        <label>
-          Birth date
-          <input id="birthDate" value="1998-05-10" autocomplete="off" />
-        </label>
-        <label>
-          Recorded birth time
-          <input id="birthTime" value="22:30" autocomplete="off" />
-        </label>
+        <div class="field-row">
+          <label>
+            Birth date
+            <input id="birthDate" type="date" value="1998-05-10" autocomplete="off" />
+          </label>
+          <label>
+            Recorded birth time
+            <input id="birthTime" type="time" value="22:30" autocomplete="off" />
+          </label>
+        </div>
         <label>
           User-controlled context profile
-          <textarea id="contextProfile">High educational support, international orientation, graduate-level education, interested in product and strategy.</textarea>
+          <textarea id="contextProfile" rows="4">High educational support, international orientation, graduate-level education, interested in product and strategy.</textarea>
         </label>
         <label>
           Forecast question
-          <textarea id="forecastQuestion">What should I pay attention to over the next 12 months?</textarea>
+          <textarea id="forecastQuestion" rows="3">What should I pay attention to over the next 12 months?</textarea>
         </label>
 
-        <button id="generateBtn" type="button">Generate demo forecast</button>
+        <button class="primary-action" id="generateBtn" type="button">Refresh illustrative report</button>
 
-        <p class="fineprint">
-          This static demo does not call OpenAI, require login, write an API key, or send input to a server.
+        <p class="fineprint" id="privacy-note">
+          Everything on this page stays in your browser. The public walkthrough uses fixed
+          example logic and never calls a model or server.
         </p>
       </aside>
 
-      <section class="panel output-panel">
+      <section class="panel output-panel" aria-labelledby="report-title">
         <div class="output-header">
           <div>
-            <p class="eyebrow">Live preview</p>
-            <h2>Forecast report</h2>
+            <p class="eyebrow">02 · Output contract</p>
+            <h2 id="report-title">Illustrative report</h2>
           </div>
-          <span class="status">local static</span>
+          <span class="status"><i aria-hidden="true"></i> local fixture</span>
         </div>
 
         <div id="report" class="report" aria-live="polite"></div>
 
         <div class="actions" aria-label="Export controls">
-          <button id="copyBtn" type="button">Copy report</button>
+          <button id="copyBtn" type="button">Copy Markdown</button>
           <button id="jsonBtn" type="button">Download JSON</button>
           <button id="mdBtn" type="button">Download Markdown</button>
-          <a class="sample-link" href="data/demo-session.json" download>Demo session</a>
+          <a class="sample-link" href="data/demo-session.json" download>Sample session</a>
         </div>
+        <p id="actionStatus" class="action-status" role="status" aria-live="polite">Ready to inspect or export.</p>
       </section>
     </section>
 
-    <section class="cards" aria-label="System boundaries">
-      <article>
-        <h3>Derived function</h3>
-        <p>BaZi-derived pillars and timing signals are treated as structure, not as a final answer.</p>
-      </article>
-      <article>
-        <h3>Initial value</h3>
-        <p>The context profile is user-controlled and only belongs in forecasting, not rectification ranking.</p>
-      </article>
-      <article>
-        <h3>Boundary first</h3>
-        <p>Ranking, context, forecast, and export roles stay separate. No secret leaves this static page.</p>
-      </article>
+    <section class="method" id="method" aria-labelledby="method-title">
+      <div class="method-heading">
+        <p class="eyebrow">Why the boundary matters</p>
+        <h2 id="method-title">One pipeline, three explicit responsibilities.</h2>
+      </div>
+      <div class="cards">
+        <article>
+          <span class="card-index">01</span>
+          <h3>Deterministic upstream</h3>
+          <p>Candidate generation, event backtesting, and rectification stay in auditable code. AI cannot alter the selected chart.</p>
+        </article>
+        <article>
+          <span class="card-index">02</span>
+          <h3>User-controlled context</h3>
+          <p>Context can be hidden from forecasts, excluded from exports, or deleted. It never leaks back into chart ranking.</p>
+        </article>
+        <article>
+          <span class="card-index">03</span>
+          <h3>Measured downstream</h3>
+          <p>Offline A/B/C/D evaluation separates derivative-only, context-only, default-chart, and selected-chart modes.</p>
+        </article>
+      </div>
     </section>
   </main>
+
+  <footer>
+    <p><strong>BaZi Context Agent</strong> · Research prototype, not medical, legal, financial, or safety-critical advice.</p>
+    <div>
+      <a href="https://github.com/130U/bazi-context-agent" target="_blank" rel="noreferrer">GitHub</a>
+      <a href="https://github.com/130U/bazi-context-agent/blob/master/docs/AI_BOUNDARY.md" target="_blank" rel="noreferrer">AI boundary</a>
+      <a href="https://github.com/130U/bazi-context-agent/tree/master/tests" target="_blank" rel="noreferrer">Tests</a>
+    </div>
+  </footer>
 
   <script src="./app.js"></script>
 </body>

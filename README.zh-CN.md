@@ -2,7 +2,7 @@
 
 一个 deterministic-first 的八字校盘与上下文增强预测研究原型。
 
-Demo: https://madarame87.github.io/bazi-context-agent/
+交互演示：https://130u.github.io/bazi-context-agent/
 
 ## 核心公式
 

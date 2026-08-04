@@ -2,7 +2,7 @@
 
 A deterministic-first BaZi rectification and context-aware forecasting research prototype.
 
-Interactive demo: https://madarame87.github.io/bazi-context-agent/
+Interactive walkthrough: https://130u.github.io/bazi-context-agent/
 
 ## Core Formula
 
