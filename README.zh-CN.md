@@ -18,6 +18,6 @@
 - AI 只在定盘和校盘完成后用于预测、解释和报告。
 - context_box 可以用于预测，但不能回流影响 ranking 或 rectification。
 - A/B/C/D evaluation 用于区分「复述已知事实」和「预测」。
-- 默认 local-first，支持本地 session、导出/导入和脱敏。
+- 公开 Pages 版本只使用标签页内存；独立的本地研究工作台提供显式导入/导出与脱敏控制。
 
 详见主 README。

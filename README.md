@@ -104,6 +104,10 @@ context_box -/-> ranking or rectification / 不进入排序或校盘
 AI -/-> ranking or rectification / AI 不参与排序或校盘
 ```
 
+The deployed browser core is split into `shared → branches → rectification / forecast`, with [`site/engine.js`](site/engine.js) as a stable facade. UI code consumes structured results and does not own scoring. See the [architecture contract](docs/ARCHITECTURE.md) for module responsibilities, security gates, and extension points.
+
+线上浏览器核心按 `shared → branches → rectification / forecast` 分层，[`site/engine.js`](site/engine.js) 只作为稳定外观层；UI 只消费结构化结果，不持有评分逻辑。模块职责、安全门禁与扩展点见[架构契约](docs/ARCHITECTURE.md)。
+
 ---
 
 ## Tech Stack / 技术栈
@@ -112,7 +116,7 @@ AI -/-> ranking or rectification / AI 不参与排序或校盘
 |---|---|
 | Runtime | Node.js + TypeScript |
 | Tests | Node.js built-in `node:test` |
-| UI | Local vanilla HTML/JS served by Node |
+| UI | Vanilla ESM: static Pages app plus a separate local Node research UI |
 | Config | JSON policy/config files under `configs/` |
 | BaZi engine | Adapter boundary via `BaziEngineAdapter` |
 | Prediction provider | Mock by default; OpenAI only behind server-side env flag |
@@ -128,18 +132,21 @@ Requirements / 环境要求：**Node.js 24+**. The project has no runtime depend
 ```bash
 git clone https://github.com/130U/bazi-context-agent.git
 cd bazi-context-agent
-npm test
+npm ci --ignore-scripts
+npm run check
+npm run preview
 npm run ui
 ```
 
-Then open [`http://127.0.0.1:3000`](http://127.0.0.1:3000). The local workspace exercises the deterministic ranking, forecast, report, evaluation, and privacy-control surfaces with fictional fixtures.
+Open [`http://127.0.0.1:4173`](http://127.0.0.1:4173) for the deployable public experience. `npm run ui` separately starts the broader research workspace at [`http://127.0.0.1:3000`](http://127.0.0.1:3000), using fictional fixtures.
 
-然后打开 [`http://127.0.0.1:3000`](http://127.0.0.1:3000)。本地工作台使用虚构样例，覆盖确定性排序、预测、报告、评估与隐私控制界面。
+访问 [`http://127.0.0.1:4173`](http://127.0.0.1:4173) 可预览将部署的公开体验；`npm run ui` 会另行在 [`http://127.0.0.1:3000`](http://127.0.0.1:3000) 启动使用虚构样例的完整研究工作台。
 
 Windows PowerShell:
 
 ```powershell
 npm.cmd test
+npm.cmd run preview
 npm.cmd run ui
 ```
 
@@ -148,6 +155,7 @@ Public browser experience / 公开浏览器体验：
 - Live / 在线：<https://www.theodoreoy.com/bazi-context-agent/>
 - Source / 源文件：[`site/index.html`](site/index.html)
 - Build config / 构建配置：`npm run build:site`
+- Verify repository / 验证仓库：`npm run check`
 - Scope / 范围：config-backed, browser-only, no login, no API key, no model call, zero session persistence; the dated branch-cycle forecast is not a full calendar-derived chart / 配置驱动、仅浏览器端、无需登录或密钥、不调用模型、会话零持久化；带日期的时支周期推演不等同于完整历法派生盘
 
 ---

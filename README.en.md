@@ -18,6 +18,6 @@ Forecast = derivative function + initial value + current date + forecast horizon
 - AI is used only after chart selection for forecasting, explanation, and reports.
 - The context box can inform forecasts, but cannot leak back into ranking or rectification.
 - A/B/C/D evaluation modes help separate recall of known facts from forecasting.
-- Local-first privacy controls support session storage, import/export, and redaction.
+- The public Pages app is memory-only; the separate local research workspace supports explicit import/export and redaction controls.
 
 See the main README for the full bilingual version.

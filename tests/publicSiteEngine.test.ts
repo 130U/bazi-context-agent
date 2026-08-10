@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createRuntimeConfig } from "../scripts/buildPublicConfig.ts";
 import {
@@ -11,7 +11,8 @@ import {
   getStageOneQuestions,
   lockWorkingChart,
   normalizeIntake,
-  scoreSession
+  scoreSession,
+  validateRuntimeConfig
 } from "../site/engine.js";
 
 const runtimePath = fileURLToPath(new URL("../site/data/runtime-config.json", import.meta.url));
@@ -19,6 +20,8 @@ const enginePath = fileURLToPath(new URL("../site/engine.js", import.meta.url));
 const appPath = fileURLToPath(new URL("../site/app.js", import.meta.url));
 const indexPath = fileURLToPath(new URL("../site/index.html", import.meta.url));
 const stylesPath = fileURLToPath(new URL("../site/styles.css", import.meta.url));
+const corePath = fileURLToPath(new URL("../site/core/", import.meta.url));
+const privacyPath = fileURLToPath(new URL("../site/ui/privacy.js", import.meta.url));
 
 function runtimeConfig() {
   return JSON.parse(readFileSync(runtimePath, "utf8"));
@@ -53,6 +56,16 @@ test("public runtime config is generated exactly from the two authority configs"
   const published = runtimeConfig();
   assert.deepEqual(published, generated);
   assert.deepEqual(published.source_files, ["configs/question_bank.v1.json", "configs/scoring_weights.v1.json"]);
+});
+
+test("public runtime config rejects broken question references and weights", () => {
+  const brokenQuestion = runtimeConfig();
+  brokenQuestion.question_bank.adaptive_policy.question_order[0] = "missing_question";
+  assert.throws(() => validateRuntimeConfig(brokenQuestion), /unknown ordered question/i);
+
+  const brokenWeight = runtimeConfig();
+  brokenWeight.scoring_weights.browser_rectification.candidate_component_weights.event_backtest = "0.55";
+  assert.throws(() => validateRuntimeConfig(brokenWeight), /invalid candidate component weights/i);
 });
 
 test("unsure intake produces twelve symmetric candidates with no Zi default bias", () => {
@@ -194,7 +207,10 @@ test("engine keeps hostile text as data and has no DOM, HTML, network, or AI pro
   const hostile = '<img src=x onerror="globalThis.pwned=true">';
   const withContext = answerQuestion(locked, "D7_inner_preferred_direction", hostile, config);
   const forecast = buildLocalForecast(withContext, { current_date: "2026-08-10" }, config);
-  const source = readFileSync(enginePath, "utf8");
+  const source = [
+    readFileSync(enginePath, "utf8"),
+    ...readdirSync(corePath).filter((name) => name.endsWith(".js")).map((name) => readFileSync(`${corePath}/${name}`, "utf8"))
+  ].join("\n");
 
   assert.equal(forecast.initial_conditions[0].value, hostile);
   for (const forbidden of [/innerHTML/, /outerHTML/, /document\./, /fetch\s*\(/, /XMLHttpRequest/, /WebSocket/, /openai/i, /anthropic/i]) {
@@ -215,6 +231,7 @@ test("public UI removes the ornamental memory cards and renders forecast windows
 
 test("public session is memory-only and clears only known app storage keys on entry and exit", () => {
   const app = readFileSync(appPath, "utf8");
+  const privacy = readFileSync(privacyPath, "utf8");
   const html = readFileSync(indexPath, "utf8");
 
   for (const forbidden of [
@@ -222,13 +239,28 @@ test("public session is memory-only and clears only known app storage keys on en
     /sessionStorage\.(?:setItem|getItem|clear)\s*\(/,
     /data-action="save-session"/,
     /data-action="resume"/
-  ]) assert.equal(forbidden.test(`${app}\n${html}`), false, `public UI matched forbidden persistence path ${forbidden}`);
+  ]) assert.equal(forbidden.test(`${app}\n${privacy}\n${html}`), false, `public UI matched forbidden persistence path ${forbidden}`);
 
-  assert.match(app, /localStorage\.removeItem\(key\)/);
-  assert.match(app, /sessionStorage\.removeItem\(key\)/);
-  assert.match(app, /clearPersistedSession\(\);\s*\n\s*try \{/);
+  assert.match(privacy, /localStorage\.removeItem\(key\)/);
+  assert.match(privacy, /sessionStorage\.removeItem\(key\)/);
+  assert.match(app, /clearKnownStorage\(\);\s*\n\s*try \{/);
   assert.match(app, /addEventListener\("pagehide"/);
-  assert.doesNotMatch(app, /localStorage\.clear|sessionStorage\.clear/);
+  assert.doesNotMatch(`${app}\n${privacy}`, /localStorage\.clear|sessionStorage\.clear/);
   assert.match(html, /不会把出生资料、人生事件或报告写入 localStorage 或 sessionStorage/);
   assert.equal((html.match(/<form[^>]+autocomplete="off"/g) ?? []).length, 4);
+});
+
+test("public entry point enforces a restrictive CSP and bounded validated config loading", () => {
+  const app = readFileSync(appPath, "utf8");
+  const html = readFileSync(indexPath, "utf8");
+
+  assert.match(html, /http-equiv="Content-Security-Policy"/);
+  for (const directive of ["default-src 'self'", "object-src 'none'", "base-uri 'none'", "form-action 'self'"]) {
+    assert.match(html, new RegExp(directive.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+  }
+  assert.match(html, /name="referrer" content="strict-origin-when-cross-origin"/);
+  assert.match(app, /MAX_RUNTIME_CONFIG_BYTES/);
+  assert.match(app, /validateRuntimeConfig\(config\)/);
+  assert.doesNotMatch(html, /<script(?![^>]*\bsrc=)[^>]*>/i);
+  assert.doesNotMatch(html, /<[^>]+\son[a-z]+\s*=/i);
 });
