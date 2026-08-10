@@ -11,7 +11,7 @@
 
 [**Open the public experience →**](https://www.theodoreoy.com/bazi-context-agent/) · [Architecture](docs/ARCHITECTURE.md) · [AI boundary](docs/AI_BOUNDARY.md) · [Evaluation](docs/EVALUATION.md)
 
-> **Public scope / 公开范围** — The browser now runs the configured 15–17 question rectification flow, candidate comparison, working-chart lock, context intake, and an evidence-linked local scenario. Ranking never uses AI. Because the browser build still lacks tested annual-fortune and luck-cycle data, it explicitly degrades instead of inventing a BaZi forecast. / 浏览器现在运行配置化的 15–17 问校时、候选比较、工作结构锁定、现实上下文与证据报告；排名不使用 AI。由于浏览器构建仍没有经过验证的流年与大运数据，它会明确降级，而不会编造八字时间窗口。
+> **Public scope / 公开范围** — The browser runs the configured 15–17 question rectification flow, candidate comparison, working-chart lock, context intake, and a deterministic month-by-month branch-cycle forecast with dated support and transition windows. Ranking and forecasting use no AI. The public forecast is deliberately narrower than a full calendar-derived BaZi forecast: it relates the locked hour branch to an approximate seasonal branch for each Gregorian month and exposes that limitation in the report. / 浏览器运行配置化的 15–17 问校时、候选比较、工作结构锁定与现实上下文，并按月输出带日期的支持窗口和调整窗口；排名与推演均不使用 AI。公开版的口径比完整历法八字预测更窄：它把锁定时支与每个公历月近似的季节支做关系推导，并在报告中明确披露这一限制。
 
 Recorded birth time is treated as evidence, not ground truth. The system preserves uncertainty, generates and ranks candidates with deterministic code, compares them against dated life events, and only then allows user-controlled context to inform downstream forecasting.
 
@@ -66,7 +66,7 @@ Forecast / 预测
 | **Deterministic chart derivation**: chart candidates and derived profiles are produced by code before AI is allowed. | **确定性排盘与派生**：候选盘和八字派生结构先由代码生成，AI 不参与定盘。 |
 | **BaZi derived-function engine**: chart data is normalized into a `BaziDerivedProfile` for downstream forecasting. | **八字导函数引擎**：将八字结构统一整理成 `BaziDerivedProfile`，供后续预测使用。 |
 | **Context-aware forecast**: user-controlled context can personalize forecasts after chart derivation. | **上下文增强预测**：用户可控的信息框可在定盘完成后用于个性化预测。 |
-| **Local-first privacy**: session save/load/export/import and redaction are designed for local control. | **本地优先隐私**：会话保存、恢复、导出、导入和脱敏都以本地控制为核心。 |
+| **Ephemeral public privacy**: the Pages experience keeps sensitive answers in tab memory only and removes known legacy storage on entry and exit; export is explicit. | **公开版临时会话隐私**：敏感答案只留在标签页内存；进入和退出时清理已知旧存储，导出必须由用户主动触发。 |
 | **Evaluation benchmark**: A/B/C/D modes compare derivative-only, context-only, default-chart, and full-system variants. | **评估基准**：A/B/C/D 模式比较只看导函数、只看初始值、默认盘和完整系统。 |
 | **Explicit AI boundary**: AI cannot alter upstream chart evidence or deterministic ranking. | **明确 AI 边界**：AI 不能回流修改上游排盘证据或确定性排序。 |
 
@@ -148,7 +148,7 @@ Public browser experience / 公开浏览器体验：
 - Live / 在线：<https://www.theodoreoy.com/bazi-context-agent/>
 - Source / 源文件：[`site/index.html`](site/index.html)
 - Build config / 构建配置：`npm run build:site`
-- Scope / 范围：config-backed, browser-only, no login, no API key, no model call; raw birth input does not yet produce a full calendar-derived chart / 配置驱动、仅浏览器端、无需登录或密钥、不调用模型；真实出生输入尚不能生成完整历法派生盘
+- Scope / 范围：config-backed, browser-only, no login, no API key, no model call, zero session persistence; the dated branch-cycle forecast is not a full calendar-derived chart / 配置驱动、仅浏览器端、无需登录或密钥、不调用模型、会话零持久化；带日期的时支周期推演不等同于完整历法派生盘
 
 ---
 
@@ -188,9 +188,9 @@ Not allowed:
 
 ## Privacy / 隐私
 
-**EN** - The project is designed as local-first. User context is user-controlled: facts can be hidden from forecast, hidden from export, deleted, or cleared from local storage. Exported sessions and reports apply redaction rules and must not include API keys or secrets.
+**EN** - The public Pages experience is ephemeral by default: birth data, life events, context, and reports stay in tab memory only. It does not save or resume sessions through browser storage; entry, explicit exit, refresh, and tab closure remove this app's known legacy storage keys without clearing unrelated same-origin data. JSON export remains an explicit user action and may contain sensitive answers.
 
-**中文** - 本项目按 local-first 设计。用户上下文由用户控制：可以隐藏不进入预测、隐藏不进入导出、删除事实，或清空本地数据。导出的 session 和报告会应用脱敏规则，不应包含 API key 或 secrets。
+**中文** - 公开 Pages 体验默认采用临时会话：出生资料、人生事件、现实上下文和报告只存在于当前标签页内存，不通过浏览器存储保存或恢复。进入、明确退出、刷新或关闭标签页时，只删除本应用已知的旧存储键，不会清空同源个人站的其他数据。JSON 导出仍需用户主动触发，并可能包含敏感答案。
 
 Do not commit:
 

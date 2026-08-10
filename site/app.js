@@ -7,7 +7,11 @@ import {
   scoreSession
 } from "./engine.js";
 
-const STORAGE_KEY = "bazi-context-agent.public-session.v1";
+const LEGACY_STORAGE_KEYS = [
+  "bazi-context-agent.public-session.v1",
+  "bazi-context-agent.session.v1",
+  "bazi-context-session"
+];
 const HORIZON_MONTHS = { "6_months": 6, "12_months": 12, "24_months": 24 };
 const PURPOSES = {
   B: ["传统线索 · 弱先验", "这类线索只用于形成弱先验，不会盖过有日期的人生事件。"],
@@ -376,28 +380,23 @@ function displayValue(questionId, value) {
   return optionLabel(question, value);
 }
 
-function addMonths(date, months) {
-  const result = new Date(`${date}T12:00:00`);
-  result.setMonth(result.getMonth() + months);
-  return result.toISOString().slice(0, 10);
-}
-
 function renderForecast(request) {
   forecast = buildLocalForecast(session, request, runtimeConfig);
   const selected = forecast.selected_structure;
+  const confidenceLabels = { high: "较高", medium: "中等", low: "有限" };
+  const strengthLabels = { high: "强", medium: "中", low: "弱" };
   text("forecast-generated-at", forecast.generated_for_date);
   text("forecast-chart", `${selected.hour_label} · ${selected.branch}`);
-  text("forecast-mode", forecast.scenario.mode === "degraded_context_planning_scenario" ? "本地规划情景（降级）" : "本地结构情景");
+  text("forecast-mode", "本地确定性时序推演");
   text("forecast-question-display", forecast.question);
-  text("forecast-summary-copy", forecast.scenario.mode === "degraded_context_planning_scenario"
-    ? "当前浏览器构建没有大运或流年数据，因此不会伪造八字时间窗口。下面把锁定结构、现实上下文和你选择的期限整理成可复核的规划情景。"
-    : "以下窗口来自锁定结构、可用时序信号和你主动提供的现实上下文；它们是待验证的情景，不是确定性结论。"
-  );
+  const focusLabels = forecast.domain_forecasts.map((domain) => domain.label).join("、");
+  text("forecast-summary-copy", `${forecast.scenario.summary} 本次聚焦 ${focusLabels}；推演置信度为${confidenceLabels[forecast.scenario.confidence.level]}，结果不是事件必然发生的概率。`);
 
   listItems("derivative-basis", [
     `工作时辰：${selected.hour_label}（${selected.representative_time}）`,
     `相对支持分：${selected.total_score.toFixed(3)}`,
-    `锁定状态：${session.lock.status === "stable" ? "满足稳定门" : "暂定结构"}`
+    `锁定状态：${session.lock.status === "stable" ? "满足稳定门" : "暂定结构"}`,
+    "时序口径：公历月份近似季节支，再与工作时支计算关系"
   ], "没有可用结构信息。");
   listItems("initial-basis", forecast.initial_conditions
     .filter((fact) => fact.value !== "skip")
@@ -412,34 +411,69 @@ function renderForecast(request) {
 
   const timeline = document.getElementById("forecast-timeline-list");
   clear(timeline);
-  const months = forecast.horizon.months;
-  const splits = [
-    ["现在 · 建立基线", forecast.horizon.start_date, "写下当前资源、约束与成功标准；避免把已知事实误写成预测。"],
-    ["中段 · 检查信号", addMonths(forecast.horizon.start_date, Math.max(1, Math.round(months / 2))), "复核哪些条件真正改变，再决定继续、收缩或转向。"],
-    ["期末 · 回看结果", forecast.horizon.end_date, "对照最初问题与行动记录，区分结构信号、环境变化和自己的选择。"]
-  ];
-  splits.forEach(([title, date, body]) => {
-    const item = make("article", "timeline-window");
-    item.append(make("span", "report-label", date), make("h3", "", title), make("p", "", body));
+  const headlineWindows = [
+    ...forecast.headline_windows.support,
+    ...forecast.headline_windows.transition
+  ].sort((left, right) => left.start_date.localeCompare(right.start_date));
+  headlineWindows.forEach((window) => {
+    const isSupport = window.kind === "support";
+    const item = make("article", `timeline-window timeline-${window.kind}`);
+    const eyebrow = make("div", "window-eyebrow");
+    eyebrow.append(
+      make("span", "window-kind", isSupport ? "相对支持" : "调整 / 承压"),
+      make("span", "report-label", `${window.start_date} — ${window.end_date}`)
+    );
+    const relation = `工作时支 ${BRANCH_GLYPHS[selected.branch]} 与本月季节支 ${BRANCH_GLYPHS[window.seasonal_branch]} 形成${window.relation_label}`;
+    const domainCopy = window.domain_signals
+      .map((signal) => `${signal.label}${strengthLabels[signal.strength]}信号`)
+      .join("、");
+    const sensitivity = window.sensitivity.agreement_count === window.sensitivity.compared_chart_count
+      ? `Top ${window.sensitivity.compared_chart_count} 候选同向`
+      : `仅 ${window.sensitivity.agreement_count}/${window.sensitivity.compared_chart_count} 候选同向`;
+    item.append(
+      eyebrow,
+      make("h3", "", `${window.month_label} · ${window.relation_label}`),
+      make("p", "", `${relation}。在 ${domainCopy} 上，${isSupport ? "更适合推进、连接资源与确认承诺" : "更容易出现变化、摩擦或被迫调整，重要决定宜留出回旋空间"}。`),
+      make("small", "window-sensitivity", sensitivity)
+    );
     timeline.append(item);
   });
 
-  const actions = document.getElementById("forecast-action-list");
-  clear(actions);
-  [
-    `把“${forecast.question}”改写成一个在 ${forecast.horizon.months} 个月内可观察的结果。`,
-    "挑出一个你能控制的行动和一个需要外界验证的假设，分别记录。",
-    "在中段检查点复盘；如果出生资料或重大年份有修正，先回到 Stage 1 重算。"
-  ].forEach((action) => actions.append(make("li", "", action)));
+  const domainList = document.getElementById("forecast-domain-list");
+  clear(domainList);
+  forecast.domain_forecasts.forEach((domain) => {
+    const card = make("article", "domain-forecast-card");
+    const heading = make("div", "domain-heading");
+    heading.append(
+      make("h3", "", domain.label),
+      make("span", `confidence-badge confidence-${domain.confidence.level}`, `${confidenceLabels[domain.confidence.level]}置信度`)
+    );
+    card.append(heading);
+    const windows = make("div", "domain-window-pair");
+    const support = make("div", "domain-window domain-window-support");
+    support.append(make("span", "report-label", "推进窗口"));
+    if (domain.support_window) {
+      support.append(
+        make("strong", "", `${domain.support_window.start_date} — ${domain.support_window.end_date}`),
+        make("p", "", `${domain.support_window.relation_label}形成${strengthLabels[domain.support_window.strength]}支持信号，适合主动推进并验证外部响应。`)
+      );
+    } else support.append(make("p", "", "所选周期内没有出现强支持关系。"));
+    const transition = make("div", "domain-window domain-window-transition");
+    transition.append(make("span", "report-label", "调整窗口"));
+    if (domain.transition_window) {
+      transition.append(
+        make("strong", "", `${domain.transition_window.start_date} — ${domain.transition_window.end_date}`),
+        make("p", "", `${domain.transition_window.relation_label}形成${strengthLabels[domain.transition_window.strength]}变化信号，宜降低不可逆承诺并预留备选路径。`)
+      );
+    } else transition.append(make("p", "", "所选周期内没有出现强调整关系。"));
+    windows.append(support, transition);
+    card.append(windows);
+    domainList.append(card);
+  });
   listItems("forecast-uncertainty-list", [
-    ...forecast.limitations.map((item) => ({
-      "Annual-fortune data is unavailable.": "当前浏览器构建没有流年数据。",
-      "Luck-cycle data is unavailable.": "当前浏览器构建没有大运数据。",
-      "Do not treat this planning scenario as a verified personal prediction.": "这是一份规划情景，不是经过验证的个人命运预测。",
-      "Local deterministic scenario; no model-generated interpretation was used.": "本结果由本地确定性规则生成，没有模型解释。"
-    }[item] ?? item)),
+    ...forecast.limitations,
     "相对分数表示配置规则下的支持度，不是统计概率。",
-    session.lock.status === "provisional" ? "工作结构仍为暂定；候选并列会放大下游不确定性。" : "工作结构满足本次配置稳定门，但不等同于客观真值。"
+    `当前推演置信度：${confidenceLabels[forecast.scenario.confidence.level]}（${forecast.scenario.confidence.score.toFixed(3)}）；它表达证据与候选一致程度，不是命中率。`
   ], "请保留对不确定性的判断。"
   );
   showView("forecast");
@@ -456,45 +490,47 @@ function exportSession() {
   URL.revokeObjectURL(url);
 }
 
-function saveSession() {
-  if (!session) {
-    showToast("还没有可以保存的会话。");
-    return;
-  }
-  localStorage.setItem(STORAGE_KEY, JSON.stringify({ session, forecast }));
-  document.querySelector('[data-action="resume"]')?.removeAttribute("hidden");
-  showToast("已明确保存到这台设备的浏览器。");
-}
-
-function clearLocal() {
-  localStorage.removeItem(STORAGE_KEY);
-  document.querySelector('[data-action="resume"]')?.setAttribute("hidden", "");
-  showToast("本机保存已清除。");
-}
-
-function resumeSession() {
-  try {
-    const stored = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    session = stored.session;
-    forecast = stored.forecast ?? null;
-    if (forecast) renderForecast({ question: forecast.question, current_date: forecast.generated_for_date, horizon_months: forecast.horizon.months });
-    else if (session.lock) renderContext();
-    else renderStageOne();
-  } catch {
-    clearLocal();
-    showToast("保存的会话无法读取，已清除。");
+function clearPersistedSession() {
+  for (const key of LEGACY_STORAGE_KEYS) {
+    try { localStorage.removeItem(key); } catch { /* Storage can be unavailable in private contexts. */ }
+    try { sessionStorage.removeItem(key); } catch { /* Storage can be unavailable in private contexts. */ }
   }
 }
 
-function resetSession() {
+function clearSensitiveDom() {
+  els.intakeForm.reset();
+  els.forecastForm.reset();
+  clear(els.questionForm);
+  clear(els.contextForm);
+  [
+    "candidate-list", "review-candidates", "stability-reasons", "evidence-delta",
+    "derivative-basis", "initial-basis", "event-basis", "forecast-timeline-list",
+    "forecast-domain-list", "forecast-uncertainty-list"
+  ].forEach((id) => clear(document.getElementById(id)));
+  [
+    "question-title", "context-question-title", "forecast-question-display", "forecast-summary-copy",
+    "forecast-generated-at", "forecast-chart", "forecast-error", "selected-branch-name", "selected-window",
+    "selected-confidence", "selected-gap", "selected-answers", "selected-branch-glyph", "candidate-count",
+    "event-count", "evidence-coverage", "question-counter", "context-counter"
+  ].forEach((id) => text(id, ""));
+  if (els.privacyDialog.open) els.privacyDialog.close();
+  updateTimeVisibility();
+}
+
+function purgeSessionData() {
   session = null;
   forecast = null;
   currentQuestion = null;
   currentContextQuestion = null;
   previousCandidateScores = new Map();
-  els.intakeForm.reset();
-  updateTimeVisibility();
+  clearSensitiveDom();
+}
+
+function resetSession() {
+  clearPersistedSession();
+  purgeSessionData();
   showView("welcome");
+  showToast("本次会话已从当前标签页清除。");
 }
 
 function bindEvents() {
@@ -542,8 +578,7 @@ function bindEvents() {
     if (!trigger) return;
     const action = trigger.dataset.action;
     if (action === "begin") { showView("intake"); setCertainty("approximate"); }
-    if (action === "preset") { showView("intake"); setCertainty(trigger.dataset.preset); }
-    if (action === "back-welcome" || action === "home") showView("welcome");
+    if (action === "back-welcome" || action === "home" || action === "exit-session") resetSession();
     if (action === "submit-answer") submitStageOne();
     if (action === "skip-question") submitStageOne("skip");
     if (action === "previous-question") reopenStageOne(session?.stage_one?.asked_question_ids?.at(-1));
@@ -564,27 +599,32 @@ function bindEvents() {
     if (action === "new-forecast") showView("forecast-intake");
     if (action === "export-session") exportSession();
     if (action === "print-report") window.print();
-    if (action === "save-session") saveSession();
-    if (action === "resume") resumeSession();
-    if (action === "restart") resetSession();
     if (action === "open-privacy") els.privacyDialog.showModal();
-    if (action === "clear-local") clearLocal();
   });
 }
 
 async function start() {
+  clearPersistedSession();
   try {
     const response = await fetch("./data/runtime-config.json", { cache: "no-store" });
     if (!response.ok) throw new Error(`runtime config ${response.status}`);
     runtimeConfig = await response.json();
     bindEvents();
     updateTimeVisibility();
-    if (localStorage.getItem(STORAGE_KEY)) document.querySelector('[data-action="resume"]')?.removeAttribute("hidden");
   } catch (problem) {
     console.error(problem);
     showToast("运行配置载入失败；请刷新页面或查看构建状态。");
     document.querySelectorAll("button").forEach((button) => { if (!button.closest("dialog")) button.disabled = true; });
   }
 }
+
+window.addEventListener("pagehide", () => {
+  clearPersistedSession();
+  purgeSessionData();
+});
+
+window.addEventListener("pageshow", (event) => {
+  if (event.persisted) resetSession();
+});
 
 start();
