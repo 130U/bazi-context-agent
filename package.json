@@ -5,7 +5,11 @@
   "type": "module",
   "scripts": {
     "build:site": "node scripts/buildPublicConfig.ts",
+    "check:generated": "node scripts/buildPublicConfig.ts --check",
+    "check:site": "node scripts/validatePublicSite.ts",
+    "check": "npm run check:generated && npm run check:site && npm test",
     "demo": "node src/demo.ts",
+    "preview": "node scripts/servePublicSite.ts",
     "ui": "node src/server.ts",
     "test": "node --test tests/*.test.ts"
   },

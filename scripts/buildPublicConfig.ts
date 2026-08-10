@@ -27,7 +27,17 @@ export function buildPublicConfig(outputPath = PUBLIC_RUNTIME_CONFIG_PATH): stri
   return outputPath;
 }
 
+export function checkPublicConfig(outputPath = PUBLIC_RUNTIME_CONFIG_PATH): string {
+  const expected = `${JSON.stringify(createRuntimeConfig(), null, 2)}\n`;
+  const published = readFileSync(outputPath, "utf8");
+  if (published !== expected) {
+    throw new Error("site/data/runtime-config.json is stale; run npm run build:site.");
+  }
+  return outputPath;
+}
+
 const invokedPath = process.argv[1] ? resolve(process.argv[1]) : "";
 if (invokedPath === fileURLToPath(import.meta.url)) {
-  process.stdout.write(`${buildPublicConfig()}\n`);
+  const outputPath = process.argv.includes("--check") ? checkPublicConfig() : buildPublicConfig();
+  process.stdout.write(`${outputPath}\n`);
 }
