@@ -3,6 +3,8 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createDefaultChart, generateCandidateChartsV2 } from "../src/chartGenerationStage5C.ts";
+import { getHourBranchForTime } from "../src/hourDefinitions.ts";
+import { runRectificationV2 } from "../src/rectificationV2.ts";
 import { createBaziUiServer } from "../src/server.ts";
 import { StaticBaziAdapter } from "../src/staticBaziAdapter.ts";
 import type { BaziDerivationOptions, BaziDerivedProfile, BaziEngineAdapter, FixedPillars, RecordedBirthTime } from "../src/baziTypes.ts";
@@ -127,6 +129,43 @@ test("Stage 5C unknown_time generates full-day candidates", async () => {
     adapter: new StaticBaziAdapter()
   });
   assert.equal(result.candidates.length, 12);
+  assert.deepEqual(new Set(result.candidates.map((candidate) => candidate.hour_branch_key)), new Set([
+    "Zi", "Chou", "Yin", "Mao", "Chen", "Si", "Wu", "Wei", "Shen", "You", "Xu", "Hai"
+  ]));
+  assert.equal(result.candidates.some((candidate) => candidate.is_default_chart), false);
+  assert.equal(result.default_chart.protection_policy.protected_as_default, false);
+  assert.equal(new Set(result.candidates.map((candidate) => candidate.recorded_time_prior_score)).size, 1);
+});
+
+test("Stage 5C candidate time and fixed hour pillar match each candidate branch", async () => {
+  const result = await generateCandidateChartsV2({
+    recorded_birth_time: recorded({ certainty: "unknown_time", birth_time: undefined, time: undefined, fixed_pillars: fixedPillars }),
+    adapter: new StaticBaziAdapter()
+  });
+
+  for (const candidate of result.candidates) {
+    assert.ok(candidate.candidate_birth_time?.birth_time);
+    assert.equal(getHourBranchForTime(candidate.candidate_birth_time.birth_time), candidate.hour_branch_key);
+    assert.equal(candidate.candidate_birth_time.fixed_pillars?.hour.branch, candidate.hour_branch_key);
+    assert.equal(candidate.fixed_pillars?.hour.branch, candidate.hour_branch_key);
+    assert.equal(candidate.derived_profile?.pillars.hour.branch, candidate.hour_branch_key);
+  }
+});
+
+test("Stage 5C unknown time is rectified without protecting an arbitrary default hour", async () => {
+  const generated = await generateCandidateChartsV2({
+    recorded_birth_time: recorded({ certainty: "unknown_time", birth_time: undefined, time: undefined, fixed_pillars: fixedPillars }),
+    adapter: new StaticBaziAdapter()
+  });
+  const rectified = runRectificationV2({
+    default_chart: generated.default_chart,
+    candidates: generated.candidates,
+    life_events: []
+  });
+
+  assert.equal(rectified.default_chart_protection.override_allowed, true);
+  assert.equal(rectified.selected_chart_role, "candidate");
+  assert.match(rectified.default_chart_protection.reasons.join(" "), /unknown/i);
 });
 
 test("Stage 5C boundary flags expand Zi hour and adjacent hour candidates", async () => {

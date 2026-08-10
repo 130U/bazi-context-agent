@@ -13,9 +13,7 @@
     "privacy",
     "non_goals",
     "repo_map",
-    "development_rules",
-    "contributing",
-    "license"
+    "development_rules"
   ],
   "bilingual": true,
   "main_readme": "README.md",

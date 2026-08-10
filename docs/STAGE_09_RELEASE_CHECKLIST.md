@@ -13,12 +13,9 @@
 
 ## Community files
 
-- [ ] CONTRIBUTING.md exists.
-- [ ] SECURITY.md exists.
 - [ ] CODE_OF_CONDUCT.md exists or a decision note exists.
 - [ ] Issue templates exist.
 - [ ] Pull request template exists.
-- [ ] License decision is documented.
 
 ## Docs
 

@@ -26,9 +26,6 @@ Use paired English and Chinese sections. Keep the first screen concise and clear
 10. Evaluation modes / 评估模式
 11. Privacy / 隐私
 12. Limitations / 局限
-13. Contributing / 贡献
-14. Security / 安全
-15. License / 许可证
 
 ## Messaging discipline / 表达边界
 

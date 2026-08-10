@@ -220,7 +220,26 @@ export interface CandidateRankingResult {
 
 export interface QuestionBank {
   version: string;
+  adaptive_policy?: AdaptiveQuestionPolicy;
+  context_policy?: ContextQuestionPolicy;
   stages: QuestionStage[];
+}
+
+export interface AdaptiveQuestionPolicy {
+  stage_id: string;
+  eligible_stages: Array<Extract<QuestionLayer, "symbol_prior" | "event_backtest">>;
+  minimum_questions: number;
+  maximum_questions: number;
+  question_order: string[];
+  stable_when: string;
+  allow_provisional_lock_at_max: boolean;
+}
+
+export interface ContextQuestionPolicy {
+  stage_id: "context_box";
+  starts_after_lock: boolean;
+  may_change_rectification_scores: false;
+  question_order: string[];
 }
 
 export interface QuestionStage {
@@ -265,4 +284,50 @@ export interface ScoringConfig {
   symbol_prior_question_scores: Record<string, Record<string, Partial<Record<HourGroupId, number>>>>;
   fetal_order_rules: Record<"male" | "female", Partial<Record<HourGroupId, number[]>>>;
   birth_record_plausibility: Record<CandidateSource, number>;
+  browser_rectification?: BrowserRectificationScoringConfig;
+}
+
+export interface BrowserRectificationScoringConfig {
+  candidate_component_weights: {
+    birth_record: number;
+    symbol_prior: number;
+    event_backtest: number;
+  };
+  birth_record_scores: Record<"recorded" | "adjacent" | "uncertain_range" | "unknown_symmetric", number>;
+  neutral_component_scores: {
+    symbol_prior: number;
+    event_backtest: number;
+  };
+  event_relation_scores: Record<string, Record<string, number>>;
+  event_type_relation_profiles: Record<string, string>;
+  event_importance_multipliers: Record<string, number>;
+  symbol_signal: {
+    baseline: number;
+    unit_scale: number;
+    no_match: number;
+    fetal_order_match: number;
+    minimum: number;
+    maximum: number;
+  };
+  stability: {
+    minimum_score_margin: number;
+    minimum_event_answers: number;
+    minimum_informative_answers: number;
+  };
+  selection: {
+    unknown_candidate_count: number;
+    adjacent_branch_radius: number;
+    locked_alternative_count: number;
+    score_precision_digits: number;
+  };
+  forecast: {
+    default_horizon_months: number;
+    minimum_horizon_months: number;
+    maximum_horizon_months: number;
+  };
+  policy: {
+    ai_used_for_ranking: false;
+    ai_used_for_forecast: false;
+    context_may_change_rectification_scores: false;
+  };
 }

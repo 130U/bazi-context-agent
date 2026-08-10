@@ -45,6 +45,13 @@
       "side": { "G2_yin_shen_si_hai": 1 },
       "face_down": { "G3_chen_xu_chou_wei": 1 },
       "unknown": {}
+    },
+    "B8_early_family_structure": {
+      "stable": { "G1_zi_wu_mao_you": 0.25 },
+      "siblings_competition": { "G2_yin_shen_si_hai": 0.25 },
+      "family_structure_changed": { "G3_chen_xu_chou_wei": 0.25 },
+      "frequent_relocation": { "G2_yin_shen_si_hai": 0.25 },
+      "unknown": {}
     }
   },
   "fetal_order_rules": {
@@ -64,5 +71,94 @@
     "adjacent": 0.7,
     "boundary_expanded": 0.55,
     "symbol_prior_added": 0.45
+  },
+  "browser_rectification": {
+    "candidate_component_weights": {
+      "birth_record": 0.2,
+      "symbol_prior": 0.25,
+      "event_backtest": 0.55
+    },
+    "birth_record_scores": {
+      "recorded": 1,
+      "adjacent": 0.68,
+      "uncertain_range": 0.58,
+      "unknown_symmetric": 0.5
+    },
+    "neutral_component_scores": {
+      "symbol_prior": 0.5,
+      "event_backtest": 0.5
+    },
+    "event_relation_scores": {
+      "change": {
+        "same_branch": 0.58,
+        "clash": 1,
+        "six_harmony": 0.62,
+        "harm": 0.9,
+        "triad_same_group": 0.7,
+        "none": 0.35
+      },
+      "flow": {
+        "same_branch": 0.85,
+        "clash": 0.42,
+        "six_harmony": 1,
+        "harm": 0.38,
+        "triad_same_group": 0.92,
+        "none": 0.35
+      },
+      "mixed": {
+        "same_branch": 0.78,
+        "clash": 0.78,
+        "six_harmony": 0.82,
+        "harm": 0.72,
+        "triad_same_group": 0.82,
+        "none": 0.35
+      }
+    },
+    "event_type_relation_profiles": {
+      "major_turning": "mixed",
+      "education": "flow",
+      "relocation": "change",
+      "relationship": "flow",
+      "health_or_accident": "change",
+      "family_change": "change",
+      "career": "change",
+      "childbearing": "flow",
+      "best_year": "flow",
+      "worst_year": "change"
+    },
+    "event_importance_multipliers": {
+      "low": 0.75,
+      "medium": 1,
+      "high": 1.25
+    },
+    "symbol_signal": {
+      "baseline": 0.5,
+      "unit_scale": 0.25,
+      "no_match": 0,
+      "fetal_order_match": 1,
+      "minimum": 0,
+      "maximum": 1
+    },
+    "stability": {
+      "minimum_score_margin": 0.035,
+      "minimum_event_answers": 5,
+      "minimum_informative_answers": 8
+    },
+    "selection": {
+      "unknown_candidate_count": 12,
+      "adjacent_branch_radius": 1,
+      "locked_alternative_count": 2,
+      "score_precision_digits": 6
+    },
+    "forecast": {
+      "default_horizon_months": 12,
+      "minimum_horizon_months": 1,
+      "maximum_horizon_months": 36
+    },
+    "policy": {
+      "ai_used_for_ranking": false,
+      "ai_used_for_forecast": false,
+      "context_may_change_rectification_scores": false
+    }
   }
 }

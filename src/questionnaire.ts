@@ -1,7 +1,7 @@
 import type { AnswerMap, Question, QuestionBank, QuestionLayer, QuestionnaireSession, ValidationResult } from "./types.ts";
 
 const DEFAULT_LAYER_ORDER: QuestionLayer[] = ["birth_input", "symbol_prior", "event_backtest", "context_box"];
-const SKIP_VALUES = new Set(["unknown", "skip", "prefer_not_to_say", "not_applicable", "complex_unknown", "varies_unknown"]);
+const SKIP_VALUES = new Set(["unknown", "unsure", "skip", "prefer_not_to_say", "not_applicable", "complex_unknown", "varies_unknown"]);
 const WORKING_IDENTITIES = new Set(["professional", "entrepreneur_freelance", "multiple", "working", "internship", "has_work_history"]);
 
 function optionIds(question: Question): string[] {

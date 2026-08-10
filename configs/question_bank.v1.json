@@ -1,5 +1,49 @@
 {
-  "version": "1.0",
+  "version": "1.1",
+  "adaptive_policy": {
+    "stage_id": "rectification",
+    "eligible_stages": ["symbol_prior", "event_backtest"],
+    "minimum_questions": 15,
+    "maximum_questions": 17,
+    "question_order": [
+      "B1_hair_whorl",
+      "C1_major_turning_years",
+      "B2_fetal_order",
+      "C2_education_years",
+      "B3_siblings",
+      "C3_relocation_years",
+      "B4_little_finger_length",
+      "C4_relationship_years",
+      "B5_face_shape",
+      "C5_health_or_accident_years",
+      "B6_sleep_posture",
+      "C6_family_change_years",
+      "B7_birth_posture_if_known",
+      "C7_career_years",
+      "B8_early_family_structure",
+      "C8_childbearing_years",
+      "C9_best_and_worst_years"
+    ],
+    "stable_when": "configured_score_margin_and_event_coverage",
+    "allow_provisional_lock_at_max": true
+  },
+  "context_policy": {
+    "stage_id": "context_box",
+    "starts_after_lock": true,
+    "may_change_rectification_scores": false,
+    "question_order": [
+      "D1_growth_location",
+      "D2_parental_education_occupation",
+      "D3_family_support_style",
+      "D4_family_values",
+      "D5_highest_education",
+      "D6_current_identity",
+      "D7_inner_preferred_direction",
+      "D8_actual_path",
+      "D9_desired_life_outcomes",
+      "D10_recent_focus_or_anxiety"
+    ]
+  },
   "stages": [
     {
       "id": "birth_input",
@@ -7,55 +51,55 @@
       "questions": [
         { "id": "A1_birth_date", "title": "出生日期", "inputType": "date", "required": true },
         { "id": "A2_birthplace", "title": "出生地", "inputType": "short_text", "required": true },
-        { "id": "A3_recorded_time", "title": "记录出生时间", "inputType": "time_or_range", "required": true },
-        { "id": "A4_uncertainty_range", "title": "时间不确定范围", "inputType": "single_choice", "required": true, "options": ["adjacent_1_shichen", "adjacent_2_shichen", "full_day", "auto"] },
-        { "id": "A5_boundary_flags", "title": "是否接近午夜、节气、时辰边界", "inputType": "multi_choice", "required": false, "options": ["near_midnight", "near_solar_term", "near_hour_boundary", "date_may_shift", "unknown"] },
-        { "id": "A6_chart_sex", "title": "传统排盘用性别", "inputType": "single_choice", "required": true, "options": ["male", "female", "prefer_not_to_say"] }
+        { "id": "A3_recorded_time", "title": "记录出生时间", "inputType": "time_or_range", "required": true, "options": [{ "id": "unsure", "label": "不确定 / 不知道" }] },
+        { "id": "A4_uncertainty_range", "title": "时间不确定范围", "inputType": "single_choice", "required": true, "options": [{ "id": "recorded_only", "label": "记录时间可信" }, { "id": "adjacent_1_shichen", "label": "前后一个时辰" }, { "id": "adjacent_2_shichen", "label": "前后两个时辰" }, { "id": "full_day", "label": "全天都不确定" }, { "id": "auto", "label": "由系统按输入判断" }] },
+        { "id": "A5_boundary_flags", "title": "是否接近午夜、节气、时辰边界", "inputType": "multi_choice", "required": false, "options": [{ "id": "near_midnight", "label": "接近午夜" }, { "id": "near_solar_term", "label": "接近节气" }, { "id": "near_hour_boundary", "label": "接近时辰边界" }, { "id": "date_may_shift", "label": "日期可能跨日" }, { "id": "unknown", "label": "不确定" }] },
+        { "id": "A6_chart_sex", "title": "传统排盘用性别", "inputType": "single_choice", "required": true, "options": [{ "id": "male", "label": "男" }, { "id": "female", "label": "女" }, { "id": "prefer_not_to_say", "label": "不愿说明" }] }
       ]
     },
     {
       "id": "symbol_prior",
       "title": "传统验时辰 Symbol 问卷",
       "questions": [
-        { "id": "B1_hair_whorl", "title": "发旋", "inputType": "single_choice", "required": false, "options": ["one_centered", "one_offset", "multiple", "unknown"] },
-        { "id": "B2_fetal_order", "title": "胎次", "inputType": "single_choice", "required": false, "specialScoring": "fetal_order_by_chart_sex", "options": ["1", "2", "3", "4", "5_plus", "unknown"] },
-        { "id": "B3_siblings", "title": "兄弟姐妹", "inputType": "single_choice", "required": false, "options": ["only_child", "one_sibling", "two_three_siblings", "four_plus_siblings", "complex_unknown"] },
-        { "id": "B4_little_finger_length", "title": "小指长度", "inputType": "single_choice", "required": false, "options": ["above", "aligned", "below", "unknown"] },
-        { "id": "B5_face_shape", "title": "脸型", "inputType": "single_choice", "required": false, "options": ["round_square", "long_rectangular", "irregular", "unknown"] },
-        { "id": "B6_sleep_posture", "title": "自然睡姿", "inputType": "single_choice", "required": false, "options": ["supine", "side", "prone", "varies_unknown"] },
-        { "id": "B7_birth_posture_if_known", "title": "出生姿势，如果知道", "inputType": "single_choice", "required": false, "options": ["face_up", "side", "face_down", "unknown"] },
-        { "id": "B8_early_family_structure", "title": "童年家庭结构", "inputType": "single_choice", "required": false, "options": ["stable", "siblings_competition", "family_structure_changed", "frequent_relocation", "unknown"] }
+        { "id": "B1_hair_whorl", "title": "你的发旋更接近哪一种？", "inputType": "single_choice", "required": false, "options": [{ "id": "one_centered", "label": "一个，位置较正" }, { "id": "one_offset", "label": "一个，位置偏侧" }, { "id": "multiple", "label": "两个或更多" }, { "id": "unknown", "label": "不确定" }] },
+        { "id": "B2_fetal_order", "title": "你在母亲的生育顺序中是第几胎？", "inputType": "single_choice", "required": false, "specialScoring": "fetal_order_by_chart_sex", "options": [{ "id": "1", "label": "第一胎" }, { "id": "2", "label": "第二胎" }, { "id": "3", "label": "第三胎" }, { "id": "4", "label": "第四胎" }, { "id": "5_plus", "label": "第五胎或以后" }, { "id": "unknown", "label": "不确定" }] },
+        { "id": "B3_siblings", "title": "你的兄弟姐妹情况更接近哪一种？", "inputType": "single_choice", "required": false, "options": [{ "id": "only_child", "label": "独生子女" }, { "id": "one_sibling", "label": "一位兄弟姐妹" }, { "id": "two_three_siblings", "label": "两至三位兄弟姐妹" }, { "id": "four_plus_siblings", "label": "四位或更多" }, { "id": "complex_unknown", "label": "情况复杂或不确定" }] },
+        { "id": "B4_little_finger_length", "title": "小指相对无名指末节横纹的位置？", "inputType": "single_choice", "required": false, "options": [{ "id": "above", "label": "高于横纹" }, { "id": "aligned", "label": "大致齐平" }, { "id": "below", "label": "低于横纹" }, { "id": "unknown", "label": "不确定" }] },
+        { "id": "B5_face_shape", "title": "你的脸型更接近哪一种？", "inputType": "single_choice", "required": false, "options": [{ "id": "round_square", "label": "偏圆或方" }, { "id": "long_rectangular", "label": "偏长或长方" }, { "id": "irregular", "label": "轮廓不规则或难归类" }, { "id": "unknown", "label": "不确定" }] },
+        { "id": "B6_sleep_posture", "title": "你最自然、最常见的睡姿？", "inputType": "single_choice", "required": false, "options": [{ "id": "supine", "label": "仰卧" }, { "id": "side", "label": "侧卧" }, { "id": "prone", "label": "俯卧" }, { "id": "varies_unknown", "label": "经常变化或不确定" }] },
+        { "id": "B7_birth_posture_if_known", "title": "如果家人提过，你出生时的姿势？", "inputType": "single_choice", "required": false, "options": [{ "id": "face_up", "label": "面部朝上" }, { "id": "side", "label": "侧向" }, { "id": "face_down", "label": "面部朝下" }, { "id": "unknown", "label": "不知道" }] },
+        { "id": "B8_early_family_structure", "title": "你的童年家庭结构更接近哪一种？", "inputType": "single_choice", "required": false, "options": [{ "id": "stable", "label": "长期稳定" }, { "id": "siblings_competition", "label": "兄弟姐妹竞争明显" }, { "id": "family_structure_changed", "label": "家庭结构曾明显变化" }, { "id": "frequent_relocation", "label": "童年频繁迁居" }, { "id": "unknown", "label": "不确定" }] }
       ]
     },
     {
       "id": "event_backtest",
       "title": "重大年份回测",
       "questions": [
-        { "id": "C1_major_turning_years", "title": "1-3 个重大转折年份", "inputType": "year_event_list", "required": true, "maxItems": 3 },
-        { "id": "C2_education_years", "title": "学业 / 考试 / 留学年份", "inputType": "year_event_list", "required": false, "eventType": "education", "maxItems": 2 },
-        { "id": "C3_relocation_years", "title": "迁移年份", "inputType": "year_event_list", "required": false, "eventType": "relocation", "maxItems": 2 },
-        { "id": "C4_relationship_years", "title": "感情年份", "inputType": "year_event_list", "required": false, "eventType": "relationship", "maxItems": 2 },
-        { "id": "C5_health_or_accident_years", "title": "健康 / 意外 / 手术年份", "inputType": "year_event_list", "required": false, "eventType": "health_or_accident", "maxItems": 2 },
-        { "id": "C6_family_change_years", "title": "家庭变化年份", "inputType": "year_event_list", "required": false, "eventType": "family_change", "maxItems": 2 },
-        { "id": "C7_career_years", "title": "事业年份，条件题", "inputType": "year_event_list", "required": false, "eventType": "career", "conditional": "current_identity_is_working_or_has_work_history", "maxItems": 2 },
-        { "id": "C8_childbearing_years", "title": "子女 / 生育年份，条件题", "inputType": "year_event_list", "required": false, "eventType": "childbearing", "conditional": "childbearing_applicable", "maxItems": 2 },
-        { "id": "C9_best_and_worst_years", "title": "最好年份 / 最差年份", "inputType": "year_event_list", "required": false, "maxItems": 2 }
+        { "id": "C1_major_turning_years", "title": "请记录 1–3 个改变人生方向的年份", "inputType": "year_event_list", "required": false, "eventType": "major_turning", "maxItems": 3 },
+        { "id": "C2_education_years", "title": "哪些年份发生过重要升学、考试或留学结果？", "inputType": "year_event_list", "required": false, "eventType": "education", "maxItems": 2 },
+        { "id": "C3_relocation_years", "title": "哪些年份发生过重要迁居或跨城市变化？", "inputType": "year_event_list", "required": false, "eventType": "relocation", "maxItems": 2 },
+        { "id": "C4_relationship_years", "title": "哪些年份发生过重要感情开始、结束或转折？", "inputType": "year_event_list", "required": false, "eventType": "relationship", "maxItems": 2 },
+        { "id": "C5_health_or_accident_years", "title": "哪些年份发生过重要健康、意外或手术事件？", "inputType": "year_event_list", "required": false, "eventType": "health_or_accident", "maxItems": 2 },
+        { "id": "C6_family_change_years", "title": "哪些年份家庭结构或家庭关系发生过明显变化？", "inputType": "year_event_list", "required": false, "eventType": "family_change", "maxItems": 2 },
+        { "id": "C7_career_years", "title": "哪些年份发生过入职、跳槽、离职或事业转向？", "inputType": "year_event_list", "required": false, "eventType": "career", "conditional": "current_identity_is_working_or_has_work_history", "maxItems": 2 },
+        { "id": "C8_childbearing_years", "title": "如适用，哪些年份发生过与子女或生育有关的重要事件？", "inputType": "year_event_list", "required": false, "eventType": "childbearing", "conditional": "childbearing_applicable", "maxItems": 2 },
+        { "id": "C9_best_and_worst_years", "title": "你主观感受最好或最困难的年份有哪些？", "inputType": "year_event_list", "required": false, "eventType": "major_turning", "maxItems": 2 }
       ]
     },
     {
       "id": "context_box",
       "title": "信息框：现实初始值",
       "questions": [
-        { "id": "D1_growth_location", "title": "成长城市", "inputType": "short_text", "required": false },
-        { "id": "D2_parental_education_occupation", "title": "父母教育和职业", "inputType": "short_text", "required": false },
-        { "id": "D3_family_support_style", "title": "家庭支持方式", "inputType": "single_choice", "required": false },
-        { "id": "D4_family_values", "title": "家庭价值观", "inputType": "multi_choice", "required": false },
-        { "id": "D5_highest_education", "title": "当前最高教育经历", "inputType": "single_choice", "required": false },
-        { "id": "D6_current_identity", "title": "当前身份", "inputType": "single_choice", "required": false },
-        { "id": "D7_inner_preferred_direction", "title": "内心真正想做的方向", "inputType": "short_text", "required": false },
-        { "id": "D8_actual_path", "title": "实际走过的方向", "inputType": "short_text", "required": false },
-        { "id": "D9_desired_life_outcomes", "title": "最看重的人生结果", "inputType": "multi_choice", "required": false, "maxSelections": 2 },
-        { "id": "D10_recent_focus_or_anxiety", "title": "过去 3 年主要投入或焦虑", "inputType": "multi_choice", "required": false, "maxSelections": 2 }
+        { "id": "D1_growth_location", "title": "你主要在哪些城市或地区成长？", "inputType": "short_text", "required": false, "maxLength": 160 },
+        { "id": "D2_parental_education_occupation", "title": "父母的教育与职业背景大致如何？", "inputType": "short_text", "required": false, "maxLength": 240 },
+        { "id": "D3_family_support_style", "title": "你的家庭支持方式更接近哪一种？", "inputType": "single_choice", "required": false, "options": [{ "id": "emotional_support", "label": "情感支持为主" }, { "id": "resource_support", "label": "资源支持为主" }, { "id": "high_expectations", "label": "高期待与督促为主" }, { "id": "limited_support", "label": "支持较有限" }, { "id": "complex_unknown", "label": "混合或不确定" }] },
+        { "id": "D4_family_values", "title": "你的家庭最强调哪些价值？", "inputType": "multi_choice", "required": false, "maxSelections": 3, "options": [{ "id": "stability_security", "label": "稳定与安全" }, { "id": "education_achievement", "label": "教育与成就" }, { "id": "independence", "label": "独立自主" }, { "id": "public_service", "label": "公共贡献" }, { "id": "entrepreneurship", "label": "创业与进取" }, { "id": "tradition", "label": "传统与家庭延续" }, { "id": "unknown", "label": "不确定" }] },
+        { "id": "D5_highest_education", "title": "你目前的最高教育经历？", "inputType": "single_choice", "required": false, "options": [{ "id": "secondary", "label": "高中及以下" }, { "id": "vocational", "label": "专科或职业教育" }, { "id": "undergraduate", "label": "本科" }, { "id": "postgraduate", "label": "硕士" }, { "id": "doctorate", "label": "博士" }, { "id": "other", "label": "其他" }, { "id": "prefer_not_to_say", "label": "不愿说明" }] },
+        { "id": "D6_current_identity", "title": "你目前的主要身份？", "inputType": "single_choice", "required": false, "options": [{ "id": "student", "label": "学生" }, { "id": "professional", "label": "受雇工作者" }, { "id": "entrepreneur_freelance", "label": "创业者或自由职业者" }, { "id": "career_transition", "label": "职业转换期" }, { "id": "caregiver", "label": "家庭照护者" }, { "id": "retired", "label": "退休" }, { "id": "other", "label": "其他" }, { "id": "prefer_not_to_say", "label": "不愿说明" }] },
+        { "id": "D7_inner_preferred_direction", "title": "如果暂时不考虑现实限制，你真正想投入什么方向？", "inputType": "short_text", "required": false, "maxLength": 240 },
+        { "id": "D8_actual_path", "title": "你实际走过的学习与工作路径是什么？", "inputType": "short_text", "required": false, "maxLength": 320 },
+        { "id": "D9_desired_life_outcomes", "title": "未来几年你最看重哪些人生结果？", "inputType": "multi_choice", "required": false, "maxSelections": 2, "options": [{ "id": "career_growth", "label": "职业成长" }, { "id": "financial_security", "label": "财务安全" }, { "id": "relationships", "label": "亲密关系" }, { "id": "family", "label": "家庭生活" }, { "id": "health", "label": "身心健康" }, { "id": "freedom", "label": "时间与地点自由" }, { "id": "creative_impact", "label": "创造与影响力" }, { "id": "public_impact", "label": "公共贡献" }] },
+        { "id": "D10_recent_focus_or_anxiety", "title": "过去三年你主要投入或焦虑在哪些方面？", "inputType": "multi_choice", "required": false, "maxSelections": 2, "options": [{ "id": "study", "label": "学习与考试" }, { "id": "career", "label": "职业与事业" }, { "id": "finances", "label": "收入与财务" }, { "id": "relationships", "label": "关系与情感" }, { "id": "family", "label": "家庭责任" }, { "id": "health", "label": "身心健康" }, { "id": "relocation", "label": "迁居与环境变化" }, { "id": "identity_direction", "label": "身份与方向感" }] }
       ]
     }
   ]

@@ -32,6 +32,36 @@ test("answer validation accepts prefer_not_to_say without treating it as illegal
   assert.equal(result.normalized, "prefer_not_to_say");
 });
 
+test("recorded birth time accepts the explicit unsure option", () => {
+  const bank = loadQuestionBank();
+  const recordedTime = getQuestionsByLayer(bank, "birth_input").find((question) => question.id === "A3_recorded_time");
+  assert.ok(recordedTime);
+
+  const result = validateAnswer(recordedTime, "unsure");
+
+  assert.equal(result.valid, true);
+  assert.equal(result.skipped, true);
+  assert.equal(result.normalized, "unsure");
+});
+
+test("adaptive and context policies are config driven and all choice options have labels", () => {
+  const bank = loadQuestionBank();
+  assert.equal(bank.adaptive_policy?.minimum_questions, 15);
+  assert.equal(bank.adaptive_policy?.maximum_questions, 17);
+  assert.equal(bank.adaptive_policy?.question_order.length, 17);
+  assert.equal(bank.context_policy?.may_change_rectification_scores, false);
+
+  const choiceQuestions = bank.stages.flatMap((stage) => stage.questions).filter((question) =>
+    question.inputType === "single_choice" || question.inputType === "multi_choice"
+  );
+  assert.ok(choiceQuestions.every((question) => (question.options?.length ?? 0) > 0));
+  assert.ok(
+    choiceQuestions.every((question) =>
+      question.options?.every((option) => typeof option === "object" && typeof option.label === "string" && option.label.length > 0)
+    )
+  );
+});
+
 test("answer validation checks year_event structure directly", () => {
   const question: Question = {
     id: "test_year_event",

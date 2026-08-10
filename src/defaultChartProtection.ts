@@ -4,7 +4,8 @@ import type { CandidateRectificationScore, DefaultChartProtectionConfig, Default
 export function applyDefaultChartProtection(
   scores: CandidateRectificationScore[],
   eventCount: number,
-  config: DefaultChartProtectionConfig = loadDefaultChartProtectionConfig()
+  config: DefaultChartProtectionConfig = loadDefaultChartProtectionConfig(),
+  protectionEnabled = true
 ): DefaultChartProtectionResult {
   const sorted = [...scores].sort((a, b) => b.total_score - a.total_score);
   const defaultScore = scores.find((score) => score.chart_role === "default") ?? sorted[0];
@@ -14,6 +15,25 @@ export function applyDefaultChartProtection(
   const lead = alternativeValue === undefined ? undefined : Number((alternativeValue - defaultValue).toFixed(4));
   const reasons: string[] = [];
   const minimumEvents = config.minimum_major_events_to_override_default;
+
+  if (!protectionEnabled) {
+    return {
+      default_chart_id: defaultScore?.candidate_id ?? "unprotected_unknown_time",
+      top_alternative_id: topAlternative?.candidate_id,
+      default_score: defaultValue,
+      top_alternative_score: alternativeValue,
+      lead_over_default: lead,
+      event_count: eventCount,
+      minimum_events_required: minimumEvents,
+      override_allowed: Boolean(topAlternative),
+      recommendation: topAlternative ? "candidate_preferred" : "insufficient_evidence",
+      reasons: [
+        topAlternative
+          ? "Recorded birth time is unknown; no arbitrary hour receives DefaultChart protection."
+          : "Recorded birth time is unknown and no candidate is available."
+      ]
+    };
+  }
 
   if (!defaultScore) {
     return {

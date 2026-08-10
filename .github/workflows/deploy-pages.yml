@@ -7,6 +7,10 @@ on:
       - main
     paths:
       - "site/**"
+      - "configs/question_bank.v1.json"
+      - "configs/scoring_weights.v1.json"
+      - "scripts/buildPublicConfig.ts"
+      - "package.json"
       - ".github/workflows/deploy-pages.yml"
   workflow_dispatch:
 
@@ -28,6 +32,17 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Build browser runtime config
+        run: npm run build:site
+
+      - name: Verify deterministic engine
+        run: npm test
 
       - name: Configure Pages
         uses: actions/configure-pages@v5

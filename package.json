@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "build:site": "node scripts/buildPublicConfig.ts",
     "demo": "node src/demo.ts",
     "ui": "node src/server.ts",
     "test": "node --test tests/*.test.ts"
