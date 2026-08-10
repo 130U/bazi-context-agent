@@ -1,8 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync, readdirSync } from "node:fs";
+import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { createRuntimeConfig } from "../scripts/buildPublicConfig.ts";
+import { checkPublicConfig, createRuntimeConfig } from "../scripts/buildPublicConfig.ts";
 import {
   answerQuestion,
   buildLocalForecast,
@@ -56,6 +58,20 @@ test("public runtime config is generated exactly from the two authority configs"
   const published = runtimeConfig();
   assert.deepEqual(published, generated);
   assert.deepEqual(published.source_files, ["configs/question_bank.v1.json", "configs/scoring_weights.v1.json"]);
+});
+
+test("generated config parity is stable across LF and CRLF worktrees", () => {
+  const directory = mkdtempSync(join(tmpdir(), "bazi-public-config-"));
+  const path = join(directory, "runtime-config.json");
+  try {
+    const expected = `${JSON.stringify(createRuntimeConfig(), null, 2)}\n`;
+    writeFileSync(path, expected.replace(/\n/g, "\r\n"), "utf8");
+    assert.equal(checkPublicConfig(path), path);
+    writeFileSync(path, expected.replace("public-runtime-config.v1", "stale-runtime-config"), "utf8");
+    assert.throws(() => checkPublicConfig(path), /stale/i);
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
 });
 
 test("public runtime config rejects broken question references and weights", () => {

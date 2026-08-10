@@ -29,7 +29,7 @@ export function buildPublicConfig(outputPath = PUBLIC_RUNTIME_CONFIG_PATH): stri
 
 export function checkPublicConfig(outputPath = PUBLIC_RUNTIME_CONFIG_PATH): string {
   const expected = `${JSON.stringify(createRuntimeConfig(), null, 2)}\n`;
-  const published = readFileSync(outputPath, "utf8");
+  const published = readFileSync(outputPath, "utf8").replace(/\r\n?/g, "\n");
   if (published !== expected) {
     throw new Error("site/data/runtime-config.json is stale; run npm run build:site.");
   }
