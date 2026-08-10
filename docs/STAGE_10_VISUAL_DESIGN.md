@@ -2,25 +2,27 @@
 
 ## Design direction
 
-Use a restrained editorial-intelligence interface:
+Use a quiet, question-led evidence gallery:
 
-- warm-white canvas with graphite text;
-- copper accents and low-saturation green status cues;
+- neutral gallery-white canvas with charcoal text;
+- one restrained blue accent plus semantic red only for adjustment pressure;
 - system typography with compact display tracking and comfortable body leading;
 - evidence-first hierarchy with minimal, purposeful depth;
-- right-side report-contract preview;
+- one thesis and a two-stage method rail on the welcome view;
+- one question at a time in Stage 1;
+- dated time windows, domain outlook, provenance, and uncertainty in Stage 2;
 - high contrast;
-- no ornamental metaphysics clichés.
+- no ornamental metaphysics clichés, looping orbits, or decorative card walls.
 
 ## Color tokens
 
 ```css
---paper: #F4F0E8;
---surface: #FFFDF8;
---ink: #20211E;
---muted: #686861;
---copper: #A65F3F;
---green: #5D7265;
+--canvas: #F7F7F5;
+--surface: #FFFFFF;
+--ink: #202124;
+--muted: #6F7378;
+--accent: #496A9B;
+--accent-dark: #2F4F7D;
 ```
 
 ## Typography
@@ -37,13 +39,20 @@ Do not load paid fonts or external font files.
 
 ## Layout inspiration
 
-Borrow general patterns, not proprietary assets:
+Borrow general principles, not proprietary assets or page composition:
 
-- editorial split workspace;
-- explicit fixture input + structured report contract;
-- cards with progressive disclosure;
-- “Explore the walkthrough” CTA above the fold;
-- four-stage pipeline and status strip for deterministic / local / no-key demo.
+- question-led curiosity and generous whitespace;
+- stable navigation with a clear task endpoint;
+- progressively disclosed evidence rather than decorative density;
+- a report that separates inference, context, provenance, and uncertainty;
+- no copied artwork, brand colors, navigation taxonomy, or content-feed layout.
+
+## Privacy interaction
+
+- Public sessions stay in tab memory only.
+- Do not offer save or resume controls in the Pages experience.
+- Entry, refresh, page exit, and explicit exit remove this app's known legacy storage keys.
+- The primary destructive control says “退出并清除”; never clear unrelated same-origin storage.
 
 ## Accessibility
 

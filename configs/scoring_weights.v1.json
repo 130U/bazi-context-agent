@@ -153,7 +153,104 @@
     "forecast": {
       "default_horizon_months": 12,
       "minimum_horizon_months": 1,
-      "maximum_horizon_months": 36
+      "maximum_horizon_months": 36,
+      "month_branch_by_gregorian_month": {
+        "1": "Chou",
+        "2": "Yin",
+        "3": "Mao",
+        "4": "Chen",
+        "5": "Si",
+        "6": "Wu",
+        "7": "Wei",
+        "8": "Shen",
+        "9": "You",
+        "10": "Xu",
+        "11": "Hai",
+        "12": "Zi"
+      },
+      "relation_scores": {
+        "same_branch": 0.55,
+        "clash": -0.95,
+        "six_harmony": 0.9,
+        "harm": -0.7,
+        "triad_same_group": 0.72,
+        "none": 0
+      },
+      "relation_kinds": {
+        "same_branch": "support",
+        "clash": "transition",
+        "six_harmony": "support",
+        "harm": "transition",
+        "triad_same_group": "support",
+        "none": "quiet"
+      },
+      "relation_labels": {
+        "same_branch": "同支",
+        "clash": "相冲",
+        "six_harmony": "六合",
+        "harm": "相害",
+        "triad_same_group": "三合组",
+        "none": "无强关系"
+      },
+      "domain_definitions": {
+        "career_growth": { "label": "职业与事业", "profile": "change" },
+        "financial_security": { "label": "收入与财务", "profile": "flow" },
+        "relationships": { "label": "关系与情感", "profile": "flow" },
+        "family": { "label": "家庭生活", "profile": "flow" },
+        "health": { "label": "身心状态", "profile": "wellbeing" },
+        "relocation": { "label": "迁居与环境", "profile": "change" },
+        "education": { "label": "学习与考试", "profile": "flow" },
+        "personal_growth": { "label": "方向与创造", "profile": "change" }
+      },
+      "context_domain_map": {
+        "career_growth": "career_growth",
+        "financial_security": "financial_security",
+        "relationships": "relationships",
+        "family": "family",
+        "health": "health",
+        "freedom": "relocation",
+        "creative_impact": "personal_growth",
+        "public_impact": "personal_growth",
+        "study": "education",
+        "career": "career_growth",
+        "finances": "financial_security",
+        "relocation": "relocation",
+        "identity_direction": "personal_growth"
+      },
+      "question_keywords": {
+        "career_growth": ["职业", "事业", "工作", "跳槽", "合作", "career", "job", "work"],
+        "financial_security": ["财务", "收入", "金钱", "投资", "financial", "money", "income"],
+        "relationships": ["感情", "关系", "婚姻", "伴侣", "relationship", "love", "marriage"],
+        "family": ["家庭", "父母", "子女", "family", "parent", "child"],
+        "health": ["健康", "身体", "情绪", "health", "wellbeing"],
+        "relocation": ["迁居", "搬家", "城市", "出国", "relocation", "move", "travel"],
+        "education": ["学习", "考试", "升学", "留学", "education", "study", "exam"],
+        "personal_growth": ["方向", "创造", "选择", "成长", "identity", "creative", "direction"]
+      },
+      "default_domains": ["career_growth", "relationships"],
+      "domain_profile_multipliers": {
+        "flow": { "support": 1, "transition": 0.65, "quiet": 0.4 },
+        "change": { "support": 0.75, "transition": 1, "quiet": 0.45 },
+        "wellbeing": { "support": 0.7, "transition": 0.85, "quiet": 0.5 }
+      },
+      "confidence": {
+        "stable_base": 0.74,
+        "provisional_base": 0.48,
+        "margin_scale": 2,
+        "minimum": 0.35,
+        "maximum": 0.88,
+        "high_threshold": 0.72,
+        "medium_threshold": 0.52
+      },
+      "strength_thresholds": {
+        "high": 0.72,
+        "medium": 0.45
+      },
+      "window_selection": {
+        "support_count": 2,
+        "transition_count": 2,
+        "maximum_domains": 3
+      }
     },
     "policy": {
       "ai_used_for_ranking": false,

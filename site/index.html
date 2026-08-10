@@ -35,15 +35,12 @@
     </nav>
 
     <div class="topbar-actions">
-      <button class="quiet-button save-button" type="button" data-action="save-session">
-        保存本机
-      </button>
       <button class="quiet-button privacy-button" type="button" data-action="open-privacy">
         <span class="privacy-dot" aria-hidden="true"></span>
-        本地私密会话
+        仅在当前标签页
       </button>
-      <button class="icon-button" type="button" data-action="restart" aria-label="重新开始" title="重新开始">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4v6h6M5.4 15a7 7 0 1 0 .9-7.7L4 10"/></svg>
+      <button class="exit-button" type="button" data-action="exit-session">
+        退出并清除
       </button>
     </div>
   </header>
@@ -59,67 +56,20 @@
         </p>
         <div class="welcome-actions">
           <button class="primary-button" type="button" data-action="begin">开始私密校时</button>
-          <button class="text-button resume-button" type="button" data-action="resume" hidden>继续本机上次会话</button>
         </div>
         <p class="trust-note">
-          无需登录 · 无 API key · 默认不持久保存 · Stage 1 不使用 AI 排名
+          无需登录 · 不写入浏览器存储 · 退出即清除 · Stage 1 不使用 AI 排名
         </p>
       </div>
 
-      <div class="orbit-stage" aria-hidden="true">
-        <div class="orbit-ring orbit-ring-a"></div>
-        <div class="orbit-ring orbit-ring-b"></div>
-        <div class="orbit-core">
-          <span>12</span>
-          <small>候选时辰</small>
-        </div>
-        <span class="orbit-label orbit-label-1">子</span>
-        <span class="orbit-label orbit-label-2">卯</span>
-        <span class="orbit-label orbit-label-3">午</span>
-        <span class="orbit-label orbit-label-4">酉</span>
-      </div>
-
-      <div class="memory-section" aria-labelledby="memory-title">
-        <div class="section-heading">
-          <div>
-            <p class="section-index">从你的记忆开始</p>
-            <h2 id="memory-title">你现在记得多少？</h2>
-          </div>
-          <p>选择最接近的情况。它只决定候选范围，不会直接决定最终时辰。</p>
-        </div>
-
-        <div class="memory-rail" role="list">
-          <button class="memory-card memory-card-exact" type="button" data-action="preset" data-preset="exact" role="listitem">
-            <span class="card-type">精确记录</span>
-            <span class="card-art art-exact" aria-hidden="true"><i></i><i></i><i></i></span>
-            <strong>我记得具体时间</strong>
-            <small>从记录时辰与相邻边界开始比较</small>
-            <span class="card-arrow" aria-hidden="true">→</span>
-          </button>
-
-          <button class="memory-card memory-card-approx" type="button" data-action="preset" data-preset="approximate" role="listitem">
-            <span class="card-type">大概印象</span>
-            <span class="card-art art-approx" aria-hidden="true"><i></i><i></i><i></i></span>
-            <strong>只记得大约时间</strong>
-            <small>扩大到相邻时辰，用问题逐步收窄</small>
-            <span class="card-arrow" aria-hidden="true">→</span>
-          </button>
-
-          <button class="memory-card memory-card-unsure" type="button" data-action="preset" data-preset="unsure" role="listitem">
-            <span class="card-type">完全不确定</span>
-            <span class="card-art art-unsure" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
-            <strong>Unsure · 我不确定</strong>
-            <small>从十二时辰对称开始，不预设子时</small>
-            <span class="card-arrow" aria-hidden="true">→</span>
-          </button>
-        </div>
-      </div>
-
-      <div class="method-strip" aria-label="方法概览">
-        <div><span>01</span><strong>记忆是先验</strong><small>Recorded time is a prior</small></div>
-        <div><span>02</span><strong>事件做回测</strong><small>Dated events carry more weight</small></div>
-        <div><span>03</span><strong>上下文后置</strong><small>Context enters only after ranking</small></div>
-      </div>
+      <aside class="welcome-method" aria-label="两阶段方法">
+        <p class="section-index">Two-stage method</p>
+        <ol>
+          <li><span>01</span><div><strong>先校时</strong><p>记录时间是起点；有日期的人生事件承担主要回测权重。</p></div></li>
+          <li><span>02</span><div><strong>再推演</strong><p>锁定工作时辰后，按月给出未来的支持窗口与调整窗口。</p></div></li>
+        </ol>
+        <p class="ephemeral-note">信息只存在于当前标签页的内存中。退出、关闭或刷新后不会恢复。</p>
+      </aside>
     </section>
 
     <section class="view intake-view" data-view="intake" aria-labelledby="intake-title" hidden>
@@ -131,7 +81,7 @@
           <p>不确定是有效答案。系统会扩大候选范围，而不是替你猜一个时间。</p>
         </div>
 
-        <form class="intake-form" id="intake-form" novalidate>
+        <form class="intake-form" id="intake-form" autocomplete="off" novalidate>
           <div class="field-grid">
             <label class="field">
               <span>出生日期 <em>必填</em></span>
@@ -203,7 +153,7 @@
             <p class="question-purpose" id="question-purpose">为什么问这个</p>
             <h1 id="question-title">正在载入问题…</h1>
             <p class="question-help" id="question-help"></p>
-            <form id="question-form" class="answer-form"></form>
+            <form id="question-form" class="answer-form" autocomplete="off"></form>
           </article>
 
           <div class="question-actions">
@@ -315,7 +265,7 @@
             <p class="question-purpose">只用于 Stage 2</p>
             <h2 id="context-question-title">正在载入问题…</h2>
             <p class="question-help" id="context-question-help"></p>
-            <form id="context-form" class="answer-form"></form>
+            <form id="context-form" class="answer-form" autocomplete="off"></form>
           </article>
           <div class="question-actions">
             <button class="back-button" type="button" data-action="previous-context">← 上一题</button>
@@ -331,7 +281,7 @@
         <h1 id="forecast-intake-title">你想把未来的注意力放在哪里？</h1>
         <p>预测从今天出发，结合已锁定结构、你提供的现实初值和既有事件；不会反向修改校时结果。</p>
 
-        <form id="forecast-form" class="forecast-form">
+        <form id="forecast-form" class="forecast-form" autocomplete="off">
           <label class="field forecast-question-field">
             <span>你的问题</span>
             <textarea id="forecast-question" rows="3" maxlength="240" placeholder="例如：未来一年，我应该如何安排职业方向与重要合作？" required></textarea>
@@ -364,9 +314,9 @@
       <div class="report-shell">
         <aside class="report-rail" aria-label="报告导航">
           <a href="#forecast-summary">摘要</a>
-          <a href="#forecast-basis">推演依据</a>
           <a href="#forecast-timeline">时间窗口</a>
-          <a href="#forecast-actions">行动建议</a>
+          <a href="#forecast-domains">领域判断</a>
+          <a href="#forecast-basis">推演依据</a>
           <a href="#forecast-uncertainty">不确定性</a>
         </aside>
 
@@ -377,28 +327,28 @@
             <p class="lead-report-copy" id="forecast-summary-copy"></p>
           </section>
 
-          <section id="forecast-basis" class="report-section">
-            <div class="section-heading">
-              <div><p class="section-index">02 · Provenance</p><h2>这份推演用了什么</h2></div>
-              <p>把已知事实、确定性推导和情景解释分开呈现。</p>
-            </div>
-            <div class="basis-grid">
-              <div class="basis-card"><span>Derivative · 稳定结构</span><ul id="derivative-basis"></ul></div>
-              <div class="basis-card"><span>Initial value · 现实初值</span><ul id="initial-basis"></ul></div>
-              <div class="basis-card"><span>Known events · 已知事件</span><ul id="event-basis"></ul></div>
-            </div>
-          </section>
-
           <section id="forecast-timeline" class="report-section">
-            <p class="section-index">03 · Time windows</p>
-            <h2>未来窗口</h2>
+            <p class="section-index">02 · Time windows</p>
+            <h2>未来的支持与调整窗口</h2>
             <div class="timeline" id="forecast-timeline-list"></div>
           </section>
 
-          <section id="forecast-actions" class="report-section">
-            <p class="section-index">04 · Action plan</p>
-            <h2>把预测变成可验证的行动</h2>
-            <ol class="action-list" id="forecast-action-list"></ol>
+          <section id="forecast-domains" class="report-section">
+            <p class="section-index">03 · Domain outlook</p>
+            <h2>不同领域会怎样表现</h2>
+            <div class="domain-forecast-list" id="forecast-domain-list"></div>
+          </section>
+
+          <section id="forecast-basis" class="report-section">
+            <div class="section-heading">
+              <div><p class="section-index">04 · Provenance</p><h2>这份推演用了什么</h2></div>
+              <p>把已知事实、确定性推导和现实关注点分开呈现。</p>
+            </div>
+            <div class="basis-grid">
+              <div class="basis-card"><span>Structure · 工作时辰</span><ul id="derivative-basis"></ul></div>
+              <div class="basis-card"><span>Initial value · 现实初值</span><ul id="initial-basis"></ul></div>
+              <div class="basis-card"><span>Known events · 已知事件</span><ul id="event-basis"></ul></div>
+            </div>
           </section>
 
           <section id="forecast-uncertainty" class="report-section uncertainty-section">
@@ -433,16 +383,17 @@
     <form method="dialog">
       <button class="dialog-close" value="close" aria-label="关闭">×</button>
       <p class="kicker">Local-first privacy</p>
-      <h2>你的会话默认只留在这个浏览器标签页。</h2>
+      <h2>你的会话只存在于当前标签页的内存中。</h2>
       <ul>
         <li>Stage 1 排名全部在浏览器本地执行，不调用 AI。</li>
-        <li>只有主动选择“保存本机”时才写入 localStorage。</li>
+        <li>应用不会把出生资料、人生事件或报告写入 localStorage 或 sessionStorage。</li>
+        <li>点击“退出并清除”、关闭标签页或刷新页面后，本次信息不可恢复。</li>
         <li>导出内容可能包含你填写的敏感人生事件，请自行保管。</li>
         <li>当前公开版本没有账户、云同步、遥测或远程数据库。</li>
       </ul>
       <div class="dialog-actions">
         <button class="secondary-button" value="close">知道了</button>
-        <button class="danger-button" type="button" data-action="clear-local">清除本机保存</button>
+        <button class="danger-button" type="button" data-action="exit-session">立即退出并清除</button>
       </div>
     </form>
   </dialog>

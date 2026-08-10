@@ -1,29 +1,32 @@
 {
   "stage": "10",
-  "design_name": "Editorial Intelligence Workspace",
+  "design_name": "Quiet Evidence Gallery",
   "colors": {
-    "paper": "#F4F0E8",
-    "surface": "#FFFDF8",
-    "ink": "#20211E",
-    "muted": "#686861",
-    "copper": "#A65F3F",
-    "green": "#5D7265"
+    "canvas": "#F7F7F5",
+    "surface": "#FFFFFF",
+    "ink": "#202124",
+    "muted": "#6F7378",
+    "accent": "#496A9B",
+    "accent_dark": "#2F4F7D"
   },
   "typography": {
     "display": "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
     "body": "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
   },
   "layout": {
-    "pattern": "editorial split workspace",
-    "left": "fixture input review",
-    "right": "illustrative report contract",
-    "nav": "four-stage pipeline"
+    "pattern": "question-led editorial gallery",
+    "welcome": "single thesis with a restrained two-stage method rail",
+    "stage_one": "one question plus inspectable deterministic evidence",
+    "stage_two": "dated time windows, domain outlook, provenance, uncertainty",
+    "nav": "two-stage pipeline with explicit exit-and-clear"
   },
   "must_not_use": [
     "external font files",
     "opaque demo claims",
     "real API key",
     "login",
-    "database"
+    "database",
+    "persistent public session storage",
+    "ornamental card walls"
   ]
 }

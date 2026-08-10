@@ -16,6 +16,9 @@ import {
 
 const runtimePath = fileURLToPath(new URL("../site/data/runtime-config.json", import.meta.url));
 const enginePath = fileURLToPath(new URL("../site/engine.js", import.meta.url));
+const appPath = fileURLToPath(new URL("../site/app.js", import.meta.url));
+const indexPath = fileURLToPath(new URL("../site/index.html", import.meta.url));
+const stylesPath = fileURLToPath(new URL("../site/styles.css", import.meta.url));
 
 function runtimeConfig() {
   return JSON.parse(readFileSync(runtimePath, "utf8"));
@@ -132,10 +135,57 @@ test("local forecast changes with context and time without changing the locked c
   assert.deepEqual(first.selected_structure, selectedBefore);
   assert.deepEqual(second.selected_structure, selectedBefore);
   assert.deepEqual(locked.lock.selected_chart, selectedBefore);
-  assert.equal(first.scenario.mode, "degraded_context_planning_scenario");
-  assert.match(first.scenario.summary, /not a calculated fate prediction/i);
+  assert.equal(first.forecast_type, "deterministic_branch_cycle_forecast");
+  assert.equal(first.scenario.mode, "branch_cycle_forecast");
+  assert.match(first.scenario.summary, /未来 12 个月/);
+  assert.ok(first.monthly_windows.length >= 12);
+  assert.ok(first.headline_windows.support.length > 0);
+  assert.ok(first.headline_windows.transition.length > 0);
+  assert.ok(first.domain_forecasts.length > 0);
+  assert.ok(first.monthly_windows.every((window: { start_date: string; end_date: string }) => (
+    window.start_date >= first.horizon.start_date && window.end_date <= first.horizon.end_date
+  )));
+  assert.ok(first.limitations.every((item: string) => !/planning scenario|规划情景/i.test(item)));
   assert.equal(first.policy.ai_used_for_ranking, false);
   assert.equal(first.policy.ai_used_for_forecast, false);
+});
+
+test("future windows are derived from the selected branch and expose chart sensitivity", () => {
+  const config = runtimeConfig();
+  const locked = lockWorkingChart(completeStageOne(config), config);
+  const alternativeState = structuredClone(locked);
+  alternativeState.lock.selected_chart = structuredClone(locked.lock.alternatives[0]);
+  const request = { current_date: "2026-08-10", horizon_months: 12, question: "未来一年职业与合作如何？" };
+  const selectedForecast = buildLocalForecast(locked, request, config);
+  const alternativeForecast = buildLocalForecast(alternativeState, request, config);
+
+  assert.notDeepEqual(
+    selectedForecast.monthly_windows.map((window: { kind: string }) => window.kind),
+    alternativeForecast.monthly_windows.map((window: { kind: string }) => window.kind)
+  );
+  assert.equal(selectedForecast.domain_forecasts[0].domain_id, "career_growth");
+  assert.ok(selectedForecast.domain_forecasts[0].support_window);
+  assert.ok(selectedForecast.domain_forecasts[0].transition_window);
+  assert.ok(selectedForecast.monthly_windows.every((window: { sensitivity: { compared_chart_count: number } }) => (
+    window.sensitivity.compared_chart_count === 3
+  )));
+  assert.equal(selectedForecast.policy.calendar_basis, "gregorian_month_to_seasonal_branch_approximation");
+});
+
+test("forecast horizon clamps month-end dates without rolling into the following month", () => {
+  const config = runtimeConfig();
+  const locked = lockWorkingChart(completeStageOne(config), config);
+  const forecast = buildLocalForecast(locked, {
+    current_date: "2026-01-31",
+    horizon_months: 1,
+    question: "下个月如何？"
+  }, config);
+
+  assert.equal(forecast.horizon.end_date, "2026-02-28");
+  assert.deepEqual(forecast.monthly_windows.map((window: { start_date: string; end_date: string }) => [window.start_date, window.end_date]), [
+    ["2026-01-31", "2026-01-31"],
+    ["2026-02-01", "2026-02-28"]
+  ]);
 });
 
 test("engine keeps hostile text as data and has no DOM, HTML, network, or AI provider path", () => {
@@ -150,4 +200,35 @@ test("engine keeps hostile text as data and has no DOM, HTML, network, or AI pro
   for (const forbidden of [/innerHTML/, /outerHTML/, /document\./, /fetch\s*\(/, /XMLHttpRequest/, /WebSocket/, /openai/i, /anthropic/i]) {
     assert.equal(forbidden.test(source), false, `engine source matched forbidden pattern ${forbidden}`);
   }
+});
+
+test("public UI removes the ornamental memory cards and renders forecast windows instead of a planning checklist", () => {
+  const html = readFileSync(indexPath, "utf8");
+  const styles = readFileSync(stylesPath, "utf8");
+
+  assert.doesNotMatch(html, /memory-section|memory-card|你现在记得多少|forecast-action-list/);
+  assert.doesNotMatch(styles, /memory-card|orbit-stage|#74462f|#38594d|#374c68/i);
+  assert.match(html, /forecast-domain-list/);
+  assert.match(html, /未来的支持与调整窗口/);
+  assert.match(html, /退出并清除/);
+});
+
+test("public session is memory-only and clears only known app storage keys on entry and exit", () => {
+  const app = readFileSync(appPath, "utf8");
+  const html = readFileSync(indexPath, "utf8");
+
+  for (const forbidden of [
+    /localStorage\.(?:setItem|getItem|clear)\s*\(/,
+    /sessionStorage\.(?:setItem|getItem|clear)\s*\(/,
+    /data-action="save-session"/,
+    /data-action="resume"/
+  ]) assert.equal(forbidden.test(`${app}\n${html}`), false, `public UI matched forbidden persistence path ${forbidden}`);
+
+  assert.match(app, /localStorage\.removeItem\(key\)/);
+  assert.match(app, /sessionStorage\.removeItem\(key\)/);
+  assert.match(app, /clearPersistedSession\(\);\s*\n\s*try \{/);
+  assert.match(app, /addEventListener\("pagehide"/);
+  assert.doesNotMatch(app, /localStorage\.clear|sessionStorage\.clear/);
+  assert.match(html, /不会把出生资料、人生事件或报告写入 localStorage 或 sessionStorage/);
+  assert.equal((html.match(/<form[^>]+autocomplete="off"/g) ?? []).length, 4);
 });
