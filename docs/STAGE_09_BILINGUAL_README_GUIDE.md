@@ -38,8 +38,6 @@ For short comparisons, use two-column tables:
 12. What this project is not
 13. Repository map
 14. Development rules
-15. Contributing
-16. License decision
 
 ## Tone
 

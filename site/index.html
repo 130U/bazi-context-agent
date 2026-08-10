@@ -1,175 +1,453 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>BaZi Context Agent — Evidence-first rectification</title>
-  <meta name="description" content="A local-first research prototype that keeps BaZi rectification deterministic, context user-controlled, and AI downstream." />
-  <meta name="theme-color" content="#f4f0e8" />
+  <meta name="color-scheme" content="light" />
+  <meta name="theme-color" content="#f7f5f0" />
+  <meta name="description" content="A private, evidence-led BaZi birth-hour rectification and context-aware forecast prototype." />
   <meta property="og:title" content="BaZi Context Agent" />
-  <meta property="og:description" content="Deterministic rectification. User-controlled context. AI only downstream." />
+  <meta property="og:description" content="Rectify the remembered birth hour before forecasting from the selected structure and real-world context." />
   <meta property="og:type" content="website" />
+  <title>BaZi Context Agent — Rectify first, then forecast</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='29' fill='%23191a17'/%3E%3Ctext x='32' y='43' text-anchor='middle' font-size='32' fill='white'%3E%E5%85%AB%3C/text%3E%3C/svg%3E" />
   <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
-  <a class="skip-link" href="#demo">Skip to interactive walkthrough</a>
+  <a class="skip-link" href="#main-content">跳到主要内容</a>
 
-  <header class="site-header">
-    <a class="brand" href="#top" aria-label="BaZi Context Agent home">
-      <span class="brand-mark" aria-hidden="true">八</span>
-      <span>BaZi Context Agent</span>
+  <header class="topbar">
+    <a class="brand" href="#welcome" data-action="home" aria-label="BaZi Context Agent 首页">
+      <span class="brand-glyph" aria-hidden="true">八</span>
+      <span class="brand-name">BaZi Context Agent</span>
     </a>
-    <nav aria-label="Primary navigation">
-      <a href="#method">Method</a>
-      <a href="https://github.com/130U/bazi-context-agent" target="_blank" rel="noreferrer">Source <span aria-hidden="true">↗</span></a>
+
+    <nav class="phase-nav" aria-label="体验阶段">
+      <button class="phase-link is-active" type="button" data-phase-link="stage1" aria-current="step">
+        <span>01</span>
+        <strong>校准出生时辰</strong>
+      </button>
+      <span class="phase-line" aria-hidden="true"></span>
+      <button class="phase-link" type="button" data-phase-link="stage2" disabled>
+        <span>02</span>
+        <strong>推演未来情景</strong>
+      </button>
     </nav>
+
+    <div class="topbar-actions">
+      <button class="quiet-button save-button" type="button" data-action="save-session">
+        保存本机
+      </button>
+      <button class="quiet-button privacy-button" type="button" data-action="open-privacy">
+        <span class="privacy-dot" aria-hidden="true"></span>
+        本地私密会话
+      </button>
+      <button class="icon-button" type="button" data-action="restart" aria-label="重新开始" title="重新开始">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4v6h6M5.4 15a7 7 0 1 0 .9-7.7L4 10"/></svg>
+      </button>
+    </div>
   </header>
 
-  <main class="shell">
-    <section class="hero" id="top" aria-labelledby="hero-title">
-      <div class="hero-main">
-        <p class="eyebrow">Evidence-first BaZi research prototype</p>
-        <h1 id="hero-title">Test uncertainty before interpretation.</h1>
-        <p class="hero-copy">
-          Recorded birth time is evidence, not ground truth. This prototype keeps chart
-          derivation and rectification deterministic, gives people control over context,
-          and permits AI only after the upstream evidence is fixed.
+  <main id="main-content">
+    <section class="view welcome-view is-active" id="welcome" data-view="welcome" aria-labelledby="welcome-title">
+      <div class="welcome-hero">
+        <p class="kicker">Evidence-led hour rectification · 证据驱动校时</p>
+        <h1 id="welcome-title">预测未来之前，<br />先让出生时辰值得相信。</h1>
+        <p class="welcome-copy">
+          记忆中的时间只是一个起点。系统会用配置化问题、重大年份回测和可解释评分，
+          比较候选时辰；锁定本次会话的工作结构后，现实处境才进入未来情景。
         </p>
-        <p class="hero-copy hero-copy-zh" lang="zh-CN">
-          先处理出生时间的不确定性，再进入解释：校盘由确定性代码完成，上下文由用户控制，AI 只在下游工作。
-        </p>
-        <div class="hero-actions">
-          <a class="button primary" href="#demo">Explore the walkthrough</a>
-          <a class="button secondary" href="https://github.com/130U/bazi-context-agent#architecture--架构" target="_blank" rel="noreferrer">Read the architecture</a>
+        <div class="welcome-actions">
+          <button class="primary-button" type="button" data-action="begin">开始私密校时</button>
+          <button class="text-button resume-button" type="button" data-action="resume" hidden>继续本机上次会话</button>
         </div>
+        <p class="trust-note">
+          无需登录 · 无 API key · 默认不持久保存 · Stage 1 不使用 AI 排名
+        </p>
       </div>
 
-      <aside class="principle-card" aria-label="System principle">
-        <p class="eyebrow">Operating principle</p>
-        <blockquote>“Recorded time is a prior, not truth.”</blockquote>
-        <dl>
-          <div><dt>Upstream</dt><dd>Deterministic only</dd></div>
-          <div><dt>Context</dt><dd>User-controlled</dd></div>
-          <div><dt>Forecast</dt><dd>Downstream, bounded</dd></div>
-        </dl>
-      </aside>
-    </section>
-
-    <ol class="pipeline" aria-label="System pipeline">
-      <li><span>01</span><strong>Derive</strong><small>structured chart data</small></li>
-      <li><span>02</span><strong>Rectify</strong><small>dated-event evidence</small></li>
-      <li><span>03</span><strong>Context</strong><small>user-controlled facts</small></li>
-      <li><span>04</span><strong>Forecast</strong><small>bounded downstream use</small></li>
-    </ol>
-
-    <div class="trust-strip" aria-label="Demo status">
-      <span><i aria-hidden="true"></i> No login</span>
-      <span><i aria-hidden="true"></i> No API key</span>
-      <span><i aria-hidden="true"></i> No network request</span>
-      <span><i aria-hidden="true"></i> Fixture-based demo</span>
-    </div>
-
-    <section class="demo-intro" aria-labelledby="demo-title">
-      <div>
-        <p class="eyebrow">Interactive public walkthrough</p>
-        <h2 id="demo-title">Inspect the separation of evidence and context.</h2>
+      <div class="orbit-stage" aria-hidden="true">
+        <div class="orbit-ring orbit-ring-a"></div>
+        <div class="orbit-ring orbit-ring-b"></div>
+        <div class="orbit-core">
+          <span>12</span>
+          <small>候选时辰</small>
+        </div>
+        <span class="orbit-label orbit-label-1">子</span>
+        <span class="orbit-label orbit-label-2">卯</span>
+        <span class="orbit-label orbit-label-3">午</span>
+        <span class="orbit-label orbit-label-4">酉</span>
       </div>
-      <p>
-        This page demonstrates the information contract and export flow with an illustrative
-        fixture. It does not calculate a real chart or make a personal prediction.
-      </p>
-    </section>
 
-    <section class="workspace" id="demo" aria-label="Interactive public walkthrough">
-      <aside class="panel input-panel">
-        <div class="panel-heading">
-          <p class="eyebrow">01 · Inputs</p>
-          <h2>Review the fixture</h2>
-          <p>Change the values to see how user inputs remain explicit in the report contract.</p>
-        </div>
-
-        <div class="field-row">
-          <label>
-            Birth date
-            <input id="birthDate" type="date" value="1998-05-10" autocomplete="off" />
-          </label>
-          <label>
-            Recorded birth time
-            <input id="birthTime" type="time" value="22:30" autocomplete="off" />
-          </label>
-        </div>
-        <label>
-          User-controlled context profile
-          <textarea id="contextProfile" rows="4">High educational support, international orientation, graduate-level education, interested in product and strategy.</textarea>
-        </label>
-        <label>
-          Forecast question
-          <textarea id="forecastQuestion" rows="3">What should I pay attention to over the next 12 months?</textarea>
-        </label>
-
-        <button class="primary-action" id="generateBtn" type="button">Refresh illustrative report</button>
-
-        <p class="fineprint" id="privacy-note">
-          Everything on this page stays in your browser. The public walkthrough uses fixed
-          example logic and never calls a model or server.
-        </p>
-      </aside>
-
-      <section class="panel output-panel" aria-labelledby="report-title">
-        <div class="output-header">
+      <div class="memory-section" aria-labelledby="memory-title">
+        <div class="section-heading">
           <div>
-            <p class="eyebrow">02 · Output contract</p>
-            <h2 id="report-title">Illustrative report</h2>
+            <p class="section-index">从你的记忆开始</p>
+            <h2 id="memory-title">你现在记得多少？</h2>
           </div>
-          <span class="status"><i aria-hidden="true"></i> local fixture</span>
+          <p>选择最接近的情况。它只决定候选范围，不会直接决定最终时辰。</p>
         </div>
 
-        <div id="report" class="report" aria-live="polite"></div>
+        <div class="memory-rail" role="list">
+          <button class="memory-card memory-card-exact" type="button" data-action="preset" data-preset="exact" role="listitem">
+            <span class="card-type">精确记录</span>
+            <span class="card-art art-exact" aria-hidden="true"><i></i><i></i><i></i></span>
+            <strong>我记得具体时间</strong>
+            <small>从记录时辰与相邻边界开始比较</small>
+            <span class="card-arrow" aria-hidden="true">→</span>
+          </button>
 
-        <div class="actions" aria-label="Export controls">
-          <button id="copyBtn" type="button">Copy Markdown</button>
-          <button id="jsonBtn" type="button">Download JSON</button>
-          <button id="mdBtn" type="button">Download Markdown</button>
-          <a class="sample-link" href="data/demo-session.json" download>Sample session</a>
+          <button class="memory-card memory-card-approx" type="button" data-action="preset" data-preset="approximate" role="listitem">
+            <span class="card-type">大概印象</span>
+            <span class="card-art art-approx" aria-hidden="true"><i></i><i></i><i></i></span>
+            <strong>只记得大约时间</strong>
+            <small>扩大到相邻时辰，用问题逐步收窄</small>
+            <span class="card-arrow" aria-hidden="true">→</span>
+          </button>
+
+          <button class="memory-card memory-card-unsure" type="button" data-action="preset" data-preset="unsure" role="listitem">
+            <span class="card-type">完全不确定</span>
+            <span class="card-art art-unsure" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+            <strong>Unsure · 我不确定</strong>
+            <small>从十二时辰对称开始，不预设子时</small>
+            <span class="card-arrow" aria-hidden="true">→</span>
+          </button>
         </div>
-        <p id="actionStatus" class="action-status" role="status" aria-live="polite">Ready to inspect or export.</p>
-      </section>
+      </div>
+
+      <div class="method-strip" aria-label="方法概览">
+        <div><span>01</span><strong>记忆是先验</strong><small>Recorded time is a prior</small></div>
+        <div><span>02</span><strong>事件做回测</strong><small>Dated events carry more weight</small></div>
+        <div><span>03</span><strong>上下文后置</strong><small>Context enters only after ranking</small></div>
+      </div>
     </section>
 
-    <section class="method" id="method" aria-labelledby="method-title">
-      <div class="method-heading">
-        <p class="eyebrow">Why the boundary matters</p>
-        <h2 id="method-title">One pipeline, three explicit responsibilities.</h2>
+    <section class="view intake-view" data-view="intake" aria-labelledby="intake-title" hidden>
+      <div class="view-shell intake-shell">
+        <button class="back-button" type="button" data-action="back-welcome">← 返回</button>
+        <div class="intake-heading">
+          <p class="kicker">Stage 1 · Birth memory</p>
+          <h1 id="intake-title">先告诉我，你记得的出生信息。</h1>
+          <p>不确定是有效答案。系统会扩大候选范围，而不是替你猜一个时间。</p>
+        </div>
+
+        <form class="intake-form" id="intake-form" novalidate>
+          <div class="field-grid">
+            <label class="field">
+              <span>出生日期 <em>必填</em></span>
+              <input id="birth-date" name="birthDate" type="date" required />
+              <small>使用你通常采用的公历日期。</small>
+            </label>
+            <label class="field">
+              <span>出生地点 <em>必填</em></span>
+              <input id="birth-place" name="birthplace" type="text" autocomplete="off" maxlength="80" placeholder="城市，国家/地区" required />
+              <small>当前原型记录地点，但不执行真太阳时校正。</small>
+            </label>
+          </div>
+
+          <fieldset class="choice-field certainty-field">
+            <legend>你对记录时间有多确定？</legend>
+            <label><input type="radio" name="certainty" value="exact" /><span><strong>精确</strong><small>记得具体到分钟</small></span></label>
+            <label><input type="radio" name="certainty" value="approximate" /><span><strong>大约</strong><small>可能前后相差一两个时辰</small></span></label>
+            <label><input type="radio" name="certainty" value="unsure" /><span><strong>Unsure</strong><small>完全不确定，从十二时辰开始</small></span></label>
+          </fieldset>
+
+          <div class="time-fields" data-time-fields>
+            <label class="field">
+              <span>记忆中的出生时间</span>
+              <input id="birth-time" name="recordedTime" type="time" />
+              <small>这只是先验；后续证据可以支持相邻候选。</small>
+            </label>
+          </div>
+
+          <fieldset class="choice-field compact-choice">
+            <legend>传统排盘用性别</legend>
+            <label><input type="radio" name="chartSex" value="female" /><span><strong>女</strong></span></label>
+            <label><input type="radio" name="chartSex" value="male" /><span><strong>男</strong></span></label>
+            <label><input type="radio" name="chartSex" value="prefer_not_to_say" /><span><strong>暂不提供</strong></span></label>
+          </fieldset>
+
+          <fieldset class="boundary-field">
+            <legend>是否可能靠近这些边界？ <small>可多选，也可不选</small></legend>
+            <label><input type="checkbox" name="boundaryFlags" value="near_midnight" /><span>午夜前后</span></label>
+            <label><input type="checkbox" name="boundaryFlags" value="near_hour_boundary" /><span>时辰交界</span></label>
+            <label><input type="checkbox" name="boundaryFlags" value="date_may_shift" /><span>日期可能记错一天</span></label>
+            <label><input type="checkbox" name="boundaryFlags" value="near_solar_term" /><span>节气附近</span></label>
+          </fieldset>
+
+          <div class="form-error" id="intake-error" role="alert"></div>
+          <button class="primary-button wide-button" type="submit">建立候选时辰</button>
+        </form>
       </div>
-      <div class="cards">
-        <article>
-          <span class="card-index">01</span>
-          <h3>Deterministic upstream</h3>
-          <p>Candidate generation, event backtesting, and rectification stay in auditable code. AI cannot alter the selected chart.</p>
-        </article>
-        <article>
-          <span class="card-index">02</span>
-          <h3>User-controlled context</h3>
-          <p>Context can be hidden from forecasts, excluded from exports, or deleted. It never leaks back into chart ranking.</p>
-        </article>
-        <article>
-          <span class="card-index">03</span>
-          <h3>Measured downstream</h3>
-          <p>Offline A/B/C/D evaluation separates derivative-only, context-only, default-chart, and selected-chart modes.</p>
+    </section>
+
+    <section class="view question-view" data-view="questions" aria-labelledby="question-title" hidden>
+      <div class="question-layout">
+        <div class="question-main">
+          <div class="question-progress">
+            <div>
+              <span id="question-counter">证据问题 1 / 17</span>
+              <strong id="question-stage-label">建立弱先验</strong>
+            </div>
+            <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="17" aria-valuenow="0" aria-label="校时问题进度">
+              <span id="question-progress-bar"></span>
+            </div>
+          </div>
+
+          <div class="reasoning-status" aria-live="polite">
+            <span class="thinking-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+            <p id="reasoning-copy">候选时辰已建立。下一题将补充区分度最高的证据。</p>
+          </div>
+
+          <article class="question-card" id="question-card">
+            <p class="question-purpose" id="question-purpose">为什么问这个</p>
+            <h1 id="question-title">正在载入问题…</h1>
+            <p class="question-help" id="question-help"></p>
+            <form id="question-form" class="answer-form"></form>
+          </article>
+
+          <div class="question-actions">
+            <button class="back-button" type="button" data-action="previous-question">← 上一题</button>
+            <button class="text-button" type="button" data-action="skip-question">暂不回答</button>
+            <button class="primary-button" type="button" data-action="submit-answer">继续</button>
+          </div>
+        </div>
+
+        <aside class="evidence-desk" aria-labelledby="candidate-heading">
+          <div class="desk-header">
+            <div>
+              <p class="section-index">Live evidence</p>
+              <h2 id="candidate-heading">候选时辰正在收敛</h2>
+            </div>
+            <span class="engine-badge">确定性引擎</span>
+          </div>
+
+          <div class="candidate-summary">
+            <div><span>候选数</span><strong id="candidate-count">12</strong></div>
+            <div><span>有效事件</span><strong id="event-count">0</strong></div>
+            <div><span>证据覆盖</span><strong id="evidence-coverage">0%</strong></div>
+          </div>
+
+          <div class="candidate-list" id="candidate-list" aria-live="polite"></div>
+
+          <div class="evidence-note" id="evidence-note">
+            <span aria-hidden="true">i</span>
+            <p>传统外观与习惯只构成弱先验；有年份的真实事件在配置权重中占比最高。</p>
+          </div>
+
+          <button class="desk-toggle" type="button" data-action="toggle-evidence" aria-expanded="false">
+            查看本题带来的证据变化 <span>＋</span>
+          </button>
+          <div class="evidence-delta" id="evidence-delta" hidden></div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="view review-view" data-view="review" aria-labelledby="review-title" hidden>
+      <div class="view-shell review-shell">
+        <p class="kicker">Stage 1 · Evidence review</p>
+        <div class="review-heading">
+          <div>
+            <h1 id="review-title">本次会话的时辰结构已经形成。</h1>
+            <p id="review-intro">这不是宣称客观真值，而是由当前答案、配置权重和事件回测生成的可复现工作结构。</p>
+          </div>
+          <span class="stability-badge" id="stability-badge">评估中</span>
+        </div>
+
+        <div class="selected-structure">
+          <div class="selected-orbit" aria-hidden="true">
+            <span id="selected-branch-glyph">—</span>
+          </div>
+          <div class="selected-copy">
+            <p>Selected working structure</p>
+            <h2 id="selected-branch-name">尚未选择</h2>
+            <p id="selected-window"></p>
+            <div class="selected-metrics">
+              <div><span>相对支持度</span><strong id="selected-confidence">—</strong></div>
+              <div><span>领先差</span><strong id="selected-gap">—</strong></div>
+              <div><span>回答问题</span><strong id="selected-answers">—</strong></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="review-grid">
+          <section class="review-panel">
+            <p class="section-index">Top candidates</p>
+            <h2>候选比较</h2>
+            <div id="review-candidates" class="review-candidates"></div>
+          </section>
+          <section class="review-panel">
+            <p class="section-index">Evidence boundary</p>
+            <h2>为什么停在这里</h2>
+            <ul id="stability-reasons" class="reason-list"></ul>
+          </section>
+        </div>
+
+        <div class="review-actions">
+          <button class="text-button" type="button" data-action="review-answers">检查并修改答案</button>
+          <button class="primary-button" type="button" data-action="lock-chart">锁定为本次预测结构</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="view context-view" data-view="context" aria-labelledby="context-title" hidden>
+      <div class="context-layout">
+        <div class="context-intro">
+          <p class="kicker">Stage 2 · Initial value</p>
+          <h1 id="context-title">八字结构是导函数，<br />现实处境是初始值。</h1>
+          <p>
+            这些答案不会回流修改 Stage 1 排名。它们只让未来情景更贴近你现在拥有的资源、
+            约束和真正想去的方向。
+          </p>
+          <div class="formula-card" aria-label="预测概念公式">
+            <span>Forecast</span>
+            <strong>f</strong>
+            <span>(稳定结构，现实初值，预测时点)</span>
+          </div>
+        </div>
+
+        <div class="context-question-panel">
+          <div class="context-progress">
+            <span id="context-counter">现实问题 1 / 6</span>
+            <button class="text-button" type="button" data-action="skip-context">跳过这一题</button>
+          </div>
+          <article class="question-card compact-question-card">
+            <p class="question-purpose">只用于 Stage 2</p>
+            <h2 id="context-question-title">正在载入问题…</h2>
+            <p class="question-help" id="context-question-help"></p>
+            <form id="context-form" class="answer-form"></form>
+          </article>
+          <div class="question-actions">
+            <button class="back-button" type="button" data-action="previous-context">← 上一题</button>
+            <button class="primary-button" type="button" data-action="submit-context">继续</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="view forecast-intake-view" data-view="forecast-intake" aria-labelledby="forecast-intake-title" hidden>
+      <div class="view-shell forecast-intake-shell">
+        <p class="kicker">Stage 2 · Forecast request</p>
+        <h1 id="forecast-intake-title">你想把未来的注意力放在哪里？</h1>
+        <p>预测从今天出发，结合已锁定结构、你提供的现实初值和既有事件；不会反向修改校时结果。</p>
+
+        <form id="forecast-form" class="forecast-form">
+          <label class="field forecast-question-field">
+            <span>你的问题</span>
+            <textarea id="forecast-question" rows="3" maxlength="240" placeholder="例如：未来一年，我应该如何安排职业方向与重要合作？" required></textarea>
+          </label>
+          <fieldset class="choice-field horizon-field">
+            <legend>观察周期</legend>
+            <label><input type="radio" name="horizon" value="6_months" /><span><strong>未来 6 个月</strong></span></label>
+            <label><input type="radio" name="horizon" value="12_months" checked /><span><strong>未来 12 个月</strong></span></label>
+            <label><input type="radio" name="horizon" value="24_months" /><span><strong>未来 24 个月</strong></span></label>
+          </fieldset>
+          <div class="form-error" id="forecast-error" role="alert"></div>
+          <button class="primary-button wide-button" type="submit">生成未来情景</button>
+        </form>
+      </div>
+    </section>
+
+    <section class="view forecast-view" data-view="forecast" aria-labelledby="forecast-title" hidden>
+      <div class="report-hero">
+        <div>
+          <p class="kicker">Stage 2 · Evidence-linked forecast</p>
+          <h1 id="forecast-title">未来不是一句结论，<br />而是一组可以验证的窗口。</h1>
+        </div>
+        <div class="report-meta">
+          <div><span>生成时间</span><strong id="forecast-generated-at">—</strong></div>
+          <div><span>工作时辰</span><strong id="forecast-chart">—</strong></div>
+          <div><span>模式</span><strong id="forecast-mode">本地情景推演</strong></div>
+        </div>
+      </div>
+
+      <div class="report-shell">
+        <aside class="report-rail" aria-label="报告导航">
+          <a href="#forecast-summary">摘要</a>
+          <a href="#forecast-basis">推演依据</a>
+          <a href="#forecast-timeline">时间窗口</a>
+          <a href="#forecast-actions">行动建议</a>
+          <a href="#forecast-uncertainty">不确定性</a>
+        </aside>
+
+        <article class="forecast-report">
+          <section id="forecast-summary" class="report-section report-summary">
+            <p class="section-index">01 · Executive summary</p>
+            <h2 id="forecast-question-display"></h2>
+            <p class="lead-report-copy" id="forecast-summary-copy"></p>
+          </section>
+
+          <section id="forecast-basis" class="report-section">
+            <div class="section-heading">
+              <div><p class="section-index">02 · Provenance</p><h2>这份推演用了什么</h2></div>
+              <p>把已知事实、确定性推导和情景解释分开呈现。</p>
+            </div>
+            <div class="basis-grid">
+              <div class="basis-card"><span>Derivative · 稳定结构</span><ul id="derivative-basis"></ul></div>
+              <div class="basis-card"><span>Initial value · 现实初值</span><ul id="initial-basis"></ul></div>
+              <div class="basis-card"><span>Known events · 已知事件</span><ul id="event-basis"></ul></div>
+            </div>
+          </section>
+
+          <section id="forecast-timeline" class="report-section">
+            <p class="section-index">03 · Time windows</p>
+            <h2>未来窗口</h2>
+            <div class="timeline" id="forecast-timeline-list"></div>
+          </section>
+
+          <section id="forecast-actions" class="report-section">
+            <p class="section-index">04 · Action plan</p>
+            <h2>把预测变成可验证的行动</h2>
+            <ol class="action-list" id="forecast-action-list"></ol>
+          </section>
+
+          <section id="forecast-uncertainty" class="report-section uncertainty-section">
+            <p class="section-index">05 · Uncertainty</p>
+            <h2>这份结果不能代表什么</h2>
+            <ul id="forecast-uncertainty-list"></ul>
+          </section>
+
+          <div class="report-actions">
+            <button class="secondary-button" type="button" data-action="export-session">导出会话 JSON</button>
+            <button class="secondary-button" type="button" data-action="print-report">打印 / 保存 PDF</button>
+            <button class="primary-button" type="button" data-action="new-forecast">调整问题</button>
+          </div>
         </article>
       </div>
     </section>
   </main>
 
-  <footer>
-    <p><strong>BaZi Context Agent</strong> · Research prototype, not medical, legal, financial, or safety-critical advice.</p>
+  <footer class="site-footer">
     <div>
-      <a href="https://github.com/130U/bazi-context-agent" target="_blank" rel="noreferrer">GitHub</a>
-      <a href="https://github.com/130U/bazi-context-agent/blob/master/docs/AI_BOUNDARY.md" target="_blank" rel="noreferrer">AI boundary</a>
-      <a href="https://github.com/130U/bazi-context-agent/tree/master/tests" target="_blank" rel="noreferrer">Tests</a>
+      <strong>BaZi Context Agent</strong>
+      <p>研究原型。不是医疗、法律、财务或确定性人生建议。</p>
+    </div>
+    <div>
+      <a href="https://github.com/130U/bazi-context-agent" target="_blank" rel="noreferrer">Source ↗</a>
+      <a href="https://github.com/130U/bazi-context-agent/blob/master/docs/AI_BOUNDARY.md" target="_blank" rel="noreferrer">AI boundary ↗</a>
+      <button class="footer-button" type="button" data-action="open-privacy">Privacy</button>
     </div>
   </footer>
 
-  <script src="./app.js"></script>
+  <dialog class="privacy-dialog" id="privacy-dialog">
+    <form method="dialog">
+      <button class="dialog-close" value="close" aria-label="关闭">×</button>
+      <p class="kicker">Local-first privacy</p>
+      <h2>你的会话默认只留在这个浏览器标签页。</h2>
+      <ul>
+        <li>Stage 1 排名全部在浏览器本地执行，不调用 AI。</li>
+        <li>只有主动选择“保存本机”时才写入 localStorage。</li>
+        <li>导出内容可能包含你填写的敏感人生事件，请自行保管。</li>
+        <li>当前公开版本没有账户、云同步、遥测或远程数据库。</li>
+      </ul>
+      <div class="dialog-actions">
+        <button class="secondary-button" value="close">知道了</button>
+        <button class="danger-button" type="button" data-action="clear-local">清除本机保存</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+  <script type="module" src="./app.js"></script>
 </body>
 </html>

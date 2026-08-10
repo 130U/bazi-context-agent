@@ -11,8 +11,6 @@ README.md
 README.en.md
 README.zh-CN.md
 AGENTS.md
-CONTRIBUTING.md
-SECURITY.md
 CODE_OF_CONDUCT.md
 package.json
 tsconfig.json
@@ -36,14 +34,11 @@ README.md
 README.en.md
 README.zh-CN.md
 AGENTS.md
-CONTRIBUTING.md
-SECURITY.md
 CODE_OF_CONDUCT.md
 package.json
 package-lock.json
 tsconfig.json
 .gitignore
-LICENSE if already chosen
 ```
 
 ## Files that should move out of root

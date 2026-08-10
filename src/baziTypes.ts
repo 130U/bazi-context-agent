@@ -79,8 +79,8 @@ export interface DefaultChart {
   assumptions: string[];
   warnings: string[];
   protection_policy: {
-    protected_as_default: true;
-    can_be_overridden_only_by_strong_evidence: true;
+    protected_as_default: boolean;
+    can_be_overridden_only_by_strong_evidence: boolean;
   };
 }
 

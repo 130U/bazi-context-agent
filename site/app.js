@@ -1,197 +1,590 @@
-const reportEl = document.getElementById("report");
-const birthDateEl = document.getElementById("birthDate");
-const birthTimeEl = document.getElementById("birthTime");
-const contextEl = document.getElementById("contextProfile");
-const questionEl = document.getElementById("forecastQuestion");
-const actionStatusEl = document.getElementById("actionStatus");
+import {
+  answerQuestion,
+  buildLocalForecast,
+  createSession,
+  getNextQuestion,
+  lockWorkingChart,
+  scoreSession
+} from "./engine.js";
 
-let latestPayload = null;
+const STORAGE_KEY = "bazi-context-agent.public-session.v1";
+const HORIZON_MONTHS = { "6_months": 6, "12_months": 12, "24_months": 24 };
+const PURPOSES = {
+  B: ["传统线索 · 弱先验", "这类线索只用于形成弱先验，不会盖过有日期的人生事件。"],
+  C: ["重大年份 · 事件回测", "年份越明确、事件越重要，越能区分候选时辰。敏感问题可以跳过。"],
+  D: ["现实处境 · 仅用于 Stage 2", "这项答案只改变情景的上下文，不会回流修改时辰排名。"]
+};
+const BRANCH_GLYPHS = {
+  Zi: "子", Chou: "丑", Yin: "寅", Mao: "卯", Chen: "辰", Si: "巳",
+  Wu: "午", Wei: "未", Shen: "申", You: "酉", Xu: "戌", Hai: "亥"
+};
 
-function buildPayload() {
-  const birthDate = birthDateEl.value.trim();
-  const birthTime = birthTimeEl.value.trim();
-  const contextProfile = contextEl.value.trim();
-  const question = questionEl.value.trim();
+const els = {
+  intakeForm: document.getElementById("intake-form"),
+  intakeError: document.getElementById("intake-error"),
+  questionForm: document.getElementById("question-form"),
+  contextForm: document.getElementById("context-form"),
+  forecastForm: document.getElementById("forecast-form"),
+  toast: document.getElementById("toast"),
+  privacyDialog: document.getElementById("privacy-dialog")
+};
 
-  return {
-    generated_at: new Date().toISOString(),
-    demo_only: true,
-    birth_input: {
-      birth_date: birthDate,
-      recorded_time: birthTime
-    },
-    derivative_function: {
-      source: "illustrative_fixture",
-      summary: "Illustrative derived-profile fixture; no chart calculation runs in this static page.",
-      signals: [
-        "timing structure",
-        "mobility and transition signal",
-        "education-career pressure signal"
-      ]
-    },
-    initial_value: {
-      context_profile: contextProfile,
-      note: "In the production pipeline, the context profile is user-controlled and can be hidden, deleted, or excluded."
-    },
-    forecast_question: question,
-    forecast_preview: {
-      summary: "This fixture demonstrates where a bounded forecast summary would appear after deterministic rectification and explicit context review.",
-      opportunity_windows: [
-        "0-6 months: clarity and consolidation",
-        "6-18 months: positioning and collaboration"
-      ],
-      risk_windows: [
-        "overextension",
-        "over-reading weak signals",
-        "context leakage if privacy controls are ignored"
-      ]
-    },
-    policy: {
-      static_demo: true,
-      fixture_based: true,
-      no_login: true,
-      no_api_key: true,
-      ai_used_for_ranking: false,
-      data_leaves_browser: false
+let runtimeConfig = null;
+let session = null;
+let forecast = null;
+let currentQuestion = null;
+let currentContextQuestion = null;
+let previousCandidateScores = new Map();
+let toastTimer = 0;
+
+function text(id, value) {
+  const element = document.getElementById(id);
+  if (element) element.textContent = value ?? "";
+}
+
+function clear(element) {
+  while (element?.firstChild) element.firstChild.remove();
+}
+
+function make(tag, className, content) {
+  const element = document.createElement(tag);
+  if (className) element.className = className;
+  if (content !== undefined) element.textContent = content;
+  return element;
+}
+
+function showView(name) {
+  document.querySelectorAll("[data-view]").forEach((view) => {
+    const active = view.dataset.view === name;
+    view.hidden = !active;
+    view.classList.toggle("is-active", active);
+  });
+  const stageTwo = ["context", "forecast-intake", "forecast"].includes(name);
+  document.querySelectorAll("[data-phase-link]").forEach((link) => {
+    const active = link.dataset.phaseLink === (stageTwo ? "stage2" : "stage1");
+    link.classList.toggle("is-active", active);
+    if (active) link.setAttribute("aria-current", "step");
+    else link.removeAttribute("aria-current");
+  });
+  const stageTwoButton = document.querySelector('[data-phase-link="stage2"]');
+  if (stageTwoButton) stageTwoButton.disabled = !session?.lock;
+  window.scrollTo({ top: 0, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+}
+
+function showToast(message) {
+  window.clearTimeout(toastTimer);
+  els.toast.textContent = message;
+  els.toast.classList.add("is-visible");
+  toastTimer = window.setTimeout(() => els.toast.classList.remove("is-visible"), 2800);
+}
+
+function findQuestion(questionId) {
+  return runtimeConfig.question_bank.stages
+    .flatMap((stage) => stage.questions)
+    .find((question) => question.id === questionId) ?? null;
+}
+
+function optionLabel(question, value) {
+  return question?.options?.find((option) => (typeof option === "string" ? option : option.id) === value)?.label ?? String(value);
+}
+
+function setCertainty(value) {
+  const radio = els.intakeForm.querySelector(`input[name="certainty"][value="${value}"]`);
+  if (radio) radio.checked = true;
+  updateTimeVisibility();
+}
+
+function updateTimeVisibility() {
+  const certainty = els.intakeForm.querySelector('input[name="certainty"]:checked')?.value;
+  const wrapper = document.querySelector("[data-time-fields]");
+  const input = document.getElementById("birth-time");
+  const hidden = certainty === "unsure";
+  wrapper.hidden = hidden;
+  input.required = !hidden;
+  if (hidden) input.value = "";
+}
+
+function renderQuestionForm(form, question, savedValue) {
+  clear(form);
+  form.dataset.questionId = question.id;
+  const type = question.inputType;
+
+  if (type === "single_choice" || type === "multi_choice") {
+    const options = make("div", "answer-options");
+    const selected = Array.isArray(savedValue) ? new Set(savedValue) : new Set([savedValue]);
+    (question.options ?? []).forEach((option) => {
+      const id = typeof option === "string" ? option : option.id;
+      const labelText = typeof option === "string" ? option : option.label;
+      const label = make("label", "answer-option");
+      const input = document.createElement("input");
+      input.type = type === "single_choice" ? "radio" : "checkbox";
+      input.name = "answer";
+      input.value = id;
+      input.checked = selected.has(id);
+      label.append(input, make("span", "", labelText));
+      options.append(label);
+    });
+    form.append(options);
+  } else if (type === "year_event_list") {
+    const editor = make("div", "event-editor");
+    editor.dataset.maxItems = String(question.maxItems ?? 3);
+    const existing = Array.isArray(savedValue) && savedValue.length ? savedValue : [{ year: "", description: "" }];
+    existing.forEach((item) => addEventRow(editor, item));
+    const add = make("button", "secondary-button event-add", "＋ 添加另一个年份");
+    add.type = "button";
+    add.addEventListener("click", () => {
+      if (editor.querySelectorAll(".event-row").length < Number(editor.dataset.maxItems)) addEventRow(editor, {});
+      if (editor.querySelectorAll(".event-row").length >= Number(editor.dataset.maxItems)) add.disabled = true;
+    });
+    form.append(editor, add);
+  } else {
+    const stack = make("div", "answer-input-stack");
+    const input = type === "short_text" ? document.createElement("textarea") : document.createElement("input");
+    input.name = "answer";
+    input.value = typeof savedValue === "string" ? savedValue : "";
+    if (type === "date") input.type = "date";
+    else if (type === "time_or_range") input.type = "time";
+    else {
+      input.rows = 4;
+      input.maxLength = question.maxLength ?? 500;
+      input.placeholder = "可以简短回答；不知道或不愿回答也可以跳过。";
     }
-  };
+    stack.append(input);
+    form.append(stack);
+  }
+  const error = make("div", "answer-error");
+  error.setAttribute("role", "alert");
+  form.append(error);
 }
 
-function renderReport(payload) {
-  reportEl.innerHTML = `
-    <div class="report-lead">
-      <p>Illustrative fixture · not a personal prediction</p>
-      <h3>${escapeHtml(payload.forecast_question)}</h3>
-    </div>
-    <dl>
-      <div>
-        <dt>Birth input</dt>
-        <dd>${escapeHtml(payload.birth_input.birth_date)} · ${escapeHtml(payload.birth_input.recorded_time)}</dd>
-      </div>
-      <div>
-        <dt>Derived structure</dt>
-        <dd>${escapeHtml(payload.derivative_function.summary)}</dd>
-      </div>
-      <div>
-        <dt>User context</dt>
-        <dd>${escapeHtml(payload.initial_value.context_profile)}</dd>
-      </div>
-      <div>
-        <dt>Output position</dt>
-        <dd>${escapeHtml(payload.forecast_preview.summary)}</dd>
-      </div>
-      <div>
-        <dt>Example windows</dt>
-        <dd>${payload.forecast_preview.opportunity_windows.map(escapeHtml).join(" · ")}</dd>
-      </div>
-    </dl>
-    <div class="report-boundary">Static fixture · no login · no API key · no data leaves this browser</div>
-  `;
+function addEventRow(editor, item = {}) {
+  const row = make("div", "event-row");
+  const year = document.createElement("input");
+  year.type = "number";
+  year.className = "event-year";
+  year.inputMode = "numeric";
+  year.min = "1900";
+  year.max = String(new Date().getFullYear());
+  year.placeholder = "年份";
+  year.value = item.year ?? "";
+  year.setAttribute("aria-label", "事件年份");
+  const description = document.createElement("input");
+  description.type = "text";
+  description.className = "event-description";
+  description.maxLength = 120;
+  description.placeholder = "发生了什么（可选）";
+  description.value = item.description ?? "";
+  description.setAttribute("aria-label", "事件说明");
+  const remove = make("button", "event-remove", "×");
+  remove.type = "button";
+  remove.setAttribute("aria-label", "移除这个事件");
+  remove.addEventListener("click", () => row.remove());
+  row.append(year, description, remove);
+  editor.append(row);
 }
 
-function escapeHtml(value) {
-  return String(value).replace(/[&<>"']/g, char => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    "\"": "&quot;",
-    "'": "&#39;"
-  }[char]));
+function readQuestionValue(form, question) {
+  if (question.inputType === "single_choice") return form.querySelector('input[name="answer"]:checked')?.value ?? "";
+  if (question.inputType === "multi_choice") return [...form.querySelectorAll('input[name="answer"]:checked')].map((input) => input.value);
+  if (question.inputType === "year_event_list") {
+    return [...form.querySelectorAll(".event-row")]
+      .map((row) => ({
+        year: row.querySelector(".event-year").value,
+        description: row.querySelector(".event-description").value.trim(),
+        event_type: question.eventType,
+        importance: "medium"
+      }))
+      .filter((item) => item.year)
+      .map((item) => ({ ...item, year: Number(item.year) }));
+  }
+  return form.querySelector('[name="answer"]')?.value.trim() ?? "";
 }
 
-function download(filename, content, type) {
-  const blob = new Blob([content], { type });
+function renderCandidates() {
+  const list = document.getElementById("candidate-list");
+  clear(list);
+  const candidates = session?.candidates?.slice(0, 5) ?? [];
+  const maximum = Math.max(...candidates.map((candidate) => candidate.total_score), 1);
+  candidates.forEach((candidate, index) => {
+    const row = make("div", "candidate-row");
+    row.append(make("span", "candidate-rank", String(index + 1).padStart(2, "0")));
+    const copy = make("div", "candidate-copy");
+    const title = make("div", "candidate-title");
+    title.append(make("strong", "", candidate.hour_label), make("span", "", candidate.representative_time));
+    const track = make("div", "candidate-track");
+    const bar = document.createElement("span");
+    bar.style.width = `${Math.max(4, (candidate.total_score / maximum) * 100)}%`;
+    track.append(bar);
+    copy.append(title, track);
+    row.append(copy, make("strong", "candidate-score", candidate.total_score.toFixed(3)));
+    list.append(row);
+  });
+
+  text("candidate-count", String(session?.candidates?.length ?? 0));
+  const eventCount = Object.entries(session?.answers?.stage_one ?? {})
+    .filter(([id, value]) => id.startsWith("C") && Array.isArray(value))
+    .reduce((sum, [, value]) => sum + value.length, 0);
+  text("event-count", String(eventCount));
+  const maximumQuestions = session?.stage_one?.maximum_questions ?? 17;
+  text("evidence-coverage", `${Math.round(((session?.stage_one?.question_count ?? 0) / maximumQuestions) * 100)}%`);
+
+  const deltas = candidates.slice(0, 3).map((candidate) => {
+    const previous = previousCandidateScores.get(candidate.candidate_id);
+    const delta = previous === undefined ? 0 : candidate.total_score - previous;
+    return `${candidate.hour_label} ${delta >= 0 ? "+" : ""}${delta.toFixed(3)}`;
+  });
+  text("evidence-delta", deltas.length ? deltas.join(" · ") : "首轮基线已建立。");
+  previousCandidateScores = new Map((session?.candidates ?? []).map((candidate) => [candidate.candidate_id, candidate.total_score]));
+}
+
+function renderStageOne() {
+  currentQuestion = getNextQuestion(session, runtimeConfig);
+  if (!currentQuestion || currentQuestion.id.startsWith("D")) {
+    renderReview();
+    return;
+  }
+  const [purpose, help] = PURPOSES[currentQuestion.id[0]] ?? PURPOSES.B;
+  text("question-purpose", purpose);
+  text("question-title", currentQuestion.title);
+  text("question-help", help);
+  const count = session.stage_one.question_count;
+  const max = session.stage_one.maximum_questions;
+  text("question-counter", `证据问题 ${Math.min(count + 1, max)} / ${max}`);
+  text("question-stage-label", currentQuestion.id.startsWith("C") ? "重大年份回测" : "建立弱先验");
+  const progress = document.querySelector(".progress-track");
+  progress.setAttribute("aria-valuemax", String(max));
+  progress.setAttribute("aria-valuenow", String(count));
+  document.getElementById("question-progress-bar").style.width = `${(count / max) * 100}%`;
+  text("reasoning-copy", count ? "上一项证据已计入。确定性引擎已重新比较候选。" : "候选时辰已建立。下一题将补充配置顺序中的证据。");
+  renderQuestionForm(els.questionForm, currentQuestion, session.answers.stage_one[currentQuestion.id]);
+  renderCandidates();
+  showView("questions");
+  document.getElementById("question-title").focus?.({ preventScroll: true });
+}
+
+function submitStageOne(valueOverride) {
+  if (!currentQuestion) return;
+  const error = els.questionForm.querySelector(".answer-error");
+  try {
+    const value = valueOverride ?? readQuestionValue(els.questionForm, currentQuestion);
+    if (currentQuestion.required && (value === "" || (Array.isArray(value) && !value.length))) {
+      error.textContent = "请回答这一题，或选择“暂不回答”。";
+      return;
+    }
+    session = answerQuestion(session, currentQuestion.id, value || "skip", runtimeConfig);
+    renderStageOne();
+  } catch (problem) {
+    error.textContent = problem.message;
+  }
+}
+
+function reopenStageOne(questionId) {
+  if (!questionId || session.lock) return;
+  const draft = structuredClone(session);
+  delete draft.answers.stage_one[questionId];
+  draft.stage_one.asked_question_ids = draft.stage_one.asked_question_ids.filter((id) => id !== questionId);
+  draft.stage_one.question_count = draft.stage_one.asked_question_ids.length;
+  session = scoreSession(draft, runtimeConfig);
+  renderStageOne();
+}
+
+function renderReview() {
+  const top = session.candidates[0];
+  const stable = session.stage_one.stable;
+  text("selected-branch-glyph", BRANCH_GLYPHS[top.branch] ?? top.branch);
+  text("selected-branch-name", `${top.hour_label} · ${top.branch}`);
+  text("selected-window", `候选代表时间 ${top.representative_time} · 来源 ${top.source === "unknown_symmetric" ? "十二时辰对称比较" : "记录时间及相邻边界"}`);
+  text("selected-confidence", `${Math.round(top.total_score * 100)} / 100`);
+  text("selected-gap", session.stage_one.score_margin?.toFixed(3) ?? "—");
+  text("selected-answers", `${session.stage_one.question_count} 题`);
+  const badge = document.getElementById("stability-badge");
+  badge.textContent = stable ? "达到稳定门" : "暂定结构";
+  badge.classList.toggle("is-stable", stable);
+  text("review-intro", stable
+    ? "当前答案已满足配置中的题数、事件覆盖与领先差条件；仍然是本次会话的工作结构，不是客观真值。"
+    : "已达到问题上限，但证据还不足以形成稳定领先。你可以带着暂定结构进入敏感性更高的 Stage 2。"
+  );
+
+  const candidateContainer = document.getElementById("review-candidates");
+  clear(candidateContainer);
+  session.candidates.slice(0, 3).forEach((candidate) => {
+    const card = make("article", "candidate-review-card");
+    const glyph = make("span", "branch", BRANCH_GLYPHS[candidate.branch] ?? candidate.branch);
+    const details = make("div");
+    details.append(make("strong", "", candidate.hour_label));
+    details.append(make("p", "", `记录 ${candidate.components.birth_record.toFixed(2)} · 传统线索 ${candidate.components.symbol_prior.toFixed(2)} · 事件 ${candidate.components.event_backtest.toFixed(2)}`));
+    card.append(glyph, details, make("strong", "", candidate.total_score.toFixed(3)));
+    candidateContainer.append(card);
+  });
+
+  const reasons = document.getElementById("stability-reasons");
+  clear(reasons);
+  [
+    `已完成 ${session.stage_one.question_count} / ${session.stage_one.maximum_questions} 个配置问题。`,
+    `有内容的事件类别：${session.stage_one.event_answer_count ?? 0}；事件分量是最高权重。`,
+    `Top 1 领先差 ${session.stage_one.score_margin?.toFixed(3) ?? "0.000"}。`,
+    stable ? "满足稳定门，可以锁定工作结构。" : "未满足全部稳定门；锁定后会明确标记 provisional。"
+  ].forEach((reason) => reasons.append(make("li", "", reason)));
+  showView("review");
+}
+
+function renderContext() {
+  currentContextQuestion = getNextQuestion(session, runtimeConfig);
+  if (!currentContextQuestion) {
+    showView("forecast-intake");
+    return;
+  }
+  const ordered = runtimeConfig.question_bank.context_policy.question_order;
+  const answered = Object.keys(session.answers.context).length;
+  text("context-counter", `现实问题 ${answered + 1} / ${ordered.length}`);
+  text("context-question-title", currentContextQuestion.title);
+  text("context-question-help", PURPOSES.D[1]);
+  renderQuestionForm(els.contextForm, currentContextQuestion, session.answers.context[currentContextQuestion.id]);
+  showView("context");
+}
+
+function submitContext(valueOverride) {
+  if (!currentContextQuestion) return;
+  const error = els.contextForm.querySelector(".answer-error");
+  try {
+    const value = valueOverride ?? readQuestionValue(els.contextForm, currentContextQuestion);
+    session = answerQuestion(session, currentContextQuestion.id, value || "skip", runtimeConfig);
+    renderContext();
+  } catch (problem) {
+    error.textContent = problem.message;
+  }
+}
+
+function previousContext() {
+  const ids = runtimeConfig.question_bank.context_policy.question_order.filter((id) => session.answers.context[id] !== undefined);
+  const questionId = ids.at(-1);
+  if (!questionId) return;
+  delete session.answers.context[questionId];
+  renderContext();
+}
+
+function listItems(targetId, values, fallback) {
+  const target = document.getElementById(targetId);
+  clear(target);
+  const items = values.length ? values : [fallback];
+  items.forEach((value) => target.append(make("li", "", value)));
+}
+
+function displayValue(questionId, value) {
+  const question = findQuestion(questionId);
+  if (Array.isArray(value)) return value.map((item) => typeof item === "string" ? optionLabel(question, item) : String(item)).join("、");
+  return optionLabel(question, value);
+}
+
+function addMonths(date, months) {
+  const result = new Date(`${date}T12:00:00`);
+  result.setMonth(result.getMonth() + months);
+  return result.toISOString().slice(0, 10);
+}
+
+function renderForecast(request) {
+  forecast = buildLocalForecast(session, request, runtimeConfig);
+  const selected = forecast.selected_structure;
+  text("forecast-generated-at", forecast.generated_for_date);
+  text("forecast-chart", `${selected.hour_label} · ${selected.branch}`);
+  text("forecast-mode", forecast.scenario.mode === "degraded_context_planning_scenario" ? "本地规划情景（降级）" : "本地结构情景");
+  text("forecast-question-display", forecast.question);
+  text("forecast-summary-copy", forecast.scenario.mode === "degraded_context_planning_scenario"
+    ? "当前浏览器构建没有大运或流年数据，因此不会伪造八字时间窗口。下面把锁定结构、现实上下文和你选择的期限整理成可复核的规划情景。"
+    : "以下窗口来自锁定结构、可用时序信号和你主动提供的现实上下文；它们是待验证的情景，不是确定性结论。"
+  );
+
+  listItems("derivative-basis", [
+    `工作时辰：${selected.hour_label}（${selected.representative_time}）`,
+    `相对支持分：${selected.total_score.toFixed(3)}`,
+    `锁定状态：${session.lock.status === "stable" ? "满足稳定门" : "暂定结构"}`
+  ], "没有可用结构信息。");
+  listItems("initial-basis", forecast.initial_conditions
+    .filter((fact) => fact.value !== "skip")
+    .slice(0, 6)
+    .map((fact) => `${fact.label}：${displayValue(fact.question_id, fact.value)}`), "没有提供现实上下文；情景将保持通用。"
+  );
+  const events = Object.entries(session.answers.stage_one)
+    .filter(([id, value]) => id.startsWith("C") && Array.isArray(value))
+    .flatMap(([id, values]) => values.map((event) => `${event.year} · ${findQuestion(id)?.title ?? id}${event.description ? ` · ${event.description}` : ""}`));
+  listItems("event-basis", events.slice(0, 8), "没有提供可用的年份事件。"
+  );
+
+  const timeline = document.getElementById("forecast-timeline-list");
+  clear(timeline);
+  const months = forecast.horizon.months;
+  const splits = [
+    ["现在 · 建立基线", forecast.horizon.start_date, "写下当前资源、约束与成功标准；避免把已知事实误写成预测。"],
+    ["中段 · 检查信号", addMonths(forecast.horizon.start_date, Math.max(1, Math.round(months / 2))), "复核哪些条件真正改变，再决定继续、收缩或转向。"],
+    ["期末 · 回看结果", forecast.horizon.end_date, "对照最初问题与行动记录，区分结构信号、环境变化和自己的选择。"]
+  ];
+  splits.forEach(([title, date, body]) => {
+    const item = make("article", "timeline-window");
+    item.append(make("span", "report-label", date), make("h3", "", title), make("p", "", body));
+    timeline.append(item);
+  });
+
+  const actions = document.getElementById("forecast-action-list");
+  clear(actions);
+  [
+    `把“${forecast.question}”改写成一个在 ${forecast.horizon.months} 个月内可观察的结果。`,
+    "挑出一个你能控制的行动和一个需要外界验证的假设，分别记录。",
+    "在中段检查点复盘；如果出生资料或重大年份有修正，先回到 Stage 1 重算。"
+  ].forEach((action) => actions.append(make("li", "", action)));
+  listItems("forecast-uncertainty-list", [
+    ...forecast.limitations.map((item) => ({
+      "Annual-fortune data is unavailable.": "当前浏览器构建没有流年数据。",
+      "Luck-cycle data is unavailable.": "当前浏览器构建没有大运数据。",
+      "Do not treat this planning scenario as a verified personal prediction.": "这是一份规划情景，不是经过验证的个人命运预测。",
+      "Local deterministic scenario; no model-generated interpretation was used.": "本结果由本地确定性规则生成，没有模型解释。"
+    }[item] ?? item)),
+    "相对分数表示配置规则下的支持度，不是统计概率。",
+    session.lock.status === "provisional" ? "工作结构仍为暂定；候选并列会放大下游不确定性。" : "工作结构满足本次配置稳定门，但不等同于客观真值。"
+  ], "请保留对不确定性的判断。"
+  );
+  showView("forecast");
+}
+
+function exportSession() {
+  const payload = { exported_at: new Date().toISOString(), session, forecast };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = filename;
-  anchor.click();
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "bazi-context-session.json";
+  link.click();
   URL.revokeObjectURL(url);
 }
 
-function setActionStatus(message, tone = "") {
-  actionStatusEl.textContent = message;
-  actionStatusEl.dataset.tone = tone;
-}
-
-async function copyText(value) {
-  if (navigator.clipboard?.writeText) {
-    await navigator.clipboard.writeText(value);
+function saveSession() {
+  if (!session) {
+    showToast("还没有可以保存的会话。");
     return;
   }
-
-  const field = document.createElement("textarea");
-  field.value = value;
-  field.setAttribute("readonly", "");
-  field.style.position = "fixed";
-  field.style.opacity = "0";
-  document.body.appendChild(field);
-  field.select();
-  const copied = document.execCommand("copy");
-  field.remove();
-  if (!copied) throw new Error("Copy command was unavailable.");
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ session, forecast }));
+  document.querySelector('[data-action="resume"]')?.removeAttribute("hidden");
+  showToast("已明确保存到这台设备的浏览器。");
 }
 
-function toMarkdown(payload) {
-  return `# BaZi Context Agent — Illustrative Demo Report
-
-> Fixture-based public walkthrough. This is not a calculated chart or personal prediction.
-
-## Question
-${payload.forecast_question}
-
-## Birth input
-- Date: ${payload.birth_input.birth_date}
-- Recorded time: ${payload.birth_input.recorded_time}
-
-## Derived function
-${payload.derivative_function.summary}
-
-## Initial value
-${payload.initial_value.context_profile}
-
-## Forecast preview
-${payload.forecast_preview.summary}
-
-## Policy
-- Static demo: ${payload.policy.static_demo}
-- Fixture based: ${payload.policy.fixture_based}
-- No login: ${payload.policy.no_login}
-- No API key: ${payload.policy.no_api_key}
-- Data leaves browser: ${payload.policy.data_leaves_browser}
-`;
+function clearLocal() {
+  localStorage.removeItem(STORAGE_KEY);
+  document.querySelector('[data-action="resume"]')?.setAttribute("hidden", "");
+  showToast("本机保存已清除。");
 }
 
-function generate() {
-  latestPayload = buildPayload();
-  renderReport(latestPayload);
-}
-
-document.getElementById("generateBtn").addEventListener("click", () => {
-  generate();
-  setActionStatus("Illustrative report refreshed.", "success");
-});
-
-document.getElementById("copyBtn").addEventListener("click", async () => {
-  if (!latestPayload) generate();
+function resumeSession() {
   try {
-    await copyText(toMarkdown(latestPayload));
-    setActionStatus("Markdown copied to the clipboard.", "success");
+    const stored = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    session = stored.session;
+    forecast = stored.forecast ?? null;
+    if (forecast) renderForecast({ question: forecast.question, current_date: forecast.generated_for_date, horizon_months: forecast.horizon.months });
+    else if (session.lock) renderContext();
+    else renderStageOne();
   } catch {
-    setActionStatus("Copy was unavailable. Download the Markdown file instead.", "error");
+    clearLocal();
+    showToast("保存的会话无法读取，已清除。");
   }
-});
+}
 
-document.getElementById("jsonBtn").addEventListener("click", () => {
-  if (!latestPayload) generate();
-  download("bazi-context-demo.json", JSON.stringify(latestPayload, null, 2), "application/json");
-  setActionStatus("JSON download prepared.", "success");
-});
+function resetSession() {
+  session = null;
+  forecast = null;
+  currentQuestion = null;
+  currentContextQuestion = null;
+  previousCandidateScores = new Map();
+  els.intakeForm.reset();
+  updateTimeVisibility();
+  showView("welcome");
+}
 
-document.getElementById("mdBtn").addEventListener("click", () => {
-  if (!latestPayload) generate();
-  download("bazi-context-demo.md", toMarkdown(latestPayload), "text/markdown");
-  setActionStatus("Markdown download prepared.", "success");
-});
+function bindEvents() {
+  els.intakeForm.addEventListener("change", (event) => {
+    if (event.target.name === "certainty") updateTimeVisibility();
+  });
+  els.intakeForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    els.intakeError.textContent = "";
+    const data = new FormData(els.intakeForm);
+    const certainty = data.get("certainty");
+    if (!data.get("birthDate") || !data.get("birthplace") || !certainty || !data.get("chartSex")) {
+      els.intakeError.textContent = "请填写出生日期、地点、时间确定程度和传统排盘用性别。";
+      return;
+    }
+    if (certainty !== "unsure" && !data.get("recordedTime")) {
+      els.intakeError.textContent = "请填写记忆中的时间，或选择 Unsure。";
+      return;
+    }
+    session = createSession(runtimeConfig, {
+      birth_date: data.get("birthDate"),
+      birthplace: data.get("birthplace"),
+      recorded_time: certainty === "unsure" ? "unsure" : data.get("recordedTime"),
+      uncertainty_range: certainty === "exact" ? "recorded_only" : certainty === "approximate" ? "adjacent_1_shichen" : "full_day",
+      boundary_flags: data.getAll("boundaryFlags"),
+      chart_sex: data.get("chartSex")
+    });
+    renderStageOne();
+  });
 
-generate();
+  els.forecastForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const question = document.getElementById("forecast-question").value.trim();
+    if (!question) {
+      text("forecast-error", "请写下一个希望观察的问题。");
+      return;
+    }
+    text("forecast-error", "");
+    const horizon = els.forecastForm.querySelector('input[name="horizon"]:checked')?.value ?? "12_months";
+    renderForecast({ question, horizon_months: HORIZON_MONTHS[horizon], current_date: new Date().toISOString().slice(0, 10) });
+  });
+
+  document.addEventListener("click", (event) => {
+    const trigger = event.target.closest("[data-action]");
+    if (!trigger) return;
+    const action = trigger.dataset.action;
+    if (action === "begin") { showView("intake"); setCertainty("approximate"); }
+    if (action === "preset") { showView("intake"); setCertainty(trigger.dataset.preset); }
+    if (action === "back-welcome" || action === "home") showView("welcome");
+    if (action === "submit-answer") submitStageOne();
+    if (action === "skip-question") submitStageOne("skip");
+    if (action === "previous-question") reopenStageOne(session?.stage_one?.asked_question_ids?.at(-1));
+    if (action === "toggle-evidence") {
+      const delta = document.getElementById("evidence-delta");
+      delta.hidden = !delta.hidden;
+      trigger.setAttribute("aria-expanded", String(!delta.hidden));
+      trigger.querySelector("span").textContent = delta.hidden ? "＋" : "−";
+    }
+    if (action === "review-answers") reopenStageOne(session?.stage_one?.asked_question_ids?.at(-1));
+    if (action === "lock-chart") {
+      try { session = lockWorkingChart(session, runtimeConfig); renderContext(); }
+      catch (problem) { showToast(problem.message); }
+    }
+    if (action === "submit-context") submitContext();
+    if (action === "skip-context") submitContext("skip");
+    if (action === "previous-context") previousContext();
+    if (action === "new-forecast") showView("forecast-intake");
+    if (action === "export-session") exportSession();
+    if (action === "print-report") window.print();
+    if (action === "save-session") saveSession();
+    if (action === "resume") resumeSession();
+    if (action === "restart") resetSession();
+    if (action === "open-privacy") els.privacyDialog.showModal();
+    if (action === "clear-local") clearLocal();
+  });
+}
+
+async function start() {
+  try {
+    const response = await fetch("./data/runtime-config.json", { cache: "no-store" });
+    if (!response.ok) throw new Error(`runtime config ${response.status}`);
+    runtimeConfig = await response.json();
+    bindEvents();
+    updateTimeVisibility();
+    if (localStorage.getItem(STORAGE_KEY)) document.querySelector('[data-action="resume"]')?.removeAttribute("hidden");
+  } catch (problem) {
+    console.error(problem);
+    showToast("运行配置载入失败；请刷新页面或查看构建状态。");
+    document.querySelectorAll("button").forEach((button) => { if (!button.closest("dialog")) button.disabled = true; });
+  }
+}
+
+start();

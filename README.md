@@ -9,9 +9,9 @@
 ![Node 24+](https://img.shields.io/badge/Node-24%2B-5D7265)
 ![Local first](https://img.shields.io/badge/privacy-local--first-A65F3F)
 
-[**Open the public walkthrough →**](https://130u.github.io/bazi-context-agent/) · [Architecture](docs/ARCHITECTURE.md) · [AI boundary](docs/AI_BOUNDARY.md) · [Evaluation](docs/EVALUATION.md)
+[**Open the public experience →**](https://www.theodoreoy.com/bazi-context-agent/) · [Architecture](docs/ARCHITECTURE.md) · [AI boundary](docs/AI_BOUNDARY.md) · [Evaluation](docs/EVALUATION.md)
 
-> **Demo scope / 演示范围** — The public page is a fixture-based walkthrough of the information contract and export flow. It makes no network request, performs no real chart calculation, and produces no personal prediction. / 公开页面是基于样例数据的信息契约与导出流程演示；不发起网络请求、不进行真实排盘，也不输出个人预测。
+> **Public scope / 公开范围** — The browser now runs the configured 15–17 question rectification flow, candidate comparison, working-chart lock, context intake, and an evidence-linked local scenario. Ranking never uses AI. Because the browser build still lacks tested annual-fortune and luck-cycle data, it explicitly degrades instead of inventing a BaZi forecast. / 浏览器现在运行配置化的 15–17 问校时、候选比较、工作结构锁定、现实上下文与证据报告；排名不使用 AI。由于浏览器构建仍没有经过验证的流年与大运数据，它会明确降级，而不会编造八字时间窗口。
 
 Recorded birth time is treated as evidence, not ground truth. The system preserves uncertainty, generates and ranks candidates with deterministic code, compares them against dated life events, and only then allows user-controlled context to inform downstream forecasting.
 
@@ -143,11 +143,12 @@ npm.cmd test
 npm.cmd run ui
 ```
 
-Public static walkthrough / 公开静态演示：
+Public browser experience / 公开浏览器体验：
 
-- Live / 在线：<https://130u.github.io/bazi-context-agent/>
+- Live / 在线：<https://www.theodoreoy.com/bazi-context-agent/>
 - Source / 源文件：[`site/index.html`](site/index.html)
-- Scope / 范围：fixture-based, browser-only, no login, no API key, no model call / 基于样例、仅浏览器端、无需登录或密钥、不调用模型
+- Build config / 构建配置：`npm run build:site`
+- Scope / 范围：config-backed, browser-only, no login, no API key, no model call; raw birth input does not yet produce a full calendar-derived chart / 配置驱动、仅浏览器端、无需登录或密钥、不调用模型；真实出生输入尚不能生成完整历法派生盘
 
 ---
 
@@ -248,27 +249,3 @@ This framework supports comparative evaluation under holdout conditions. It does
 **EN** - This is a research prototype. BaZi and metaphysical analysis should not be used as medical, legal, financial, or safety-critical advice. Forecasts are structured interpretations, not guarantees.
 
 **中文** - 本项目是研究型原型。八字和玄学分析不应作为医疗、法律、金融或安全关键决策依据。预测是结构化解释，不是保证。
-
----
-
-## Contributing / 贡献
-
-See [`CONTRIBUTING.md`](CONTRIBUTING.md).
-
-请查看 [`CONTRIBUTING.md`](CONTRIBUTING.md)。
-
----
-
-## Security / 安全
-
-See [`SECURITY.md`](SECURITY.md).
-
-请查看 [`SECURITY.md`](SECURITY.md)。
-
----
-
-## License / 许可证
-
-License is TBD. No reuse rights are granted until a license is selected. See [`docs/LICENSE_DECISION_STAGE9.md`](docs/LICENSE_DECISION_STAGE9.md).
-
-许可证待定。在明确选择许可证之前，不授予复用权利。请查看 [`docs/LICENSE_DECISION_STAGE9.md`](docs/LICENSE_DECISION_STAGE9.md)。

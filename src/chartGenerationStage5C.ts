@@ -65,6 +65,21 @@ const BRANCH_WINDOWS: Record<EarthlyBranch, Array<[number, number]>> = {
   Hai: [[1260, 1380]]
 };
 
+const BRANCH_REPRESENTATIVE_TIMES: Record<EarthlyBranch, string> = {
+  Zi: "00:30",
+  Chou: "02:00",
+  Yin: "04:00",
+  Mao: "06:00",
+  Chen: "08:00",
+  Si: "10:00",
+  Wu: "12:00",
+  Wei: "14:00",
+  Shen: "16:00",
+  You: "18:00",
+  Xu: "20:00",
+  Hai: "22:00"
+};
+
 const CANONICAL_BOUNDARY: Record<string, BoundaryFlag> = {
   near_zi_boundary: "near_zi_hour",
   near_jieqi: "near_solar_term",
@@ -267,6 +282,7 @@ export async function createDefaultChart(
 ): Promise<DefaultChart> {
   const normalized = normalizedRecordedBirthTime(recordedBirthTime);
   const certainty = normalizeBirthTimeCertainty(normalized.certainty);
+  const hasRecordedTime = Boolean(birthTime(normalized));
   const boundaryFlags = normalizeBoundaryFlags(normalized.boundary_flags);
   const selectedAdapter = adapter ?? (await getBaziEngineAdapter());
   const timeBranch = birthTime(normalized) ? getHourBranchForTime(birthTime(normalized) as string) : null;
@@ -284,11 +300,14 @@ export async function createDefaultChart(
     fixed_pillars: derived.fixed_pillars,
     derived_profile: derived.profile,
     boundary_flags: boundaryFlags,
-    assumptions: unique(["recorded_time_used_as_default_chart", ...(normalized.assumptions ?? [])]),
+    assumptions: unique([
+      hasRecordedTime ? "recorded_time_used_as_default_chart" : "unknown_time_has_no_protected_default_hour",
+      ...(normalized.assumptions ?? [])
+    ]),
     warnings,
     protection_policy: {
-      protected_as_default: true,
-      can_be_overridden_only_by_strong_evidence: true
+      protected_as_default: hasRecordedTime,
+      can_be_overridden_only_by_strong_evidence: hasRecordedTime
     }
   };
 }
@@ -321,6 +340,9 @@ async function buildCandidate(input: {
   const candidateBirthTime = normalizedRecordedBirthTime(input.recordedBirthTime, {
     birth_date: input.date,
     date: input.date,
+    birth_time: BRANCH_REPRESENTATIVE_TIMES[input.branch],
+    time: BRANCH_REPRESENTATIVE_TIMES[input.branch],
+    fixed_pillars: fixedPillarsForBranch(input.recordedBirthTime.fixed_pillars, input.branch),
     certainty: input.recordedBirthTime.certainty,
     boundary_flags: input.boundaryFlags
   });
@@ -353,7 +375,7 @@ function candidateBranches(recordedBirthTime: RecordedBirthTime, certainty: Birt
     if (branch) result.push({ branch, reason });
   };
 
-  push(recordedBranch ?? "Zi", "default");
+  push(recordedBranch, "default");
 
   if ((certainty === "within_1_hour" || certainty === "approximate_hour") && recordedBranch) {
     for (const branch of adjacentBranches(recordedBranch)) push(branch, "adjacent");
@@ -405,7 +427,12 @@ export async function generateCandidateChartsV2(input: CandidateGenerationInput)
     const dateBranches = birthTime(normalized) ? [getHourBranchForTime(birthTime(normalized) as string) ?? "Zi"] : [...EARTHLY_BRANCHES];
     for (let offset = -span; offset <= span; offset += 1) {
       for (const branch of dateBranches) {
-        candidateSpecs.push({ branch, date: addDays(baseDate, offset), reason: offset === 0 ? "default" : "unknown_date", warnings: ["unknown_date_low_confidence"] });
+        candidateSpecs.push({
+          branch,
+          date: addDays(baseDate, offset),
+          reason: offset === 0 && birthTime(normalized) ? "default" : "unknown_date",
+          warnings: ["unknown_date_low_confidence"]
+        });
       }
     }
   } else {

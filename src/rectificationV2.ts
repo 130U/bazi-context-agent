@@ -177,7 +177,12 @@ function scoreChart(chart: ChartLike, request: RectificationV2Request): Candidat
 export function runRectificationV2(request: RectificationV2Request): RectificationResultV2 {
   if (!request.default_chart) throw new Error("Rectification v2 requires default_chart.");
   const scores = [request.default_chart, ...(request.candidates ?? [])].map((chart) => scoreChart(chart, request)).sort((a, b) => b.total_score - a.total_score);
-  const protection = applyDefaultChartProtection(scores, request.life_events?.length ?? 0);
+  const protection = applyDefaultChartProtection(
+    scores,
+    request.life_events?.length ?? 0,
+    undefined,
+    request.default_chart.protection_policy?.protected_as_default ?? true
+  );
   const selected =
     protection.recommendation === "candidate_preferred" && protection.top_alternative_id
       ? scores.find((score) => score.candidate_id === protection.top_alternative_id) ?? scores.find((score) => score.chart_role === "default") ?? scores[0]
