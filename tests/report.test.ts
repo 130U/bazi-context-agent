@@ -11,7 +11,7 @@ import { classifyPredictionDomain } from "../src/predictionDomain.ts";
 import { cloneRankingSnapshot } from "../src/predictionPolicy.ts";
 import { buildPredictionReport } from "../src/reportBuilder.ts";
 import { reportToMarkdown } from "../src/reportMarkdown.ts";
-import { assertNoExportSecrets } from "../src/reportRedaction.ts";
+import { assertNoExportSecrets, redactForExport } from "../src/reportRedaction.ts";
 import { rankCandidates } from "../src/ranking.ts";
 import { createBaziUiServer } from "../src/server.ts";
 import { scoreSymbolPrior } from "../src/symbolPrior.ts";
@@ -22,8 +22,7 @@ async function withServer<T>(run: (baseUrl: string) => Promise<T>): Promise<T> {
   const server = createBaziUiServer();
   await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
   const address = server.address();
-  assert.equal(typeof address, "object");
-  assert.ok(address);
+  if (!address || typeof address === "string") throw new Error("Test server did not expose a TCP address.");
   const baseUrl = `http://127.0.0.1:${address.port}`;
   try {
     return await run(baseUrl);
@@ -133,6 +132,19 @@ test("report builder redacts API keys and raw provider payloads", () => {
   assert.equal(serialized.includes("raw_provider_request"), false);
   assert.equal(serialized.includes("raw_provider_response"), false);
   assert.equal(serialized.includes("process_env"), false);
+});
+
+test("report redaction covers current OpenAI GitHub and bearer token forms", () => {
+  const tokens = [
+    `sk-proj-${"a".repeat(24)}`,
+    `github_pat_${"b".repeat(24)}`,
+    `ghp_${"c".repeat(24)}`,
+    `Bearer ${"d".repeat(24)}`
+  ];
+  const redacted = redactForExport({ notes: tokens });
+  const serialized = JSON.stringify(redacted);
+  for (const token of tokens) assert.equal(serialized.includes(token), false);
+  assertNoExportSecrets(redacted);
 });
 
 test("markdown export contains core report sections and is secret-free", () => {
@@ -259,19 +271,17 @@ test("provider status and report output do not expose env key names or values", 
   });
 });
 
-test("UI HTML contains prediction display report export controls and privacy notice", async () => {
+test("UI HTML contains the canonical forecast report and privacy controls", async () => {
   await withServer(async (baseUrl) => {
     const html = await fetch(`${baseUrl}/`).then((response) => response.text());
     for (const token of [
-      'id="prediction-display"',
-      'id="provider_status"',
-      'id="report_preview"',
-      'id="report-json"',
-      'id="report-markdown"',
-      'id="privacy_notice"',
-      "AI/provider does not participate in ranking",
-      "Context box is used for prediction personalization only",
-      "API keys are never displayed or exported"
+      'id="forecast-domain-list"',
+      'id="forecast-uncertainty-list"',
+      'data-action="export-session"',
+      'id="privacy-dialog"',
+      "校时排名全部在浏览器本地执行，不调用 AI",
+      "不会把出生资料、人生事件或报告写入 localStorage",
+      "导出内容可能包含你填写的敏感人生事件"
     ]) {
       assert.match(html, new RegExp(token.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
     }

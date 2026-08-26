@@ -46,8 +46,7 @@ async function withServer<T>(run: (baseUrl: string) => Promise<T>): Promise<T> {
   const server = createBaziUiServer();
   await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
   const address = server.address();
-  assert.equal(typeof address, "object");
-  assert.ok(address);
+  if (!address || typeof address === "string") throw new Error("Test server did not expose a TCP address.");
   try {
     return await run(`http://127.0.0.1:${address.port}`);
   } finally {
@@ -55,9 +54,10 @@ async function withServer<T>(run: (baseUrl: string) => Promise<T>): Promise<T> {
   }
 }
 
-test("Stage 5D reads rectification weights from config", () => {
+test("rectification v2 reads every weight from the canonical scoring config", () => {
   const weights = loadRectificationWeights();
-  assert.equal(weights.version, "stage5d.v1");
+  assert.equal(weights.version, "rectification.v2");
+  assert.match(RECTIFICATION_WEIGHTS_SOURCE, /scoring_weights\.v1\.json/);
   assert.deepEqual(weights.candidate_rectification_score_weights, {
     recorded_time_prior: 0.35,
     event_timing_fit: 0.45,

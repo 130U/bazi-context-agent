@@ -161,6 +161,7 @@ test("repo contains no real env file, real key, or forbidden provider framework"
   for (const token of ["langchain", "llamaindex", "@ai-sdk"]) assert.equal(pkg.includes(token), false);
 
   function files(dir: string): string[] {
+    if (!existsSync(dir)) return [];
     return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
       const path = join(dir, entry.name);
       return entry.isDirectory() ? files(path) : [path];

@@ -6,7 +6,7 @@ function clamp(value: number): number {
   return Number(Math.max(0, Math.min(1, value)).toFixed(4));
 }
 
-export const mockPredictionProvider: PredictionProvider = {
+export const mockPredictionProvider = {
   id: "mock",
   predict(request: PredictionRequest): PredictionResult {
     const input = buildPredictionProviderInput(request);
@@ -29,14 +29,14 @@ export const mockPredictionProvider: PredictionProvider = {
       },
       confidence,
       uncertainty: [
-        "Stage 4A uses a mock provider.",
+        "This result uses the offline mock provider.",
         "Prediction quality depends on the frozen ranking snapshot and disclosed context."
       ],
       next_questions: [
         "What outcome would make this prediction useful?",
-        "Which context fact should be weighted most in a later report?"
+        "Which context fact should receive the most weight in the report?"
       ],
       policy: mockPredictionPolicy("mock")
     };
   }
-};
+} satisfies PredictionProvider;

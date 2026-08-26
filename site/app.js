@@ -9,6 +9,14 @@ import {
 } from "./engine.js";
 import { clear, make, text } from "./ui/dom.js";
 import { renderForecastView } from "./ui/forecast-view.js";
+import {
+  readIntakeForm,
+  readQuestionValue,
+  renderIntakeForm,
+  renderQuestionForm,
+  updateIntakeTimeState,
+  validateIntakeForm
+} from "./ui/forms.js";
 import { BRANCH_GLYPHS, HORIZON_MONTHS, PURPOSES } from "./ui/labels.js";
 import { clearKnownStorage } from "./ui/privacy.js";
 
@@ -31,6 +39,7 @@ let currentQuestion = null;
 let currentContextQuestion = null;
 let previousCandidateScores = new Map();
 let toastTimer = 0;
+let privacyReturnTarget = null;
 
 function showView(name) {
   document.querySelectorAll("[data-view]").forEach((view) => {
@@ -47,7 +56,13 @@ function showView(name) {
   });
   const stageTwoButton = document.querySelector('[data-phase-link="stage2"]');
   if (stageTwoButton) stageTwoButton.disabled = !session?.lock;
-  window.scrollTo({ top: 0, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+  window.scrollTo({ top: 0, behavior: "auto" });
+  const activeView = document.querySelector(`[data-view="${name}"]`);
+  const heading = activeView?.querySelector("h1, h2");
+  if (heading) {
+    heading.tabIndex = -1;
+    heading.focus({ preventScroll: true });
+  }
 }
 
 function showToast(message) {
@@ -55,118 +70,6 @@ function showToast(message) {
   els.toast.textContent = message;
   els.toast.classList.add("is-visible");
   toastTimer = window.setTimeout(() => els.toast.classList.remove("is-visible"), 2800);
-}
-
-function setCertainty(value) {
-  const radio = els.intakeForm.querySelector(`input[name="certainty"][value="${value}"]`);
-  if (radio) radio.checked = true;
-  updateTimeVisibility();
-}
-
-function updateTimeVisibility() {
-  const certainty = els.intakeForm.querySelector('input[name="certainty"]:checked')?.value;
-  const wrapper = document.querySelector("[data-time-fields]");
-  const input = document.getElementById("birth-time");
-  const hidden = certainty === "unsure";
-  wrapper.hidden = hidden;
-  input.required = !hidden;
-  if (hidden) input.value = "";
-}
-
-function renderQuestionForm(form, question, savedValue) {
-  clear(form);
-  form.dataset.questionId = question.id;
-  const type = question.inputType;
-
-  if (type === "single_choice" || type === "multi_choice") {
-    const options = make("div", "answer-options");
-    const selected = Array.isArray(savedValue) ? new Set(savedValue) : new Set([savedValue]);
-    (question.options ?? []).forEach((option) => {
-      const id = typeof option === "string" ? option : option.id;
-      const labelText = typeof option === "string" ? option : option.label;
-      const label = make("label", "answer-option");
-      const input = document.createElement("input");
-      input.type = type === "single_choice" ? "radio" : "checkbox";
-      input.name = "answer";
-      input.value = id;
-      input.checked = selected.has(id);
-      label.append(input, make("span", "", labelText));
-      options.append(label);
-    });
-    form.append(options);
-  } else if (type === "year_event_list") {
-    const editor = make("div", "event-editor");
-    editor.dataset.maxItems = String(question.maxItems ?? 3);
-    const existing = Array.isArray(savedValue) && savedValue.length ? savedValue : [{ year: "", description: "" }];
-    existing.forEach((item) => addEventRow(editor, item));
-    const add = make("button", "secondary-button event-add", "＋ 添加另一个年份");
-    add.type = "button";
-    add.addEventListener("click", () => {
-      if (editor.querySelectorAll(".event-row").length < Number(editor.dataset.maxItems)) addEventRow(editor, {});
-      if (editor.querySelectorAll(".event-row").length >= Number(editor.dataset.maxItems)) add.disabled = true;
-    });
-    form.append(editor, add);
-  } else {
-    const stack = make("div", "answer-input-stack");
-    const input = type === "short_text" ? document.createElement("textarea") : document.createElement("input");
-    input.name = "answer";
-    input.value = typeof savedValue === "string" ? savedValue : "";
-    if (type === "date") input.type = "date";
-    else if (type === "time_or_range") input.type = "time";
-    else {
-      input.rows = 4;
-      input.maxLength = question.maxLength ?? 500;
-      input.placeholder = "可以简短回答；不知道或不愿回答也可以跳过。";
-    }
-    stack.append(input);
-    form.append(stack);
-  }
-  const error = make("div", "answer-error");
-  error.setAttribute("role", "alert");
-  form.append(error);
-}
-
-function addEventRow(editor, item = {}) {
-  const row = make("div", "event-row");
-  const year = document.createElement("input");
-  year.type = "number";
-  year.className = "event-year";
-  year.inputMode = "numeric";
-  year.min = "1900";
-  year.max = String(new Date().getFullYear());
-  year.placeholder = "年份";
-  year.value = item.year ?? "";
-  year.setAttribute("aria-label", "事件年份");
-  const description = document.createElement("input");
-  description.type = "text";
-  description.className = "event-description";
-  description.maxLength = 120;
-  description.placeholder = "发生了什么（可选）";
-  description.value = item.description ?? "";
-  description.setAttribute("aria-label", "事件说明");
-  const remove = make("button", "event-remove", "×");
-  remove.type = "button";
-  remove.setAttribute("aria-label", "移除这个事件");
-  remove.addEventListener("click", () => row.remove());
-  row.append(year, description, remove);
-  editor.append(row);
-}
-
-function readQuestionValue(form, question) {
-  if (question.inputType === "single_choice") return form.querySelector('input[name="answer"]:checked')?.value ?? "";
-  if (question.inputType === "multi_choice") return [...form.querySelectorAll('input[name="answer"]:checked')].map((input) => input.value);
-  if (question.inputType === "year_event_list") {
-    return [...form.querySelectorAll(".event-row")]
-      .map((row) => ({
-        year: row.querySelector(".event-year").value,
-        description: row.querySelector(".event-description").value.trim(),
-        event_type: question.eventType,
-        importance: "medium"
-      }))
-      .filter((item) => item.year)
-      .map((item) => ({ ...item, year: Number(item.year) }));
-  }
-  return form.querySelector('[name="answer"]')?.value.trim() ?? "";
 }
 
 function renderCandidates() {
@@ -182,7 +85,7 @@ function renderCandidates() {
     title.append(make("strong", "", candidate.hour_label), make("span", "", candidate.representative_time));
     const track = make("div", "candidate-track");
     const bar = document.createElement("span");
-    bar.style.width = `${Math.max(4, (candidate.total_score / maximum) * 100)}%`;
+    bar.style.transform = `scaleX(${Math.max(0.04, candidate.total_score / maximum)})`;
     track.append(bar);
     copy.append(title, track);
     row.append(copy, make("strong", "candidate-score", candidate.total_score.toFixed(3)));
@@ -202,7 +105,7 @@ function renderCandidates() {
     const delta = previous === undefined ? 0 : candidate.total_score - previous;
     return `${candidate.hour_label} ${delta >= 0 ? "+" : ""}${delta.toFixed(3)}`;
   });
-  text("evidence-delta", deltas.length ? deltas.join(" · ") : "首轮基线已建立。");
+  text("evidence-delta", deltas.length ? deltas.join("；") : "首轮基线已建立。");
   previousCandidateScores = new Map((session?.candidates ?? []).map((candidate) => [candidate.candidate_id, candidate.total_score]));
 }
 
@@ -223,12 +126,11 @@ function renderStageOne() {
   const progress = document.querySelector(".progress-track");
   progress.setAttribute("aria-valuemax", String(max));
   progress.setAttribute("aria-valuenow", String(count));
-  document.getElementById("question-progress-bar").style.width = `${(count / max) * 100}%`;
+  document.getElementById("question-progress-bar").style.transform = `scaleX(${count / max})`;
   text("reasoning-copy", count ? "上一项证据已计入。确定性引擎已重新比较候选。" : "候选时辰已建立。下一题将补充配置顺序中的证据。");
   renderQuestionForm(els.questionForm, currentQuestion, session.answers.stage_one[currentQuestion.id]);
   renderCandidates();
   showView("questions");
-  document.getElementById("question-title").focus?.({ preventScroll: true });
 }
 
 function submitStageOne(valueOverride) {
@@ -238,8 +140,12 @@ function submitStageOne(valueOverride) {
     const value = valueOverride ?? readQuestionValue(els.questionForm, currentQuestion);
     if (currentQuestion.required && (value === "" || (Array.isArray(value) && !value.length))) {
       error.textContent = "请回答这一题，或选择“暂不回答”。";
+      const firstControl = els.questionForm.querySelector("input, textarea, select");
+      firstControl?.setAttribute("aria-invalid", "true");
+      firstControl?.focus();
       return;
     }
+    els.questionForm.querySelectorAll("[aria-invalid]").forEach((control) => control.removeAttribute("aria-invalid"));
     session = answerQuestion(session, currentQuestion.id, value || "skip", runtimeConfig);
     renderStageOne();
   } catch (problem) {
@@ -261,17 +167,17 @@ function renderReview() {
   const top = session.candidates[0];
   const stable = session.stage_one.stable;
   text("selected-branch-glyph", BRANCH_GLYPHS[top.branch] ?? top.branch);
-  text("selected-branch-name", `${top.hour_label} · ${top.branch}`);
-  text("selected-window", `候选代表时间 ${top.representative_time} · 来源 ${top.source === "unknown_symmetric" ? "十二时辰对称比较" : "记录时间及相邻边界"}`);
+  text("selected-branch-name", top.hour_label);
+  text("selected-window", `候选代表时间 ${top.representative_time}，来源：${top.source === "unknown_symmetric" ? "十二时辰对称比较" : "记录时间及相邻边界"}`);
   text("selected-confidence", `${Math.round(top.total_score * 100)} / 100`);
-  text("selected-gap", session.stage_one.score_margin?.toFixed(3) ?? "—");
+  text("selected-gap", session.stage_one.score_margin?.toFixed(3) ?? "待生成");
   text("selected-answers", `${session.stage_one.question_count} 题`);
   const badge = document.getElementById("stability-badge");
   badge.textContent = stable ? "达到稳定门" : "暂定结构";
   badge.classList.toggle("is-stable", stable);
   text("review-intro", stable
     ? "当前答案已满足配置中的题数、事件覆盖与领先差条件；仍然是本次会话的工作结构，不是客观真值。"
-    : "已达到问题上限，但证据还不足以形成稳定领先。你可以带着暂定结构进入敏感性更高的 Stage 2。"
+    : "已达到问题上限，但证据还不足以形成稳定领先。你可以带着暂定结构进入现实信息框。"
   );
 
   const candidateContainer = document.getElementById("review-candidates");
@@ -281,7 +187,7 @@ function renderReview() {
     const glyph = make("span", "branch", BRANCH_GLYPHS[candidate.branch] ?? candidate.branch);
     const details = make("div");
     details.append(make("strong", "", candidate.hour_label));
-    details.append(make("p", "", `记录 ${candidate.components.birth_record.toFixed(2)} · 传统线索 ${candidate.components.symbol_prior.toFixed(2)} · 事件 ${candidate.components.event_backtest.toFixed(2)}`));
+    details.append(make("p", "", `记录 ${candidate.components.birth_record.toFixed(2)}；传统线索 ${candidate.components.symbol_prior.toFixed(2)}；事件 ${candidate.components.event_backtest.toFixed(2)}`));
     card.append(glyph, details, make("strong", "", candidate.total_score.toFixed(3)));
     candidateContainer.append(card);
   });
@@ -291,8 +197,8 @@ function renderReview() {
   [
     `已完成 ${session.stage_one.question_count} / ${session.stage_one.maximum_questions} 个配置问题。`,
     `有内容的事件类别：${session.stage_one.event_answer_count ?? 0}；事件分量是最高权重。`,
-    `Top 1 领先差 ${session.stage_one.score_margin?.toFixed(3) ?? "0.000"}。`,
-    stable ? "满足稳定门，可以锁定工作结构。" : "未满足全部稳定门；锁定后会明确标记 provisional。"
+    `首位候选领先差 ${session.stage_one.score_margin?.toFixed(3) ?? "0.000"}。`,
+    stable ? "满足稳定门，可以锁定工作结构。" : "未满足全部稳定门；锁定后会明确标记为暂定结构。"
   ].forEach((reason) => reasons.append(make("li", "", reason)));
   showView("review");
 }
@@ -366,7 +272,7 @@ function clearSensitiveDom() {
     "event-count", "evidence-coverage", "question-counter", "context-counter"
   ].forEach((id) => text(id, ""));
   if (els.privacyDialog.open) els.privacyDialog.close();
-  updateTimeVisibility();
+  if (runtimeConfig) renderIntakeForm(els.intakeForm, runtimeConfig);
 }
 
 function purgeSessionData() {
@@ -386,30 +292,32 @@ function resetSession() {
 }
 
 function bindEvents() {
+  els.privacyDialog.addEventListener("cancel", (event) => {
+    event.preventDefault();
+    els.privacyDialog.close();
+  });
+  els.privacyDialog.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      els.privacyDialog.close();
+    }
+  });
+  els.privacyDialog.addEventListener("close", () => {
+    privacyReturnTarget?.focus();
+    privacyReturnTarget = null;
+  });
   els.intakeForm.addEventListener("change", (event) => {
-    if (event.target.name === "certainty") updateTimeVisibility();
+    updateIntakeTimeState(els.intakeForm, event.target);
   });
   els.intakeForm.addEventListener("submit", (event) => {
     event.preventDefault();
     els.intakeError.textContent = "";
-    const data = new FormData(els.intakeForm);
-    const certainty = data.get("certainty");
-    if (!data.get("birthDate") || !data.get("birthplace") || !certainty || !data.get("chartSex")) {
-      els.intakeError.textContent = "请填写出生日期、地点、时间确定程度和传统排盘用性别。";
+    const missingQuestion = validateIntakeForm(els.intakeForm, runtimeConfig);
+    if (missingQuestion) {
+      els.intakeError.textContent = `请补充“${missingQuestion}”，不确定时可选择配置提供的不确定选项。`;
       return;
     }
-    if (certainty !== "unsure" && !data.get("recordedTime")) {
-      els.intakeError.textContent = "请填写记忆中的时间，或选择 Unsure。";
-      return;
-    }
-    session = createSession(runtimeConfig, {
-      birth_date: data.get("birthDate"),
-      birthplace: data.get("birthplace"),
-      recorded_time: certainty === "unsure" ? "unsure" : data.get("recordedTime"),
-      uncertainty_range: certainty === "exact" ? "recorded_only" : certainty === "approximate" ? "adjacent_1_shichen" : "full_day",
-      boundary_flags: data.getAll("boundaryFlags"),
-      chart_sex: data.get("chartSex")
-    });
+    session = createSession(runtimeConfig, readIntakeForm(els.intakeForm));
     renderStageOne();
   });
 
@@ -418,8 +326,11 @@ function bindEvents() {
     const question = document.getElementById("forecast-question").value.trim();
     if (!question) {
       text("forecast-error", "请写下一个希望观察的问题。");
+      document.getElementById("forecast-question").setAttribute("aria-invalid", "true");
+      document.getElementById("forecast-question").focus();
       return;
     }
+    document.getElementById("forecast-question").removeAttribute("aria-invalid");
     text("forecast-error", "");
     const horizon = els.forecastForm.querySelector('input[name="horizon"]:checked')?.value ?? "12_months";
     renderForecast({ question, horizon_months: HORIZON_MONTHS[horizon], current_date: new Date().toISOString().slice(0, 10) });
@@ -429,7 +340,7 @@ function bindEvents() {
     const trigger = event.target.closest("[data-action]");
     if (!trigger) return;
     const action = trigger.dataset.action;
-    if (action === "begin") { showView("intake"); setCertainty("approximate"); }
+    if (action === "begin") showView("intake");
     if (action === "back-welcome" || action === "home" || action === "exit-session") resetSession();
     if (action === "submit-answer") submitStageOne();
     if (action === "skip-question") submitStageOne("skip");
@@ -451,7 +362,10 @@ function bindEvents() {
     if (action === "new-forecast") showView("forecast-intake");
     if (action === "export-session") exportSession();
     if (action === "print-report") window.print();
-    if (action === "open-privacy") els.privacyDialog.showModal();
+    if (action === "open-privacy") {
+      privacyReturnTarget = trigger;
+      els.privacyDialog.showModal();
+    }
   });
 }
 
@@ -475,8 +389,11 @@ async function start() {
   clearKnownStorage();
   try {
     runtimeConfig = await loadRuntimeConfig();
+    renderIntakeForm(els.intakeForm, runtimeConfig);
     bindEvents();
-    updateTimeVisibility();
+    const beginButton = document.querySelector('[data-action="begin"]');
+    beginButton.disabled = false;
+    beginButton.removeAttribute("aria-busy");
   } catch (problem) {
     console.error(problem);
     showToast("运行配置载入失败；请刷新页面或查看构建状态。");

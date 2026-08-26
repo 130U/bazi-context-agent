@@ -45,9 +45,9 @@ export function deleteFact(session: SessionState, factId: string, deletedAt = no
   return next;
 }
 
-export function clearAllLocalData(store: SessionStore, session?: SessionState, clearedAt = nowIso()): SessionState | void {
-  const cleared = store.clear();
-  if (!session) return cleared;
+export async function clearAllLocalData(store: SessionStore, session?: SessionState, clearedAt = nowIso()): Promise<SessionState | void> {
+  await store.clear();
+  if (!session) return;
   return {
     ...clone(session),
     updated_at: clearedAt,

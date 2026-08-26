@@ -24,7 +24,7 @@ export function renderForecastView(forecast, session, runtimeConfig) {
   const confidenceLabels = { high: "较高", medium: "中等", low: "有限" };
   const strengthLabels = { high: "强", medium: "中", low: "弱" };
   text("forecast-generated-at", forecast.generated_for_date);
-  text("forecast-chart", `${selected.hour_label} · ${selected.branch}`);
+  text("forecast-chart", selected.hour_label);
   text("forecast-mode", "本地确定性时序推演");
   text("forecast-question-display", forecast.question);
   const focusLabels = forecast.domain_forecasts.map((domain) => domain.label).join("、");
@@ -50,7 +50,7 @@ export function renderForecastView(forecast, session, runtimeConfig) {
   const events = Object.entries(session.answers.stage_one)
     .filter(([id, value]) => id.startsWith("C") && Array.isArray(value))
     .flatMap(([id, values]) => values.map((event) => (
-      `${event.year} · ${findQuestion(runtimeConfig, id)?.title ?? id}${event.description ? ` · ${event.description}` : ""}`
+      `${event.year}年，${findQuestion(runtimeConfig, id)?.title ?? id}${event.description ? `：${event.description}` : ""}`
     )));
   listItems("event-basis", events.slice(0, 8), "没有提供可用的年份事件。");
 
@@ -66,7 +66,7 @@ export function renderForecastView(forecast, session, runtimeConfig) {
     const eyebrow = make("div", "window-eyebrow");
     eyebrow.append(
       make("span", "window-kind", isSupport ? "相对支持" : "调整 / 承压"),
-      make("span", "report-label", `${window.start_date} — ${window.end_date}`)
+      make("span", "report-label", `${window.start_date} 至 ${window.end_date}`)
     );
     const relation = `工作时支 ${BRANCH_GLYPHS[selected.branch]} 与本月季节支 ${BRANCH_GLYPHS[window.seasonal_branch]} 形成${window.relation_label}`;
     const domainCopy = window.domain_signals
@@ -77,7 +77,7 @@ export function renderForecastView(forecast, session, runtimeConfig) {
       : `仅 ${window.sensitivity.agreement_count}/${window.sensitivity.compared_chart_count} 候选同向`;
     item.append(
       eyebrow,
-      make("h3", "", `${window.month_label} · ${window.relation_label}`),
+      make("h3", "", `${window.month_label}，${window.relation_label}`),
       make(
         "p",
         "",
@@ -103,7 +103,7 @@ export function renderForecastView(forecast, session, runtimeConfig) {
     support.append(make("span", "report-label", "推进窗口"));
     if (domain.support_window) {
       support.append(
-        make("strong", "", `${domain.support_window.start_date} — ${domain.support_window.end_date}`),
+        make("strong", "", `${domain.support_window.start_date} 至 ${domain.support_window.end_date}`),
         make("p", "", `${domain.support_window.relation_label}形成${strengthLabels[domain.support_window.strength]}支持信号，适合主动推进并验证外部响应。`)
       );
     } else support.append(make("p", "", "所选周期内没有出现强支持关系。"));
@@ -111,7 +111,7 @@ export function renderForecastView(forecast, session, runtimeConfig) {
     transition.append(make("span", "report-label", "调整窗口"));
     if (domain.transition_window) {
       transition.append(
-        make("strong", "", `${domain.transition_window.start_date} — ${domain.transition_window.end_date}`),
+        make("strong", "", `${domain.transition_window.start_date} 至 ${domain.transition_window.end_date}`),
         make("p", "", `${domain.transition_window.relation_label}形成${strengthLabels[domain.transition_window.strength]}变化信号，宜降低不可逆承诺并预留备选路径。`)
       );
     } else transition.append(make("p", "", "所选周期内没有出现强调整关系。"));

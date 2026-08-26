@@ -21,6 +21,9 @@ export interface OpenAiPredictionProviderOptions {
   client?: OpenAiChatClient;
 }
 
+const PROVIDER_TIMEOUT_MS = 20_000;
+const MAX_PROVIDER_RESPONSE_BYTES = 1024 * 1024;
+
 function extractJson(payload: unknown): unknown {
   if (payload && typeof payload === "object" && "choices" in payload) {
     const choice = (payload as { choices?: Array<{ message?: { content?: string } }> }).choices?.[0];
@@ -37,10 +40,17 @@ async function defaultOpenAiChatClient(request: OpenAiChatRequest, apiKey: strin
       "content-type": "application/json",
       authorization: `Bearer ${apiKey}`
     },
-    body: JSON.stringify(request)
+    body: JSON.stringify(request),
+    signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS)
   });
   if (!response.ok) throw new Error(`openai_provider_error:${response.status}`);
-  return response.json() as Promise<unknown>;
+  const advertisedBytes = Number(response.headers.get("content-length"));
+  if (Number.isFinite(advertisedBytes) && advertisedBytes > MAX_PROVIDER_RESPONSE_BYTES) {
+    throw new Error("openai_provider_response_too_large");
+  }
+  const body = await response.arrayBuffer();
+  if (body.byteLength > MAX_PROVIDER_RESPONSE_BYTES) throw new Error("openai_provider_response_too_large");
+  return JSON.parse(new TextDecoder().decode(body)) as unknown;
 }
 
 export function createOpenAiPredictionProvider(options: OpenAiPredictionProviderOptions): PredictionProvider {

@@ -1,13 +1,5 @@
 import type { ContextFactControl, RedactionMetadata, SessionState } from "./sessionTypes.ts";
-
-const SECRET_PATTERNS = [
-  /OPENAI_API_KEY\s*=\s*[^\s"']+/gi,
-  /ANTHROPIC_API_KEY\s*=\s*[^\s"']+/gi,
-  /GITHUB_TOKEN\s*=\s*[^\s"']+/gi,
-  /sk-[A-Za-z0-9_-]{8,}/g,
-  /gh[op]_[A-Za-z0-9_]{8,}/g,
-  /\.env(?:\.[A-Za-z0-9_-]+)?\s*[:=]\s*[^\s"']+/gi
-];
+import { containsSecretValue, redactSecretString, SENSITIVE_FIELD_NAMES } from "./secretSafety.ts";
 
 const LOCAL_PATH_PATTERN = /[A-Za-z]:[\\/][^\s"']+/g;
 
@@ -20,22 +12,15 @@ function isHiddenFromExport(fact: ContextFactControl): boolean {
 }
 
 export function containsSensitiveValue(input: unknown): boolean {
-  const text = JSON.stringify(input ?? "");
-  return SECRET_PATTERNS.some((pattern) => {
-    pattern.lastIndex = 0;
-    return pattern.test(text);
-  });
+  return containsSecretValue(input);
 }
 
 export function redactString(input: string): { value: string; count: number } {
   let value = input;
   let count = 0;
-  for (const pattern of SECRET_PATTERNS) {
-    value = value.replace(pattern, () => {
-      count += 1;
-      return "[REDACTED:api_key]";
-    });
-  }
+  const secretRedaction = redactSecretString(value);
+  value = secretRedaction.value;
+  count += secretRedaction.count;
   value = value.replace(LOCAL_PATH_PATTERN, () => {
     count += 1;
     return "[REDACTED:local_path]";
@@ -57,11 +42,13 @@ export function redactValue(input: unknown): { value: unknown; count: number } {
   if (input && typeof input === "object") {
     let count = 0;
     const value = Object.fromEntries(
-      Object.entries(input as Record<string, unknown>).map(([key, child]) => {
+      Object.entries(input as Record<string, unknown>)
+        .filter(([key]) => !SENSITIVE_FIELD_NAMES.has(key.toLowerCase()))
+        .map(([key, child]) => {
         const redacted = redactValue(child);
         count += redacted.count;
         return [key, redacted.value];
-      })
+        })
     );
     return { value, count };
   }

@@ -22,8 +22,7 @@ async function withServer<T>(run: (baseUrl: string) => Promise<T>): Promise<T> {
   const server = createBaziUiServer();
   await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
   const address = server.address();
-  assert.equal(typeof address, "object");
-  assert.ok(address);
+  if (!address || typeof address === "string") throw new Error("Test server did not expose a TCP address.");
   const baseUrl = `http://127.0.0.1:${address.port}`;
   try {
     return await run(baseUrl);

@@ -1,8 +1,8 @@
-# AI_POLICY
+# AI Policy / AI 使用策略
 
 ## Boundary
 
-AI is forbidden before deterministic candidate ranking is complete.
+AI is forbidden before deterministic candidate ranking and rectification are complete.
 
 ## Before Ranking
 
@@ -12,16 +12,19 @@ The following must be deterministic code:
 - symbol prior scoring;
 - candidate generation;
 - event backtest scoring;
-- Top 3 ranking.
+- Top 3 ranking;
+- working-chart selection and protection rules.
 
 ## After Ranking
 
-AI may later be used to:
+After an immutable ranking/rectification snapshot exists, AI may be used to:
 
-- organize the context box;
+- organize user-provided context without changing upstream evidence;
 - explain ranked evidence;
 - generate a report draft;
 - produce prediction language from already-ranked deterministic inputs.
+
+The public GitHub Pages experience does not call AI. The local API defaults to a mock provider; a real provider requires a server-side environment flag, validated output, timeout, response-size limit, and redaction.
 
 ## Secrets
 

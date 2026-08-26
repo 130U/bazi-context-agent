@@ -3,30 +3,24 @@ import { scoreEventBacktest } from "./eventBacktest.ts";
 
 type Components = CandidateScore["components"];
 
-function contextFit(contextFacts: ContextFact[] = []): Pick<Components, "early_life_and_family_fit" | "domain_trajectory_fit"> {
-  if (contextFacts.length === 0) return { early_life_and_family_fit: 0.5, domain_trajectory_fit: 0.5 };
-  const confidence = contextFacts.reduce((sum, fact) => sum + fact.confidence, 0) / contextFacts.length;
-  return {
-    early_life_and_family_fit: Number(Math.min(1, confidence).toFixed(4)),
-    domain_trajectory_fit: Number(Math.min(1, 0.45 + confidence / 2).toFixed(4))
-  };
-}
-
-function total(components: Components, weights: Components, contradictionCount: number, penaltyEnabled: boolean): number {
+function total(components: Components, weights: Components, contradictionCount: number, penaltyEnabled: boolean, config: ScoringConfig): number {
   const base =
     components.symbol_prior_fit * weights.symbol_prior_fit +
     components.event_timing_fit * weights.event_timing_fit +
     components.early_life_and_family_fit * weights.early_life_and_family_fit +
     components.birth_record_plausibility * weights.birth_record_plausibility +
     components.domain_trajectory_fit * weights.domain_trajectory_fit;
-  const penalty = penaltyEnabled ? Math.min(0.15, contradictionCount * 0.03) : 0;
-  return Number(Math.max(0, base - penalty).toFixed(6));
+  const policy = config.legacy_ranking;
+  const penalty = penaltyEnabled
+    ? Math.min(policy.maximum_contradiction_penalty, contradictionCount * policy.contradiction_penalty_per_item)
+    : 0;
+  return Number(Math.max(0, base - penalty).toFixed(policy.score_precision_digits));
 }
 
-function confidence(scores: CandidateScore[]): CandidateScore[] {
+function confidence(scores: CandidateScore[], precision: number): CandidateScore[] {
   const sum = scores.reduce((acc, score) => acc + score.totalScore, 0);
-  if (sum <= 0) return scores.map((score) => ({ ...score, confidence: Number((1 / scores.length).toFixed(4)) }));
-  return scores.map((score) => ({ ...score, confidence: Number((score.totalScore / sum).toFixed(4)) }));
+  if (sum <= 0) return scores.map((score) => ({ ...score, confidence: Number((1 / scores.length).toFixed(precision)) }));
+  return scores.map((score) => ({ ...score, confidence: Number((score.totalScore / sum).toFixed(precision)) }));
 }
 
 function symbolEntries(result: HourGroupPriorResult, group: CandidateChart["hour_group"]): EvidenceItem[] {
@@ -47,16 +41,22 @@ function rowsForCandidate(candidate: CandidateChart, components: Components, sym
   return rows;
 }
 
+export function rankCandidates(input: CandidateRankingInput): CandidateRankingResult;
+export function rankCandidates(candidates: CandidateChart[], priors: HourGroupPrior[] | HourGroupPriorResult, events: LifeEvent[], contextFacts: ContextFact[] | undefined, scoringConfig: ScoringConfig): CandidateScore[];
 export function rankCandidates(inputOrCandidates: CandidateRankingInput | CandidateChart[], priors?: HourGroupPrior[] | HourGroupPriorResult, events?: LifeEvent[], contextFacts?: ContextFact[], scoringConfig?: ScoringConfig): CandidateRankingResult | CandidateScore[] {
+  if (Array.isArray(inputOrCandidates) && !scoringConfig) throw new Error("scoringConfig is required for candidate ranking.");
+  const uniformPrior = Array.isArray(inputOrCandidates)
+    ? (scoringConfig as ScoringConfig).legacy_ranking.uniform_group_prior
+    : inputOrCandidates.scoringConfig.legacy_ranking.uniform_group_prior;
   const input: CandidateRankingInput = Array.isArray(inputOrCandidates)
     ? {
         candidates: inputOrCandidates,
         symbol_prior_result: Array.isArray(priors)
           ? {
               prior: {
-                G1_zi_wu_mao_you: priors.find((entry) => entry.group === "G1_zi_wu_mao_you")?.prior ?? 1 / 3,
-                G2_yin_shen_si_hai: priors.find((entry) => entry.group === "G2_yin_shen_si_hai")?.prior ?? 1 / 3,
-                G3_chen_xu_chou_wei: priors.find((entry) => entry.group === "G3_chen_xu_chou_wei")?.prior ?? 1 / 3
+                G1_zi_wu_mao_you: priors.find((entry) => entry.group === "G1_zi_wu_mao_you")?.prior ?? uniformPrior,
+                G2_yin_shen_si_hai: priors.find((entry) => entry.group === "G2_yin_shen_si_hai")?.prior ?? uniformPrior,
+                G3_chen_xu_chou_wei: priors.find((entry) => entry.group === "G3_chen_xu_chou_wei")?.prior ?? uniformPrior
               },
               raw_scores: { G1_zi_wu_mao_you: 0, G2_yin_shen_si_hai: 0, G3_chen_xu_chou_wei: 0 },
               entries: priors,
@@ -65,36 +65,36 @@ export function rankCandidates(inputOrCandidates: CandidateRankingInput | Candid
               warning: "Symbol evidence is weak and cannot determine birth hour alone."
             }
           : (priors as HourGroupPriorResult),
-        event_backtest_results: scoreEventBacktest(inputOrCandidates, events ?? []) as EventBacktestResult[],
+        event_backtest_results: scoreEventBacktest(inputOrCandidates, events ?? [], scoringConfig),
         contextFacts,
         scoringConfig: scoringConfig as ScoringConfig
       }
     : inputOrCandidates;
 
-  const context = contextFit(input.contextFacts);
+  const policy = input.scoringConfig.legacy_ranking;
   const scored = input.candidates.map((candidate): CandidateScore => {
     const event = input.event_backtest_results.find((item) => item.candidate_id === candidate.candidate_id) ?? {
       candidate_id: candidate.candidate_id,
-      event_timing_fit: 0.5,
+      event_timing_fit: policy.neutral_component_score,
       per_event_scores: [],
       matched_rules: [],
       contradictions: [],
       missing_information: ["event backtest result"],
-      warning: "Round 02 event scoring is a deterministic stub based on year-branch/hour-branch relations. It is not a full BaZi calendar calculation."
+      warning: "Event scoring is a deterministic year-branch and hour-branch approximation, not a full calendar calculation."
     };
     const components: Components = {
       symbol_prior_fit: candidate.symbol_prior_fit ?? input.symbol_prior_result.prior[candidate.hour_group],
       event_timing_fit: event.event_timing_fit,
-      early_life_and_family_fit: context.early_life_and_family_fit,
-      birth_record_plausibility: candidate.birth_record_plausibility ?? 0.5,
-      domain_trajectory_fit: context.domain_trajectory_fit
+      early_life_and_family_fit: policy.neutral_component_score,
+      birth_record_plausibility: candidate.birth_record_plausibility ?? policy.neutral_component_score,
+      domain_trajectory_fit: policy.neutral_component_score
     };
     const symbolEvidence = symbolEntries(input.symbol_prior_result, candidate.hour_group);
     const evidence_table = rowsForCandidate(candidate, components, symbolEvidence, event);
     return {
       candidate,
       components,
-      totalScore: total(components, input.scoringConfig.candidate_score_weights, event.contradictions.length, input.scoringConfig.contradiction_penalty_enabled),
+      totalScore: total(components, input.scoringConfig.candidate_score_weights, event.contradictions.length, input.scoringConfig.contradiction_penalty_enabled, input.scoringConfig),
       confidence: 0,
       evidence: [...symbolEvidence, ...event.matched_rules.map((message) => ({ code: "event_backtest", message }))],
       evidence_table,
@@ -104,11 +104,14 @@ export function rankCandidates(inputOrCandidates: CandidateRankingInput | Candid
   });
 
   const sorted = scored.sort((a, b) => b.totalScore - a.totalScore);
-  const top_3 = confidence(sorted.slice(0, 3));
-  const should_not_force_single_hour = top_3.length > 1 && (top_3[0].totalScore - top_3[1].totalScore < 0.08 || top_3[0].confidence - top_3[1].confidence < 0.1);
+  const top_3 = confidence(sorted.slice(0, 3), policy.confidence_precision_digits);
+  const should_not_force_single_hour = top_3.length > 1 && (
+    top_3[0].totalScore - top_3[1].totalScore < policy.single_hour_score_margin
+    || top_3[0].confidence - top_3[1].confidence < policy.single_hour_confidence_margin
+  );
   const result: CandidateRankingResult = {
     top_candidate_id: top_3[0]?.candidate.candidate_id ?? null,
-    candidates: confidence(sorted),
+    candidates: confidence(sorted, policy.confidence_precision_digits),
     top_3,
     should_not_force_single_hour,
     evidence_table: top_3.flatMap((candidate) => candidate.evidence_table),

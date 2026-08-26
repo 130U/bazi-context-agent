@@ -83,7 +83,17 @@
         { "id": "C6_family_change_years", "title": "哪些年份家庭结构或家庭关系发生过明显变化？", "inputType": "year_event_list", "required": false, "eventType": "family_change", "maxItems": 2 },
         { "id": "C7_career_years", "title": "哪些年份发生过入职、跳槽、离职或事业转向？", "inputType": "year_event_list", "required": false, "eventType": "career", "conditional": "current_identity_is_working_or_has_work_history", "maxItems": 2 },
         { "id": "C8_childbearing_years", "title": "如适用，哪些年份发生过与子女或生育有关的重要事件？", "inputType": "year_event_list", "required": false, "eventType": "childbearing", "conditional": "childbearing_applicable", "maxItems": 2 },
-        { "id": "C9_best_and_worst_years", "title": "你主观感受最好或最困难的年份有哪些？", "inputType": "year_event_list", "required": false, "eventType": "major_turning", "maxItems": 2 }
+        {
+          "id": "C9_best_and_worst_years",
+          "title": "你主观感受最好或最困难的年份有哪些？",
+          "inputType": "year_event_list",
+          "required": false,
+          "eventTypeOptions": [
+            { "id": "best_year", "label": "相对顺利" },
+            { "id": "worst_year", "label": "相对困难" }
+          ],
+          "maxItems": 2
+        }
       ]
     },
     {

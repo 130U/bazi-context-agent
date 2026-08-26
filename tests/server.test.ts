@@ -9,8 +9,7 @@ async function withServer<T>(run: (baseUrl: string) => Promise<T>): Promise<T> {
   const server = createBaziUiServer();
   await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
   const address = server.address();
-  assert.equal(typeof address, "object");
-  assert.ok(address);
+  if (!address || typeof address === "string") throw new Error("Test server did not expose a TCP address.");
   const baseUrl = `http://127.0.0.1:${address.port}`;
   try {
     return await run(baseUrl);
@@ -26,16 +25,42 @@ test("server can start and close", async () => {
   });
 });
 
-test("home page returns HTML with five-step flow", async () => {
+test("home page serves the canonical public experience with security headers", async () => {
   await withServer(async (baseUrl) => {
     const response = await fetch(`${baseUrl}/`);
     const html = await response.text();
     assert.match(response.headers.get("content-type") ?? "", /text\/html/);
+    assert.match(response.headers.get("content-security-policy") ?? "", /frame-ancestors 'none'/);
+    assert.equal(response.headers.get("x-content-type-options"), "nosniff");
     assert.match(html, /BaZi Context Agent/);
-    for (const step of ["birth_input", "symbol_prior", "event_backtest", "context_box", "ranking_result", "prediction_result"]) {
-      assert.match(html, new RegExp(step));
+    for (const view of ["welcome", "intake", "questions", "review", "context", "forecast-intake", "forecast"]) {
+      assert.match(html, new RegExp(`data-view="${view}"`));
     }
-    assert.match(html, /Symbol prior is weak/);
+    assert.match(html, /校时排序不使用 AI/);
+  });
+});
+
+test("API rejects unsupported content types, oversized bodies, and cross-origin requests", async () => {
+  await withServer(async (baseUrl) => {
+    const unsupported = await fetch(`${baseUrl}/api/ranking`, { method: "POST", body: "{}" });
+    assert.equal(unsupported.status, 415);
+    assert.equal((await unsupported.json()).error.code, "UNSUPPORTED_MEDIA_TYPE");
+
+    const oversized = await fetch(`${baseUrl}/api/ranking`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ value: "x".repeat(256 * 1024) })
+    });
+    assert.equal(oversized.status, 413);
+    assert.equal((await oversized.json()).error.code, "PAYLOAD_TOO_LARGE");
+
+    const crossOrigin = await fetch(`${baseUrl}/api/ranking`, {
+      method: "POST",
+      headers: { "content-type": "application/json", origin: "https://attacker.example" },
+      body: "{}"
+    });
+    assert.equal(crossOrigin.status, 403);
+    assert.equal((await crossOrigin.json()).error.code, "ORIGIN_NOT_ALLOWED");
   });
 });
 
@@ -85,6 +110,19 @@ test("candidate API returns two to six candidates", async () => {
     const payload = await response.json();
     assert.ok(payload.candidates.length >= 2);
     assert.ok(payload.candidates.length <= 6);
+  });
+});
+
+test("ranking API rejects missing birth data instead of substituting a fictional profile", async () => {
+  await withServer(async (baseUrl) => {
+    const response = await fetch(`${baseUrl}/api/ranking`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: "{}"
+    });
+    const payload = await response.json();
+    assert.equal(response.status, 400);
+    assert.equal(payload.error.code, "INVALID_INPUT");
   });
 });
 

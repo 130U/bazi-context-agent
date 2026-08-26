@@ -265,7 +265,7 @@ export function buildForecastInput(request: ForecastInputBuildRequest): Forecast
       secrets_included: false
     },
     warnings: [
-      "Stage 5E builds forecast input only; it does not generate future predictions.",
+      "This step builds forecast input only; it does not generate future predictions.",
       "Known facts are packaged as initial_value, not as prediction output."
     ]
   };

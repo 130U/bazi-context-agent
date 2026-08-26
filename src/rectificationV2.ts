@@ -26,61 +26,69 @@ function profileFor(chart: ChartLike, profiles: BaziDerivedProfile[] | undefined
   return profiles?.find((profile) => profile.source_chart_id === chartId(chart));
 }
 
-function recordedTimePrior(chart: ChartLike): number {
-  return clampScore(typeof chart.recorded_time_prior_score === "number" ? chart.recorded_time_prior_score : chart.chart_role === "default" ? 0.8 : 0.45);
+function recordedTimePrior(chart: ChartLike, config: ReturnType<typeof loadRectificationWeights>): number {
+  return clampScore(typeof chart.recorded_time_prior_score === "number"
+    ? chart.recorded_time_prior_score
+    : chart.chart_role === "default"
+      ? config.fallback_scores.default_recorded_time_prior
+      : config.fallback_scores.candidate_recorded_time_prior);
 }
 
-function symbolPriorFit(chart: ChartLike, symbolPrior: unknown): number {
+function symbolPriorFit(chart: ChartLike, symbolPrior: unknown, config: ReturnType<typeof loadRectificationWeights>): number {
   if (chart.chart_role === "candidate" && typeof chart.symbol_prior_score === "number") return clampScore(chart.symbol_prior_score);
   if (symbolPrior && typeof symbolPrior === "object") {
     const values = Object.values(symbolPrior as Record<string, unknown>).filter((value): value is number => typeof value === "number");
     if (values.length > 0) return clampScore(values.reduce((sum, value) => sum + value, 0) / values.length);
   }
-  return 0.5;
+  return config.fallback_scores.symbol_prior;
 }
 
-function chartProfileFit(profile: BaziDerivedProfile | undefined): { score: number; missing: string[]; evidence: string[] } {
-  if (!profile) return { score: 0.2, missing: ["BaziDerivedProfile"], evidence: ["No derived profile attached."] };
+function chartProfileFit(profile: BaziDerivedProfile | undefined, config: ReturnType<typeof loadRectificationWeights>): { score: number; missing: string[]; evidence: string[] } {
+  const policy = config.profile_scoring;
+  if (!profile) return { score: policy.missing_profile, missing: ["BaziDerivedProfile"], evidence: ["No derived profile attached."] };
   const evidence: string[] = [];
   const missing: string[] = [];
-  let score = 0.25;
+  let score = policy.base;
   if (Array.isArray(profile.annual_fortunes) && profile.annual_fortunes.length > 0) {
-    score += 0.25;
+    score += policy.annual_fortunes;
     evidence.push("annual_fortunes present");
   } else missing.push("annual_fortunes");
   if (Array.isArray(profile.luck_cycles) && profile.luck_cycles.length > 0) {
-    score += 0.2;
+    score += policy.luck_cycles;
     evidence.push("luck_cycles present");
   } else missing.push("luck_cycles");
   if (profile.relations) {
-    score += 0.15;
+    score += policy.relations;
     evidence.push("relations present");
   } else missing.push("relations");
   if (Array.isArray(profile.ten_gods) && profile.ten_gods.length > 0) {
-    score += 0.1;
+    score += policy.ten_gods;
     evidence.push("ten_gods present");
   } else missing.push("ten_gods");
-  if (Array.isArray(profile.warnings) && profile.warnings.length === 0) score += 0.05;
+  if (Array.isArray(profile.warnings) && profile.warnings.length === 0) score += policy.no_warnings;
   return { score: clampScore(score), missing, evidence };
 }
 
-function contradictionPenalty(contradictions: CandidateRectificationScore["contradictions"]): number {
+function contradictionPenalty(contradictions: CandidateRectificationScore["contradictions"], config: ReturnType<typeof loadRectificationWeights>): number {
   return clampScore(
     contradictions.reduce((sum, item) => sum + item.penalty, 0),
-    [0, 0.35]
+    [config.clamp_scores_to[0], config.fallback_scores.maximum_contradiction_penalty]
   );
 }
 
-function scoreChart(chart: ChartLike, request: RectificationV2Request): CandidateRectificationScore {
-  const weightsConfig = loadRectificationWeights();
+function scoreChart(
+  chart: ChartLike,
+  request: RectificationV2Request,
+  weightsConfig: ReturnType<typeof loadRectificationWeights>
+): CandidateRectificationScore {
   const weights = weightsConfig.candidate_rectification_score_weights;
   const id = chartId(chart);
   const profile = profileFor(chart, request.bazi_derived_profiles);
   const eventFit = scoreEventTimingFit(chart, request.life_events ?? [], profile);
-  const profileFit = chartProfileFit(profile);
-  const recorded = recordedTimePrior(chart);
-  const symbol = symbolPriorFit(chart, request.symbol_prior);
-  const penalty = weightsConfig.contradiction_penalty_enabled ? contradictionPenalty(eventFit.contradictions) : 0;
+  const profileFit = chartProfileFit(profile, weightsConfig);
+  const recorded = recordedTimePrior(chart, weightsConfig);
+  const symbol = symbolPriorFit(chart, request.symbol_prior, weightsConfig);
+  const penalty = weightsConfig.contradiction_penalty_enabled ? contradictionPenalty(eventFit.contradictions, weightsConfig) : 0;
   const weighted = {
     recorded_time_prior: clampScore(recorded * weights.recorded_time_prior),
     event_timing_fit: clampScore(eventFit.event_timing_fit * weights.event_timing_fit),
@@ -136,7 +144,7 @@ function scoreChart(chart: ChartLike, request: RectificationV2Request): Candidat
         description: `Contradiction penalty ${penalty}.`,
         source: "life_event",
         score_delta: -penalty,
-        weight: 1
+        weight: weightsConfig.result_policy.contradiction_evidence_weight
       })
     );
   }
@@ -148,7 +156,7 @@ function scoreChart(chart: ChartLike, request: RectificationV2Request): Candidat
         label: missing,
         description: `Missing information: ${missing}.`,
         source: "derived_profile",
-        confidence: 0.4
+        confidence: weightsConfig.fallback_scores.missing_evidence_confidence
       })
     );
   }
@@ -157,7 +165,11 @@ function scoreChart(chart: ChartLike, request: RectificationV2Request): Candidat
     candidate_id: id,
     chart_role: chartRole(chart),
     total_score: total,
-    confidence: clampScore((eventFit.confidence + (profile ? 0.75 : 0.35)) / 2 - penalty / 2),
+    confidence: clampScore(
+      (eventFit.confidence + (profile ? weightsConfig.fallback_scores.profile_confidence : weightsConfig.fallback_scores.missing_profile_confidence))
+        / weightsConfig.result_policy.confidence_component_count
+        - penalty / weightsConfig.result_policy.penalty_confidence_divisor
+    ),
     components: {
       recorded_time_prior: recorded,
       event_timing_fit: eventFit.event_timing_fit,
@@ -176,7 +188,10 @@ function scoreChart(chart: ChartLike, request: RectificationV2Request): Candidat
 
 export function runRectificationV2(request: RectificationV2Request): RectificationResultV2 {
   if (!request.default_chart) throw new Error("Rectification v2 requires default_chart.");
-  const scores = [request.default_chart, ...(request.candidates ?? [])].map((chart) => scoreChart(chart, request)).sort((a, b) => b.total_score - a.total_score);
+  const weightsConfig = loadRectificationWeights();
+  const scores = [request.default_chart, ...(request.candidates ?? [])]
+    .map((chart) => scoreChart(chart, request, weightsConfig))
+    .sort((a, b) => b.total_score - a.total_score);
   const protection = applyDefaultChartProtection(
     scores,
     request.life_events?.length ?? 0,
@@ -188,8 +203,8 @@ export function runRectificationV2(request: RectificationV2Request): Rectificati
       ? scores.find((score) => score.candidate_id === protection.top_alternative_id) ?? scores.find((score) => score.chart_role === "default") ?? scores[0]
       : scores.find((score) => score.chart_role === "default") ?? scores[0];
   const componentWeights = {
-    ...loadRectificationWeights().candidate_rectification_score_weights,
-    contradiction_penalty: 1
+    ...weightsConfig.candidate_rectification_score_weights,
+    contradiction_penalty: weightsConfig.result_policy.contradiction_evidence_weight
   };
   const evidence_table = scores.flatMap((score) => evidenceTableRows(score, componentWeights));
   return {
@@ -197,7 +212,9 @@ export function runRectificationV2(request: RectificationV2Request): Rectificati
     selected_chart_role: selected.chart_role,
     recommendation: protection.recommendation,
     scores,
-    top_alternatives: scores.filter((score) => score.candidate_id !== selected.candidate_id).slice(0, 3),
+    top_alternatives: scores
+      .filter((score) => score.candidate_id !== selected.candidate_id)
+      .slice(0, weightsConfig.result_policy.alternative_count),
     evidence_table,
     default_chart_protection: protection,
     warnings: [...new Set([...scores.flatMap((score) => score.warnings), ...protection.reasons])],

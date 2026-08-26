@@ -1,10 +1,11 @@
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import { pathToFileURL } from "node:url";
 import { generateCandidateHours } from "./candidateGeneration.ts";
-import { createDefaultChart, generateCandidateChartsV2 } from "./chartGenerationStage5C.ts";
+import { createDefaultChart, generateCandidateChartsV2, normalizeBoundaryFlags } from "./chartGenerationStage5C.ts";
 import { normalizeContextBox } from "./contextBox.ts";
 import { loadQuestionBank, loadScoringConfig } from "./config.ts";
 import { scoreEventBacktest } from "./eventBacktest.ts";
+import { assertEvalCase } from "./evalCaseSchema.ts";
 import { classifyPredictionDomain } from "./predictionDomain.ts";
 import { buildForecastInput, ForecastInputBuildError } from "./forecastInputBuilder.ts";
 import { FutureForecastError, runFutureForecast } from "./futureForecastEngine.ts";
@@ -16,6 +17,7 @@ import { reportToMarkdown } from "./reportMarkdown.ts";
 import { runRectificationV2 } from "./rectificationV2.ts";
 import { scoreSymbolPrior } from "./symbolPrior.ts";
 import { validateForecastInput } from "./forecastInputValidator.ts";
+import { PUBLIC_SITE_CSP, servePublicSite } from "./publicSite.ts";
 import type {
   BirthInput,
   BoundaryFlag,
@@ -35,40 +37,36 @@ import type { PredictionRequest, PredictionResult, RankingSnapshot } from "./pre
 import type { RectificationLifeEvent, RectificationV2Request } from "./rectificationTypes.ts";
 import type { ReportExportFormat } from "./reportTypes.ts";
 import type { RecordedBirthTime } from "./baziTypes.ts";
-import type { EvalCase, EvaluationModeId, ModeOutput } from "./evalTypes.ts";
+import type { EvaluationModeId, ModeOutput } from "./evalTypes.ts";
 
 type JsonValue = Record<string, unknown>;
 
-const DEFAULT_BIRTH_INPUT: BirthInput = {
-  birthDate: "1998-05-10",
-  birthplace: "demo-city",
-  recordedTime: "22:50",
-  uncertaintyRange: "auto",
-  boundaryFlags: ["near_hour_boundary", "near_zi_hour"],
-  chartSex: "female"
-};
+const MAX_JSON_BODY_BYTES = 256 * 1024;
 
-const DEFAULT_SYMBOL_ANSWERS: SymbolAnswer[] = [
-  { questionId: "B1_hair_whorl", answerId: "one_offset" },
-  { questionId: "B4_little_finger_length", answerId: "aligned" },
-  { questionId: "B6_sleep_posture", answerId: "side" }
-];
+class HttpInputError extends Error {
+  readonly status: number;
+  readonly code: string;
 
-const DEFAULT_LIFE_EVENTS: LifeEvent[] = [
-  { year: 2018, type: "education", description: "fictional education event" },
-  { year: 2021, type: "career", description: "fictional career direction change" }
-];
-
-const HOUR_GROUP_KEYS: HourGroupId[] = ["G1_zi_wu_mao_you", "G2_yin_shen_si_hai", "G3_chen_xu_chou_wei"];
-
-function json(response: ServerResponse, status: number, body: unknown): void {
-  response.writeHead(status, { "content-type": "application/json; charset=utf-8" });
-  response.end(JSON.stringify(body));
+  constructor(status: number, code: string, message: string) {
+    super(message);
+    this.status = status;
+    this.code = code;
+  }
 }
 
-function html(response: ServerResponse, body: string): void {
-  response.writeHead(200, { "content-type": "text/html; charset=utf-8" });
-  response.end(body);
+const HOUR_GROUP_KEYS: HourGroupId[] = ["G1_zi_wu_mao_you", "G2_yin_shen_si_hai", "G3_chen_xu_chou_wei"];
+const UNCERTAINTY_RANGES = new Set<BirthInput["uncertaintyRange"]>(["recorded_only", "adjacent_1_shichen", "adjacent_2_shichen", "full_day", "auto"]);
+const CHART_SEX_VALUES = new Set<ChartSex>(["male", "female", "prefer_not_to_say"]);
+
+function json(response: ServerResponse, status: number, body: unknown): void {
+  response.writeHead(status, {
+    "cache-control": "no-store",
+    "content-security-policy": `${PUBLIC_SITE_CSP}; sandbox`,
+    "content-type": "application/json; charset=utf-8",
+    "referrer-policy": "no-referrer",
+    "x-content-type-options": "nosniff"
+  });
+  response.end(JSON.stringify(body));
 }
 
 function error(response: ServerResponse, status: number, code: string, message: string): void {
@@ -76,10 +74,30 @@ function error(response: ServerResponse, status: number, code: string, message: 
 }
 
 async function readJson(request: IncomingMessage): Promise<JsonValue> {
+  const contentType = request.headers["content-type"]?.split(";", 1)[0]?.trim().toLowerCase();
+  if (contentType !== "application/json") {
+    throw new HttpInputError(415, "UNSUPPORTED_MEDIA_TYPE", "Content-Type must be application/json.");
+  }
+  const advertisedLength = Number(request.headers["content-length"]);
+  if (Number.isFinite(advertisedLength) && advertisedLength > MAX_JSON_BODY_BYTES) {
+    throw new HttpInputError(413, "PAYLOAD_TOO_LARGE", "Request body exceeds the 256 KB limit.");
+  }
   const chunks: Buffer[] = [];
-  for await (const chunk of request) chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+  let receivedBytes = 0;
+  for await (const chunk of request) {
+    const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+    receivedBytes += buffer.byteLength;
+    if (receivedBytes > MAX_JSON_BODY_BYTES) {
+      throw new HttpInputError(413, "PAYLOAD_TOO_LARGE", "Request body exceeds the 256 KB limit.");
+    }
+    chunks.push(buffer);
+  }
   if (chunks.length === 0) return {};
-  return JSON.parse(Buffer.concat(chunks).toString("utf8")) as JsonValue;
+  try {
+    return JSON.parse(Buffer.concat(chunks).toString("utf8")) as JsonValue;
+  } catch {
+    throw new HttpInputError(400, "INVALID_JSON", "Request body must contain valid JSON.");
+  }
 }
 
 function text(value: unknown, fallback = ""): string {
@@ -95,19 +113,32 @@ function exportFormat(value: unknown): ReportExportFormat {
 }
 
 function normalizeBirthInput(input: unknown): BirthInput {
-  const record = (input && typeof input === "object" ? input : {}) as JsonValue;
+  if (!input || typeof input !== "object" || Array.isArray(input)) throw new Error("birth_input is required.");
+  const record = input as JsonValue;
+  const birthDate = text(record.birthDate ?? record.birth_date);
+  const birthplace = text(record.birthplace ?? record.birth_place);
+  const recordedTime = text(record.recordedTime ?? record.recorded_time);
+  const uncertaintyRange = text(record.uncertaintyRange ?? record.uncertainty_range) as BirthInput["uncertaintyRange"];
+  const chartSex = text(record.chartSex ?? record.chart_sex) as ChartSex;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(birthDate)) throw new Error("birth_input.birth_date must use YYYY-MM-DD.");
+  if (!birthplace || birthplace.length > 120) throw new Error("birth_input.birthplace is required and must not exceed 120 characters.");
+  if (!UNCERTAINTY_RANGES.has(uncertaintyRange)) throw new Error("birth_input.uncertainty_range is invalid.");
+  if (!CHART_SEX_VALUES.has(chartSex)) throw new Error("birth_input.chart_sex is invalid.");
+  if (uncertaintyRange !== "full_day" && !/^([01]\d|2[0-3]):[0-5]\d$/.test(recordedTime)) {
+    throw new Error("birth_input.recorded_time must use HH:MM unless the full day is uncertain.");
+  }
   return {
-    birthDate: text(record.birthDate ?? record.birth_date, DEFAULT_BIRTH_INPUT.birthDate),
-    birthplace: text(record.birthplace ?? record.birth_place, DEFAULT_BIRTH_INPUT.birthplace),
-    recordedTime: text(record.recordedTime ?? record.recorded_time, DEFAULT_BIRTH_INPUT.recordedTime),
-    uncertaintyRange: text(record.uncertaintyRange ?? record.uncertainty_range, DEFAULT_BIRTH_INPUT.uncertaintyRange) as BirthInput["uncertaintyRange"],
+    birthDate,
+    birthplace,
+    recordedTime: recordedTime || undefined,
+    uncertaintyRange,
     boundaryFlags: arrayOfStrings(record.boundaryFlags ?? record.boundary_flags) as BoundaryFlag[],
-    chartSex: text(record.chartSex ?? record.chart_sex, DEFAULT_BIRTH_INPUT.chartSex) as ChartSex
+    chartSex
   };
 }
 
 function normalizeSymbolAnswers(input: unknown): SymbolAnswer[] {
-  if (!Array.isArray(input)) return DEFAULT_SYMBOL_ANSWERS;
+  if (!Array.isArray(input)) return [];
   return input
     .filter((item): item is JsonValue => Boolean(item) && typeof item === "object" && !Array.isArray(item))
     .map((item) => ({
@@ -118,7 +149,7 @@ function normalizeSymbolAnswers(input: unknown): SymbolAnswer[] {
 }
 
 function normalizeLifeEvents(input: unknown): LifeEvent[] {
-  if (!Array.isArray(input)) return DEFAULT_LIFE_EVENTS;
+  if (!Array.isArray(input)) return [];
   return input
     .filter((item): item is JsonValue => Boolean(item) && typeof item === "object" && !Array.isArray(item))
     .map((item) => ({
@@ -173,7 +204,7 @@ function normalizeRecordedBirthTime(input: unknown): RecordedBirthTime {
     birth_time: birthTime,
     time: birthTime,
     certainty: text(record.certainty, "exact_to_minute") as RecordedBirthTime["certainty"],
-    boundary_flags: arrayOfStrings(record.boundary_flags),
+    boundary_flags: normalizeBoundaryFlags(record.boundary_flags),
     assumptions: arrayOfStrings(record.assumptions)
   };
 }
@@ -187,16 +218,17 @@ function labels(prior: HourGroupPriorResult): Record<"G1" | "G2" | "G3", { label
   };
 }
 
-function priorFromPayload(payload: unknown): HourGroupPriorResult | null {
+function priorFromPayload(payload: unknown, scoringConfig: ScoringConfig): HourGroupPriorResult | null {
   if (!payload || typeof payload !== "object") return null;
   const record = payload as JsonValue;
   if (record.prior && Array.isArray(record.entries)) return record as unknown as HourGroupPriorResult;
   const values = record as Partial<Record<HourGroupId, unknown>>;
   if (!HOUR_GROUP_KEYS.some((group) => typeof values[group] === "number")) return null;
+  const uniformPrior = scoringConfig.legacy_ranking.uniform_group_prior;
   const prior = {
-    G1_zi_wu_mao_you: Number(values.G1_zi_wu_mao_you ?? 1 / 3),
-    G2_yin_shen_si_hai: Number(values.G2_yin_shen_si_hai ?? 1 / 3),
-    G3_chen_xu_chou_wei: Number(values.G3_chen_xu_chou_wei ?? 1 / 3)
+    G1_zi_wu_mao_you: Number(values.G1_zi_wu_mao_you ?? uniformPrior),
+    G2_yin_shen_si_hai: Number(values.G2_yin_shen_si_hai ?? uniformPrior),
+    G3_chen_xu_chou_wei: Number(values.G3_chen_xu_chou_wei ?? uniformPrior)
   };
   return {
     prior,
@@ -236,311 +268,14 @@ function runDeterministicFlow(payload: JsonValue = {}) {
   return { birthInput, symbolAnswers, lifeEvents, contextFacts, symbolPrior, candidates, eventBacktests, ranking };
 }
 
-function homePage(): string {
-  return `<!doctype html>
-<html lang="zh-CN">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>BaZi Context Agent</title>
-  <style>
-    :root { color-scheme: light; font: 100%/1.6 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif; background: #f4f0e8; color: #20211e; --paper: #f4f0e8; --surface: #fffdf8; --ink: #20211e; --muted: #686861; --line: #d7d0c4; --copper: #a65f3f; --green: #5d7265; }
-    * { box-sizing: border-box; }
-    body { margin: 0; background: radial-gradient(circle at 88% 2%, rgba(166, 95, 63, .09), transparent 24rem), var(--paper); }
-    main { width: min(1100px, calc(100vw - 32px)); margin: 0 auto; padding: clamp(44px, 7vw, 80px) 0; }
-    .local-hero { max-width: 760px; margin-bottom: 32px; }
-    .eyebrow { margin: 0; color: #7b412b; font-size: 12px; font-weight: 750; letter-spacing: .11em; text-transform: uppercase; }
-    h1 { margin: 8px 0 12px; max-width: 700px; font-size: clamp(42px, 7vw, 72px); line-height: .98; letter-spacing: -.055em; }
-    h2 { font-size: 19px; letter-spacing: -.018em; margin: 0 0 12px; }
-    section { margin-top: 14px; border: 1px solid var(--line); border-radius: 12px; padding: clamp(18px, 3vw, 28px); background: rgba(255, 253, 248, .78); box-shadow: 0 14px 38px rgba(54, 45, 34, .06); }
-    .notice { padding: 12px 14px; border-left: 3px solid var(--green); background: rgba(223, 231, 223, .56); color: #43554a; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; }
-    .item { border: 1px solid var(--line); border-radius: 9px; background: var(--surface); padding: 12px; }
-    .label { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
-    input, select, textarea { max-width: 100%; border: 1px solid #bdb4a7; border-radius: 8px; padding: 10px 11px; color: var(--ink); background: var(--surface); font: inherit; }
-    pre { overflow: auto; white-space: pre-wrap; background: #252621; color: #f8f3e9; border-radius: 9px; padding: 14px; }
-    button { min-height: 42px; border: 1px solid var(--ink); border-radius: 8px; padding: 10px 14px; background: var(--ink); color: var(--surface); cursor: pointer; font: inherit; font-weight: 700; transition: transform 120ms ease-out, border-color 150ms ease, background-color 150ms ease; }
-    button:hover { border-color: var(--copper); }
-    button:active { transform: scale(.98); transition-duration: 70ms; }
-    :focus-visible { outline: 3px solid rgba(166, 95, 63, .28); outline-offset: 3px; }
-    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; } }
-  </style>
-</head>
-<body>
-<main>
-  <header class="local-hero">
-    <p class="eyebrow">Local deterministic workspace</p>
-    <h1>BaZi Context Agent</h1>
-    <p class="notice">Recorded birth time is a prior, not truth. Symbol prior is weak and cannot determine the chart alone. Context box is saved for later prediction review and is not used for Round 03 chart ranking.</p>
-  </header>
-  <section id="birth_input"><h2>Step 1: birth_input</h2><div class="grid" data-layer="birth_input"></div></section>
-  <section id="symbol_prior"><h2>Step 2: symbol_prior</h2><div class="grid" data-layer="symbol_prior"></div><pre id="prior">Loading prior...</pre></section>
-  <section id="event_backtest"><h2>Step 3: event_backtest</h2><div class="grid" data-layer="event_backtest"></div><pre id="candidates">Loading candidates...</pre></section>
-  <section id="context_box"><h2>Step 4: context_box preview</h2><div class="grid" data-layer="context_box"></div><pre id="context-preview">Context facts preview only; not part of Round 03 ranking.</pre></section>
-  <section id="ranking_result"><h2>Step 5: ranking_result</h2><button id="run">Run deterministic ranking</button><pre id="ranking">Waiting...</pre></section>
-  <section id="prediction_result"><h2>Prediction display</h2><input id="prediction-question" value="What career direction fits this context?" style="width: min(100%, 520px); padding: 10px; border: 1px solid #cbd2dc; border-radius: 6px;"><button id="predict">Generate prediction</button><div id="prediction-display" class="grid"></div><pre id="prediction">Waiting for ranking snapshot...</pre></section>
-  <section id="provider_status"><h2>Provider status</h2><pre id="provider">Waiting for prediction...</pre></section>
-  <section id="report_preview"><h2>Report preview</h2><button id="report-json">Export JSON</button> <button id="report-markdown">Export Markdown</button><pre id="report">Waiting for prediction...</pre></section>
-  <section id="session_controls"><h2>Privacy and local session controls</h2><p class="notice">Session storage is local-first. No account, server-side data store, remote sync, or telemetry is used. Context box still does not participate in ranking, and AI does not participate in rectification.</p><div class="grid"><button id="save-session">Save Session</button><button id="load-session">Load Session</button><button id="export-session">Export Session JSON</button><button id="import-session">Import Session JSON</button><button id="clear-session">Clear All Local Data</button></div><div id="fact-controls" class="grid"></div><pre id="session-status">No session action yet.</pre><input id="import-session-file" type="file" accept="application/json" hidden></section>
-  <section id="privacy_notice"><h2>Privacy notice</h2><p class="notice">Candidate ranking is deterministic. AI/provider does not participate in ranking. Context box is used for prediction personalization only, not ranking. Exported reports may contain user-provided personal information. API keys are never displayed or exported. This is not medical, legal, or financial certainty advice.</p></section>
-</main>
-<script>
-let lastRanking = null;
-let lastPrediction = null;
-let lastReport = null;
-const sample = {
-  birth_input: { birth_date: "1998-05-10", birth_place: "Shanghai, China", recorded_time: "22:50", uncertainty_range: "auto", boundary_flags: ["near_hour_boundary", "near_zi_hour"], chart_sex: "female" },
-  symbol_answers: [
-    { question_id: "B1_hair_whorl", value: "one_offset" },
-    { question_id: "B4_little_finger_length", value: "aligned" },
-    { question_id: "B6_sleep_posture", value: "side" }
-  ],
-  life_events: [
-    { year: 2018, event_type: "education", description: "fictional education event" },
-    { year: 2021, event_type: "career", description: "fictional direction change" }
-  ],
-  context_facts: [{ id: "desired_direction", category: "preference", field: "desired_direction", value: "fictional creative technology direction", source: "demo", confidence: 0.5, visibility: { use_in_forecast: true, include_in_export: true, include_in_report: true }, deleted_at: null }]
-};
-const sessionKey = 'bazi-context-agent:session:v1';
-function sessionState() {
-  return {
-    session_id: 'browser-demo-session',
-    schema_version: 'stage8.session.v1',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    birth_input: sample.birth_input,
-    context_box: sample.context_facts.map((fact) => ({
-      fact_id: fact.id || fact.field,
-      category: fact.category || 'context',
-      field: fact.field,
-      value: fact.value,
-      source: fact.source || 'demo',
-      confidence: fact.confidence,
-      fact_type: 'direct_fact',
-      visibility: fact.visibility || { use_in_forecast: true, include_in_export: true, include_in_report: true },
-      deleted_at: fact.deleted_at || null
-    })),
-    known_life_events: sample.life_events,
-    forecast_input: null,
-    future_forecast_result: null,
-    reports: lastReport ? [lastReport] : [],
-    user_controls: {
-      persistent_storage_enabled: true,
-      export_redaction_enabled: true,
-      report_redaction_enabled: true,
-      hidden_fact_ids: sample.context_facts.filter((fact) => fact.visibility && (!fact.visibility.use_in_forecast || !fact.visibility.include_in_export)).map((fact) => fact.id || fact.field),
-      deleted_fact_ids: sample.context_facts.filter((fact) => fact.deleted_at).map((fact) => fact.id || fact.field)
-    },
-    privacy_metadata: { local_only: true, cloud_sync_enabled: false, secrets_included: false, api_keys_included: false }
-  };
-}
-function redactSessionForBrowserExport(session) {
-  const copy = JSON.parse(JSON.stringify(session));
-  let count = 0;
-  copy.context_box = copy.context_box.map((fact) => {
-    if (fact.deleted_at) { count++; return { ...fact, value: null }; }
-    if (!fact.visibility.include_in_export) { count++; return { ...fact, value: '[REDACTED:hidden_context_fact]' }; }
-    return fact;
-  });
-  return {
-    schema_version: 'stage8.session_export.v1',
-    exported_at: new Date().toISOString(),
-    session_id: session.session_id,
-    session: copy,
-    redaction_metadata: { redaction_applied: count > 0, redacted_fields_count: count, secrets_included: false, redaction_policy_version: 'stage8.redaction.v1', redacted_fact_ids: copy.context_box.filter((fact) => fact.value === '[REDACTED:hidden_context_fact]').map((fact) => fact.fact_id), removed_deleted_fact_values: copy.context_box.filter((fact) => fact.deleted_at).length }
-  };
-}
-function visibleContextFactsForForecast() {
-  return sample.context_facts.filter((fact) => (!fact.visibility || fact.visibility.use_in_forecast) && !fact.deleted_at);
-}
-function setSessionStatus(message) {
-  document.getElementById('session-status').textContent = message;
-}
-function renderFactControls() {
-  document.getElementById('fact-controls').innerHTML = sample.context_facts.map((fact) => {
-    const hiddenForecast = fact.visibility && !fact.visibility.use_in_forecast;
-    const hiddenExport = fact.visibility && !fact.visibility.include_in_export;
-    const deleted = Boolean(fact.deleted_at);
-    return '<div class="item"><div class="label">' + (fact.id || fact.field) + '</div><div>' + fact.field + ': ' + (deleted ? '[deleted]' : fact.value) + '</div><button data-action="hide-forecast" data-id="' + (fact.id || fact.field) + '">' + (hiddenForecast ? 'Show in Forecast' : 'Hide from Forecast') + '</button> <button data-action="hide-export" data-id="' + (fact.id || fact.field) + '">' + (hiddenExport ? 'Show in Export' : 'Hide from Export') + '</button> <button data-action="delete" data-id="' + (fact.id || fact.field) + '">Delete Fact</button></div>';
-  }).join('');
-}
-function updateFactControl(id, action) {
-  sample.context_facts = sample.context_facts.map((fact) => {
-    const factId = fact.id || fact.field;
-    if (factId !== id) return fact;
-    const visibility = fact.visibility || { use_in_forecast: true, include_in_export: true, include_in_report: true };
-    if (action === 'hide-forecast') return { ...fact, visibility: { ...visibility, use_in_forecast: !visibility.use_in_forecast } };
-    if (action === 'hide-export') return { ...fact, visibility: { ...visibility, include_in_export: !visibility.include_in_export, include_in_report: !visibility.include_in_report } };
-    if (action === 'delete') return { ...fact, value: null, deleted_at: new Date().toISOString(), visibility: { use_in_forecast: false, include_in_export: false, include_in_report: false } };
-    return fact;
-  });
-  renderFactControls();
-  setSessionStatus('Updated fact control: ' + action);
-}
-async function post(url, body) {
-  const res = await fetch(url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
-  return res.json();
-}
-function renderQuestions(data) {
-  for (const stage of data.questions.stages) {
-    const target = document.querySelector('[data-layer="' + stage.id + '"]');
-    if (!target) continue;
-    target.innerHTML = stage.questions.map((q) => '<div class="item"><div class="label">' + q.id + '</div>' + q.title + '</div>').join('');
-  }
-}
-async function run() {
-  const ranking = await post('/api/ranking', sample);
-  lastRanking = ranking;
-  document.getElementById('ranking').textContent = JSON.stringify(ranking, null, 2);
-  await predict();
-}
-function rankingSnapshot() {
-  if (!lastRanking) return null;
-  return {
-    top_candidate_id: lastRanking.top_candidates?.[0]?.candidate?.candidate_id ?? null,
-    top_3: lastRanking.top_candidates ?? [],
-    evidence_table: lastRanking.evidence_table ?? [],
-    contradictions: lastRanking.contradictions ?? [],
-    missing_information: lastRanking.missing_information ?? [],
-    should_not_force_single_hour: lastRanking.should_not_force_single_hour
-  };
-}
-async function predict() {
-  const snapshot = rankingSnapshot();
-  if (!snapshot) return;
-  const prediction = await post('/api/prediction', {
-    question: document.getElementById('prediction-question').value,
-    rankingSnapshot: snapshot,
-    contextBox: visibleContextFactsForForecast(),
-    lifeEvents: sample.life_events
-  });
-  lastPrediction = prediction;
-  renderPrediction(prediction);
-  document.getElementById('prediction').textContent = JSON.stringify(prediction, null, 2);
-  await requestReport('markdown');
-}
-function renderList(items, select) {
-  return (items || []).map((item) => '<li>' + select(item) + '</li>').join('');
-}
-function renderPrediction(prediction) {
-  document.getElementById('prediction-display').innerHTML = [
-    '<div class="item"><div class="label">conclusion</div>' + prediction.conclusion + '</div>',
-    '<div class="item"><div class="label">prediction</div>' + prediction.prediction.answer + '</div>',
-    '<div class="item"><div class="label">confidence</div>' + prediction.confidence + '</div>',
-    '<div class="item"><div class="label">known_facts</div><ul>' + renderList(prediction.known_facts, (x) => x.fact) + '</ul></div>',
-    '<div class="item"><div class="label">chart_signals</div><ul>' + renderList(prediction.chart_signals, (x) => x.signal) + '</ul></div>',
-    '<div class="item"><div class="label">context_adjustments</div><ul>' + renderList(prediction.context_adjustments, (x) => x.adjustment) + '</ul></div>',
-    '<div class="item"><div class="label">uncertainty</div><ul>' + renderList(prediction.uncertainty, (x) => x) + '</ul></div>',
-    '<div class="item"><div class="label">next_questions</div><ul>' + renderList(prediction.next_questions, (x) => x) + '</ul></div>'
-  ].join('');
-  document.getElementById('provider').textContent = JSON.stringify({
-    provider: prediction.policy.provider,
-    output_schema_validated: prediction.policy.output_schema_validated,
-    ai_used_for_ranking: prediction.policy.ai_used_for_ranking,
-    ranking_modified_by_ai: prediction.policy.ranking_modified_by_ai,
-    context_box_used_for_ranking: false,
-    context_box_used_for_prediction: true
-  }, null, 2);
-}
-async function requestReport(format) {
-  const snapshot = rankingSnapshot();
-  if (!snapshot || !lastPrediction) return;
-  const result = await post('/api/report', {
-    rankingSnapshot: snapshot,
-    contextBox: sample.context_facts,
-    predictionResult: lastPrediction,
-    exportFormat: format
-  });
-  lastReport = result;
-  document.getElementById('report').textContent = format === 'markdown' ? result.markdown : JSON.stringify(result.report, null, 2);
-  return result;
-}
-function downloadText(filename, text, type) {
-  const blob = new Blob([text], { type });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(url);
-}
-function saveSession() {
-  localStorage.setItem(sessionKey, JSON.stringify(sessionState()));
-  setSessionStatus('Session saved locally.');
-}
-function loadSession() {
-  const raw = localStorage.getItem(sessionKey);
-  if (!raw) return setSessionStatus('No local session found.');
-  const loaded = JSON.parse(raw);
-  sample.context_facts = (loaded.context_box || []).map((fact) => ({ id: fact.fact_id, category: fact.category, field: fact.field, value: fact.value, source: fact.source, confidence: fact.confidence, visibility: fact.visibility, deleted_at: fact.deleted_at }));
-  renderFactControls();
-  setSessionStatus('Session loaded locally.');
-}
-function exportSession() {
-  const exported = redactSessionForBrowserExport(sessionState());
-  downloadText('bazi-context-session.json', JSON.stringify(exported, null, 2), 'application/json');
-  setSessionStatus('Redacted session JSON exported.');
-}
-function importSessionFile(file) {
-  const reader = new FileReader();
-  reader.onload = () => {
-    try {
-      const parsed = JSON.parse(String(reader.result));
-      if (parsed.schema_version !== 'stage8.session_export.v1' || !parsed.session) throw new Error('Unsupported session export schema.');
-      sample.context_facts = (parsed.session.context_box || []).map((fact) => ({ id: fact.fact_id, category: fact.category, field: fact.field, value: fact.value, source: fact.source, confidence: fact.confidence, visibility: fact.visibility, deleted_at: fact.deleted_at }));
-      renderFactControls();
-      setSessionStatus('Session imported from JSON.');
-    } catch (error) {
-      setSessionStatus('Import rejected: ' + error.message);
-    }
-  };
-  reader.readAsText(file);
-}
-function clearSession() {
-  localStorage.removeItem(sessionKey);
-  sample.context_facts = [];
-  renderFactControls();
-  setSessionStatus('All local session data cleared.');
-}
-async function exportReport(format) {
-  const result = await requestReport(format);
-  if (!result) return;
-  if (format === 'markdown') downloadText('bazi-context-report.md', result.markdown, 'text/markdown');
-  else downloadText('bazi-context-report.json', JSON.stringify(result.report, null, 2), 'application/json');
-}
-async function init() {
-  const questionnaire = await fetch('/api/questionnaire').then((res) => res.json());
-  renderQuestions(questionnaire);
-  document.getElementById('prior').textContent = JSON.stringify(await post('/api/symbol-prior', { answers: sample.symbol_answers, birth_input: sample.birth_input }), null, 2);
-  document.getElementById('candidates').textContent = JSON.stringify(await post('/api/candidates', { birth_input: sample.birth_input }), null, 2);
-  document.getElementById('context-preview').textContent = JSON.stringify(sample.context_facts, null, 2);
-  document.getElementById('run').addEventListener('click', run);
-  document.getElementById('predict').addEventListener('click', predict);
-  document.getElementById('report-json').addEventListener('click', () => exportReport('json'));
-  document.getElementById('report-markdown').addEventListener('click', () => exportReport('markdown'));
-  document.getElementById('save-session').addEventListener('click', saveSession);
-  document.getElementById('load-session').addEventListener('click', loadSession);
-  document.getElementById('export-session').addEventListener('click', exportSession);
-  document.getElementById('import-session').addEventListener('click', () => document.getElementById('import-session-file').click());
-  document.getElementById('import-session-file').addEventListener('change', (event) => event.target.files && event.target.files[0] && importSessionFile(event.target.files[0]));
-  document.getElementById('clear-session').addEventListener('click', clearSession);
-  document.getElementById('fact-controls').addEventListener('click', (event) => {
-    const target = event.target;
-    if (target && target.dataset && target.dataset.action) updateFactControl(target.dataset.id, target.dataset.action);
-  });
-  renderFactControls();
-  run();
-}
-init();
-</script>
-</body>
-</html>`;
-}
-
 export async function handleRequest(request: IncomingMessage, response: ServerResponse): Promise<void> {
   const url = new URL(request.url ?? "/", "http://127.0.0.1");
   try {
-    if (request.method === "GET" && url.pathname === "/") return html(response, homePage());
+    if (!url.pathname.startsWith("/api/")) return servePublicSite(request, response);
+    const origin = request.headers.origin;
+    if (origin && new URL(origin).host !== request.headers.host) {
+      return error(response, 403, "ORIGIN_NOT_ALLOWED", "Cross-origin API requests are not allowed.");
+    }
     if (request.method === "GET" && url.pathname === "/api/questionnaire") {
       const bank = loadQuestionBank();
       return json(response, 200, { layers: bank.stages.map((stage) => stage.id), questions: bank });
@@ -548,15 +283,17 @@ export async function handleRequest(request: IncomingMessage, response: ServerRe
     if (request.method === "POST" && url.pathname === "/api/symbol-prior") {
       const body = await readJson(request);
       const scoringConfig = loadScoringConfig();
-      const birthInput = normalizeBirthInput(body.birth_input ?? body.birthInput);
-      const symbolPrior = scoreSymbolPrior({ answers: normalizeSymbolAnswers(body.answers ?? body.symbol_answers), chartSex: birthInput.chartSex, scoringConfig });
+      const birthInput = (body.birth_input ?? body.birthInput) as JsonValue | undefined;
+      const chartSex = text(birthInput?.chart_sex ?? birthInput?.chartSex) as ChartSex;
+      if (!CHART_SEX_VALUES.has(chartSex)) return error(response, 400, "INVALID_CHART_SEX", "birth_input.chart_sex is required.");
+      const symbolPrior = scoreSymbolPrior({ answers: normalizeSymbolAnswers(body.answers ?? body.symbol_answers), chartSex, scoringConfig });
       return json(response, 200, { ...labels(symbolPrior), evidence: symbolPrior.evidence, prior: symbolPrior });
     }
     if (request.method === "POST" && url.pathname === "/api/candidates") {
       const body = await readJson(request);
       const scoringConfig = loadScoringConfig();
       const birthInput = normalizeBirthInput(body.birth_input ?? body.birthInput);
-      const prior = priorFromPayload(body.hour_group_prior) ?? scoreSymbolPrior({ answers: DEFAULT_SYMBOL_ANSWERS, chartSex: birthInput.chartSex, scoringConfig });
+      const prior = priorFromPayload(body.hour_group_prior, scoringConfig) ?? scoreSymbolPrior({ answers: [], chartSex: birthInput.chartSex, scoringConfig });
       const candidates = generateCandidateHours(birthInput, prior, scoringConfig);
       return json(response, 200, { candidates });
     }
@@ -681,7 +418,7 @@ export async function handleRequest(request: IncomingMessage, response: ServerRe
     }
     if (request.method === "POST" && url.pathname === "/api/benchmark") {
       const body = await readJson(request);
-      const cases = Array.isArray(body.cases) ? (body.cases as EvalCase[]) : [];
+      const cases = Array.isArray(body.cases) ? body.cases.map(assertEvalCase) : [];
       if (cases.length === 0) return error(response, 400, "MISSING_EVAL_CASES", "Benchmark requires cases.");
       const modeOutputs =
         body.mode_outputs && typeof body.mode_outputs === "object"
@@ -736,14 +473,20 @@ export async function handleRequest(request: IncomingMessage, response: ServerRe
     }
     return error(response, 404, "NOT_FOUND", "Route not found.");
   } catch (caught) {
-    return error(response, 400, "INVALID_INPUT", caught instanceof Error ? caught.message : "Invalid request.");
+    if (caught instanceof HttpInputError) return error(response, caught.status, caught.code, caught.message);
+    return error(response, 400, "INVALID_INPUT", "Invalid request.");
   }
 }
 
 export function createBaziUiServer(): Server {
-  return createServer((request, response) => {
+  const server = createServer((request, response) => {
     void handleRequest(request, response);
   });
+  server.requestTimeout = 15_000;
+  server.headersTimeout = 10_000;
+  server.keepAliveTimeout = 5_000;
+  server.maxRequestsPerSocket = 100;
+  return server;
 }
 
 export function startBaziUiServer(port = Number(process.env.PORT ?? 3000), host = "127.0.0.1"): Server {

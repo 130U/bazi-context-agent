@@ -1,8 +1,8 @@
 # Architecture / 架构
 
-The repository has two deliberately separate runtime surfaces. The deployed GitHub Pages experience is a zero-dependency browser application under `site/`. The Node/TypeScript modules under `src/` are the broader research workspace and local API prototype; they are not uploaded by the Pages workflow.
+The repository has one canonical interface under `site/`. GitHub Pages deploys it directly, the local preview server serves it unchanged, and the Node/TypeScript API server serves the same files alongside research endpoints. The `src/` APIs are not uploaded by the Pages workflow.
 
-本仓库有两个刻意隔离的运行面：线上 GitHub Pages 只部署 `site/` 中的零依赖浏览器应用；`src/` 是更广的 Node/TypeScript 研究工作区与本地 API 原型，不会被 Pages 工作流上传。
+本仓库只维护 `site/` 中的一套正式界面：GitHub Pages 直接部署，本地预览服务原样提供，Node/TypeScript API 服务也复用同一组文件并附加研究接口。`src/` 下的 API 不会被 Pages 工作流上传。
 
 ## Public dependency direction / 公开版依赖方向
 
@@ -22,6 +22,7 @@ site/core/shared.js
              v
          site/app.js       state and interaction controller
           ├─> site/ui/dom.js
+          ├─> site/ui/forms.js
           ├─> site/ui/labels.js
           ├─> site/ui/privacy.js
           └─> site/ui/forecast-view.js
@@ -63,7 +64,7 @@ Hard invariants:
 | `site/core/forecast.js` | Dated local forecast from an immutable lock and context | Candidate mutation, DOM, network |
 | `site/engine.js` | Stable exports and compatibility aliases | Product logic |
 | `site/app.js` | In-memory session state, navigation and event coordination | Scoring rules |
-| `site/ui/*` | Safe DOM construction, labels, legacy-key removal and forecast presentation | Core state mutation |
+| `site/ui/*` | Config-driven forms, safe DOM construction, labels, legacy-key removal and forecast presentation | Core state mutation |
 
 ## Runtime safety and privacy / 运行安全与隐私
 
@@ -78,7 +79,7 @@ Hard invariants:
 
 ```bash
 npm run build:site      # regenerate the committed public config after authority config edits
-npm run check           # generated-file parity + static security checks + complete test suite
+npm run check           # strict types + generated parity + static security checks + complete test suite
 ```
 
 `npm run check` is the required pull-request gate. Deployment rebuilds the runtime config, repeats the same checks, and uploads only `site/`.

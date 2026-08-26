@@ -78,7 +78,7 @@ export function validatePredictionResult(output: unknown, provider: PredictionPr
   return {
     ...(output as unknown as PredictionResult),
     policy: {
-      ...(output.policy as PredictionResult["policy"]),
+      ...(output.policy as unknown as PredictionResult["policy"]),
       provider,
       ai_used_for_ranking: false,
       ranking_modified_by_ai: false,

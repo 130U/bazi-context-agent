@@ -38,7 +38,7 @@ export function scoreModeOutput(evalCase: EvalCase, output: ModeOutput): Forecas
   });
   const time_window_overlap = perTargetYear.length > 0 ? perTargetYear.reduce((sum, item) => sum + item, 0) / perTargetYear.length : 0;
 
-  const directionMatches = evalCase.hidden_targets.map((target) => {
+  const directionMatches: number[] = evalCase.hidden_targets.map((target): number => {
     const forecast = output.domain_forecasts.find((item) => item.domain === target.domain);
     if (!forecast || typeof forecast.occurred !== "boolean") return includesAny(outputText, target.acceptable_answers) ? 0.75 : 0.45;
     return forecast.occurred === target.occurred ? 1 : 0;

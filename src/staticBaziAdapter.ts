@@ -46,7 +46,7 @@ export class StaticBaziAdapter implements BaziEngineAdapter {
       warnings: [
         "StaticBaziAdapter does not compute complete five-element strength.",
         "StaticBaziAdapter does not compute full luck cycles or annual fortunes.",
-        "Use Stage 5C library adapters for full BaZi calendar derivation."
+        "A calendar adapter is required for full luck-cycle and annual-fortune derivation."
       ]
     };
     const errors = validateBaziDerivedProfile(profile);

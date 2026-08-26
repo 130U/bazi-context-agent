@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - master
-      - main
     paths:
       - "site/**"
       - "configs/question_bank.v1.json"

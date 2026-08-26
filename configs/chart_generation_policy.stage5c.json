@@ -3,15 +3,6 @@
   "default_candidate_limit": 6,
   "full_day_candidate_limit": 12,
   "unknown_date_day_span": 1,
-  "recorded_time_prior_scores": {
-    "exact_to_minute": 1.0,
-    "within_1_hour": 0.85,
-    "approximate_hour": 0.7,
-    "time_range": 0.6,
-    "part_of_day": 0.45,
-    "unknown_time": 0.2,
-    "unknown_date": 0.05
-  },
   "hour_branches": [
     "子",
     "丑",

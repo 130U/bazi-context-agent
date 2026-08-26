@@ -105,6 +105,24 @@ test("recorded intake produces the recorded branch plus configured neighbors", (
   assert.equal(state.candidates.find((candidate: { branch: string }) => candidate.branch === "Hai")?.source, "recorded");
 });
 
+test("intake uncertainty and boundary flags deterministically control candidate expansion", () => {
+  const config = runtimeConfig();
+  const exact = createSession(config, { ...unsureIntake(), recorded_time: "22:30", uncertainty_range: "recorded_only" });
+  assert.deepEqual(exact.candidates.map((candidate: { branch: string }) => candidate.branch), ["Hai"]);
+
+  const nearBoundary = createSession(config, {
+    ...unsureIntake(),
+    recorded_time: "22:30",
+    uncertainty_range: "recorded_only",
+    boundary_flags: ["near_hour_boundary"]
+  });
+  assert.deepEqual(new Set(nearBoundary.candidates.map((candidate: { branch: string }) => candidate.branch)), new Set(["Xu", "Hai", "Zi"]));
+  assert.equal(nearBoundary.candidates.find((candidate: { branch: string }) => candidate.branch === "Xu")?.source, "boundary_expanded");
+
+  const widerRange = createSession(config, { ...unsureIntake(), recorded_time: "22:30", uncertainty_range: "adjacent_2_shichen" });
+  assert.deepEqual(new Set(widerRange.candidates.map((candidate: { branch: string }) => candidate.branch)), new Set(["You", "Xu", "Hai", "Zi", "Chou"]));
+});
+
 test("adaptive stage asks 15 to 17 B/C questions and permits a provisional operational lock", () => {
   const config = runtimeConfig();
   assert.equal(getStageOneQuestions(config).length, 17);
@@ -149,6 +167,26 @@ test("B/C answers deterministically re-rank while D context cannot change Stage 
   const withContext = answerQuestion(lockedBase, "D7_inner_preferred_direction", "Build a research product", config);
   assert.deepEqual(withContext.candidates, candidateSnapshot);
   assert.deepEqual(withContext.lock.selected_chart, selectedSnapshot);
+});
+
+test("best and worst year polarity is config driven and changes deterministic event scoring", () => {
+  const config = runtimeConfig();
+  const question = config.question_bank.stages
+    .flatMap((stage: { questions: Array<{ id: string; eventTypeOptions?: unknown }> }) => stage.questions)
+    .find((item: { id: string }) => item.id === "C9_best_and_worst_years");
+  assert.ok(question);
+  assert.deepEqual(question.eventTypeOptions, [
+    { id: "best_year", label: "相对顺利" },
+    { id: "worst_year", label: "相对困难" }
+  ]);
+
+  const base = createSession(config, unsureIntake());
+  const best = answerQuestion(base, question.id, [{ year: 2020, event_type: "best_year", importance: "medium" }], config);
+  const worst = answerQuestion(base, question.id, [{ year: 2020, event_type: "worst_year", importance: "medium" }], config);
+  assert.notDeepEqual(
+    best.candidates.map((candidate: { components: { event_backtest: number } }) => candidate.components.event_backtest),
+    worst.candidates.map((candidate: { components: { event_backtest: number } }) => candidate.components.event_backtest)
+  );
 });
 
 test("local forecast changes with context and time without changing the locked chart", () => {

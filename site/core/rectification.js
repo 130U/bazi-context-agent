@@ -41,11 +41,24 @@ function candidateBranches(intake, browser) {
   }
 
   const center = BRANCHES.indexOf(recordedBranch);
-  const radius = browser.selection.adjacent_branch_radius;
+  const baseRadius = browser.selection.radius_by_uncertainty[intake.uncertainty_range]
+    ?? browser.selection.adjacent_branch_radius;
+  const boundaryExpanded = intake.boundary_flags.some((flag) => (
+    flag === "near_midnight" || flag === "near_hour_boundary" || flag === "date_may_shift"
+  ));
+  const radius = Math.max(
+    baseRadius,
+    boundaryExpanded ? browser.selection.boundary_expansion_radius : baseRadius
+  );
   const result = [];
   for (let offset = -radius; offset <= radius; offset += 1) {
     const branch = BRANCHES[wrapBranchIndex(center + offset)];
-    result.push({ branch, source: offset === 0 ? "recorded" : "adjacent" });
+    const source = offset === 0
+      ? "recorded"
+      : Math.abs(offset) <= baseRadius
+        ? (intake.uncertainty_range === "auto" ? "adjacent" : "uncertain_range")
+        : "boundary_expanded";
+    result.push({ branch, source });
   }
   return result;
 }

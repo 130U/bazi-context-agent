@@ -9,7 +9,7 @@
 ![Node 24+](https://img.shields.io/badge/Node-24%2B-5D7265)
 ![Local first](https://img.shields.io/badge/privacy-local--first-A65F3F)
 
-[**Open the public experience →**](https://www.theodoreoy.com/bazi-context-agent/) · [Architecture](docs/ARCHITECTURE.md) · [AI boundary](docs/AI_BOUNDARY.md) · [Evaluation](docs/EVALUATION.md)
+[**Open the public experience →**](https://www.theodoreoy.com/bazi-context-agent/) · [Architecture](docs/ARCHITECTURE.md) · [Quality audit](docs/report-source.md) · [AI boundary](docs/AI_BOUNDARY.md) · [Evaluation](docs/EVALUATION.md)
 
 > **Public scope / 公开范围** — The browser runs the configured 15–17 question rectification flow, candidate comparison, working-chart lock, context intake, and a deterministic month-by-month branch-cycle forecast with dated support and transition windows. Ranking and forecasting use no AI. The public forecast is deliberately narrower than a full calendar-derived BaZi forecast: it relates the locked hour branch to an approximate seasonal branch for each Gregorian month and exposes that limitation in the report. / 浏览器运行配置化的 15–17 问校时、候选比较、工作结构锁定与现实上下文，并按月输出带日期的支持窗口和调整窗口；排名与推演均不使用 AI。公开版的口径比完整历法八字预测更窄：它把锁定时支与每个公历月近似的季节支做关系推导，并在报告中明确披露这一限制。
 
@@ -25,7 +25,7 @@ Recorded birth time is treated as evidence, not ground truth. The system preserv
 | Can context leak into ranking? / 上下文会回流到排序吗？ | No. `context_box` enters `ForecastInput` only after the chart evidence is fixed. | [`src/forecastInputBuilder.ts`](src/forecastInputBuilder.ts), [`tests/forecastInput.test.ts`](tests/forecastInput.test.ts) |
 | Is user data controllable? / 用户能控制数据吗？ | Sessions are local-first; facts can be hidden, redacted, deleted, exported, or cleared. | [`src/sessionStore.ts`](src/sessionStore.ts), [`tests/stage8Session.test.ts`](tests/stage8Session.test.ts) |
 | Is the forecast layer evaluated? / 预测层有评估吗？ | Offline A/B/C/D modes isolate derivative, context, default-chart, and selected-chart inputs. | [`src/benchmarkRunner.ts`](src/benchmarkRunner.ts), [`tests/stage7Evaluation.test.ts`](tests/stage7Evaluation.test.ts) |
-| Can the result be reproduced? / 结果能复现吗？ | The repository contains 120+ automated checks and a zero-dependency Node test path. | [`tests/`](tests/), [`package.json`](package.json) |
+| Can the result be reproduced? / 结果能复现吗？ | The repository contains 140+ automated checks, strict TypeScript validation, and locked development dependencies. | [`tests/`](tests/), [`package.json`](package.json) |
 
 ---
 
@@ -116,7 +116,7 @@ The deployed browser core is split into `shared → branches → rectification /
 |---|---|
 | Runtime | Node.js + TypeScript |
 | Tests | Node.js built-in `node:test` |
-| UI | Vanilla ESM: static Pages app plus a separate local Node research UI |
+| UI | Vanilla ESM: one canonical interface served by GitHub Pages, the preview server, and the local API server |
 | Config | JSON policy/config files under `configs/` |
 | BaZi engine | Adapter boundary via `BaziEngineAdapter` |
 | Prediction provider | Mock by default; OpenAI only behind server-side env flag |
@@ -127,7 +127,7 @@ The deployed browser core is split into `shared → branches → rectification /
 
 ## Quick Start / 快速开始
 
-Requirements / 环境要求：**Node.js 24+**. The project has no runtime dependencies, so no install step is required for the test and local-demo paths below. / 项目无运行时依赖，以下测试与本地演示无需安装依赖。
+Requirements / 环境要求：**Node.js 24+**. Runtime code has no third-party dependency; development dependencies are locked for reproducible type checks. / 运行时代码不依赖第三方包；开发依赖已锁定，用于可复现的类型检查。
 
 ```bash
 git clone https://github.com/130U/bazi-context-agent.git
@@ -138,9 +138,9 @@ npm run preview
 npm run ui
 ```
 
-Open [`http://127.0.0.1:4173`](http://127.0.0.1:4173) for the deployable public experience. `npm run ui` separately starts the broader research workspace at [`http://127.0.0.1:3000`](http://127.0.0.1:3000), using fictional fixtures.
+Open [`http://127.0.0.1:4173`](http://127.0.0.1:4173) for the deployable public experience. `npm run ui` serves the same canonical interface at [`http://127.0.0.1:3000`](http://127.0.0.1:3000) and adds the local research APIs.
 
-访问 [`http://127.0.0.1:4173`](http://127.0.0.1:4173) 可预览将部署的公开体验；`npm run ui` 会另行在 [`http://127.0.0.1:3000`](http://127.0.0.1:3000) 启动使用虚构样例的完整研究工作台。
+访问 [`http://127.0.0.1:4173`](http://127.0.0.1:4173) 可预览将部署的公开体验；`npm run ui` 会在 [`http://127.0.0.1:3000`](http://127.0.0.1:3000) 提供同一套正式界面，并开放本地研究 API。
 
 Windows PowerShell:
 

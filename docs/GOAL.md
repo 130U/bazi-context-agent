@@ -1,17 +1,15 @@
-# GOAL
+# Goal / 项目目标
 
-用传统验时辰 symbol 做弱先验，
-用重大人生年份做确定性回测，
-用信息框补足用户现实初始值，
-最后让 AI 在已定八字和已知上下文上做预测，而不是让 AI 参与定八字。
+用传统验时辰符号作为弱先验，用有日期的人生事件做确定性回测，用信息框记录用户现实初始值；先锁定可解释、可复现的工作时辰，再生成带边界说明的未来情景。
 
-## MVP Boundary
+## Current product boundary / 当前产品边界
 
-Round 01 only proves the deterministic spine:
+- 出生输入、候选生成、传统线索、事件回测、评分与 Top 3 排序全部由确定性代码完成。
+- 现实上下文只在工作时辰锁定后进入预测，不能回流修改候选或分数。
+- 公开版在浏览器本地生成确定性月度情景，不调用模型或远程 API。
+- 本地研究 API 可以在确定性结构完成后调用受控预测 provider，但默认使用 mock。
+- 产品不宣称客观定盘真值或事件必然性；结果是可追溯的工作结构与情景窗口。
 
-- collect structured birth input;
-- collect traditional symbol answers;
-- generate candidate hour groups with deterministic code;
-- score candidates with deterministic code;
-- output Top 3 candidates and evidence;
-- keep AI out of candidate ranking.
+## Non-goals / 非目标
+
+不做紫微斗数、奇门遁甲、风水、登录、支付、社交或移动 App，也不把玄学输出作为医疗、法律、财务或安全关键建议。

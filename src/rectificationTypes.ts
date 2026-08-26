@@ -41,11 +41,37 @@ export interface RectificationWeightsConfig {
   clamp_scores_to: [number, number];
   context_box_allowed_for_rectification: false;
   ai_allowed_for_rectification: false;
+  profile_scoring: {
+    missing_profile: number;
+    base: number;
+    annual_fortunes: number;
+    luck_cycles: number;
+    relations: number;
+    ten_gods: number;
+    no_warnings: number;
+  };
+  fallback_scores: {
+    default_recorded_time_prior: number;
+    candidate_recorded_time_prior: number;
+    symbol_prior: number;
+    maximum_contradiction_penalty: number;
+    profile_confidence: number;
+    missing_profile_confidence: number;
+    missing_evidence_confidence: number;
+  };
+  result_policy: {
+    confidence_component_count: number;
+    penalty_confidence_divisor: number;
+    contradiction_evidence_weight: number;
+    alternative_count: number;
+    score_precision_digits: number;
+  };
 }
 
 export interface EventTypeScoringConfig {
   version: string;
   event_score_components: Record<string, { max: number }>;
+  parameters: Record<string, number>;
   event_types: Record<string, { domains: string[]; importance_default: RectificationEventImportance }>;
 }
 

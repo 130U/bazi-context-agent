@@ -1,22 +1,13 @@
 import { loadForecastDomainMappingConfig, loadForecastHorizonsConfig } from "./config.ts";
+import { containsSecretValue } from "./secretSafety.ts";
 import type { ForecastDomain, ForecastInput, ForecastInputValidationResult } from "./forecastInputTypes.ts";
-
-const SECRET_PATTERNS = [
-  /OPENAI_API_KEY/i,
-  /ANTHROPIC_API_KEY/i,
-  /gho_[A-Za-z0-9_]+/,
-  /github_pat_[A-Za-z0-9_]+/,
-  /sk-[A-Za-z0-9_-]{12,}/,
-  /\.env/i
-];
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
 function containsSecret(value: unknown): boolean {
-  const json = JSON.stringify(value);
-  return SECRET_PATTERNS.some((pattern) => pattern.test(json));
+  return containsSecretValue(value);
 }
 
 export function validateForecastInput(input: unknown): ForecastInputValidationResult {

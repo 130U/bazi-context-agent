@@ -1,3 +1,5 @@
+import type { DefaultChartProtectionConfig, EventTypeScoringConfig, RectificationWeightsConfig } from "./rectificationTypes.ts";
+
 export const HOUR_GROUPS = [
   "G1_zi_wu_mao_you",
   "G2_yin_shen_si_hai",
@@ -254,6 +256,7 @@ export interface Question {
   inputType: QuestionInputType;
   required?: boolean;
   options?: Array<string | { id: string; label?: string }>;
+  eventTypeOptions?: Array<{ id: LifeEvent["type"]; label: string }>;
   maxLength?: number;
   maxItems?: number;
   maxSelections?: number;
@@ -284,6 +287,46 @@ export interface ScoringConfig {
   symbol_prior_question_scores: Record<string, Record<string, Partial<Record<HourGroupId, number>>>>;
   fetal_order_rules: Record<"male" | "female", Partial<Record<HourGroupId, number[]>>>;
   birth_record_plausibility: Record<CandidateSource, number>;
+  legacy_event_backtest: {
+    neutral_score: number;
+    childbearing_score: number;
+    fallback_relation_score: number;
+    default_event_confidence: number;
+    contradiction_threshold: number;
+    score_precision_digits: number;
+    event_type_profiles: Record<string, string>;
+    relation_scores: Record<string, Record<BranchRelation | "none", number>>;
+  };
+  symbol_prior_policy: {
+    fetal_order_match_score: number;
+    normalization_precision_digits: number;
+  };
+  legacy_ranking: {
+    neutral_component_score: number;
+    uniform_group_prior: number;
+    contradiction_penalty_per_item: number;
+    maximum_contradiction_penalty: number;
+    single_hour_score_margin: number;
+    single_hour_confidence_margin: number;
+    score_precision_digits: number;
+    confidence_precision_digits: number;
+  };
+  rectification_v2: {
+    weights: RectificationWeightsConfig;
+    event_scoring: EventTypeScoringConfig;
+    default_chart_protection: DefaultChartProtectionConfig;
+  };
+  chart_generation: {
+    recorded_time_prior_scores: Record<string, number>;
+    expanded_candidate_prior_penalty: number;
+    minimum_candidate_prior: number;
+  };
+  legacy_candidate_generation: {
+    maximum_candidates: number;
+    minimum_candidates: number;
+    adjacent_1_shichen_radius: number;
+    adjacent_2_shichen_radius: number;
+  };
   browser_rectification?: BrowserRectificationScoringConfig;
 }
 
@@ -293,7 +336,7 @@ export interface BrowserRectificationScoringConfig {
     symbol_prior: number;
     event_backtest: number;
   };
-  birth_record_scores: Record<"recorded" | "adjacent" | "uncertain_range" | "unknown_symmetric", number>;
+  birth_record_scores: Record<"recorded" | "adjacent" | "uncertain_range" | "boundary_expanded" | "unknown_symmetric", number>;
   neutral_component_scores: {
     symbol_prior: number;
     event_backtest: number;

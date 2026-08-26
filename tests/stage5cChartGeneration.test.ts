@@ -53,8 +53,7 @@ async function withServer<T>(run: (baseUrl: string) => Promise<T>): Promise<T> {
   const server = createBaziUiServer();
   await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
   const address = server.address();
-  assert.equal(typeof address, "object");
-  assert.ok(address);
+  if (!address || typeof address === "string") throw new Error("Test server did not expose a TCP address.");
   try {
     return await run(`http://127.0.0.1:${address.port}`);
   } finally {
@@ -188,12 +187,12 @@ test("Stage 5C boundary flags expand Zi hour and adjacent hour candidates", asyn
   assert.ok(boundaryBranches.has("Si"));
 });
 
-test("Stage 5C near_solar_term returns warning stub", async () => {
+test("Stage 5C near_solar_term returns an explicit limitation warning", async () => {
   const result = await generateCandidateChartsV2({
     recorded_birth_time: recorded({ boundary_flags: ["near_solar_term"], fixed_pillars: fixedPillars }),
     adapter: new StaticBaziAdapter()
   });
-  assert.ok(result.generation_summary.warnings.some((warning) => warning.includes("near_solar_term_stub")));
+  assert.ok(result.generation_summary.warnings.some((warning) => warning.includes("near_solar_term_not_calculated")));
 });
 
 test("Stage 5C adapter failure returns warnings and does not fatal", async () => {

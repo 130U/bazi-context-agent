@@ -29,8 +29,7 @@ async function withServer<T>(run: (baseUrl: string) => Promise<T>): Promise<T> {
   const server = createBaziUiServer();
   await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
   const address = server.address();
-  assert.equal(typeof address, "object");
-  assert.ok(address);
+  if (!address || typeof address === "string") throw new Error("Test server did not expose a TCP address.");
   const baseUrl = `http://127.0.0.1:${address.port}`;
   try {
     return await run(baseUrl);
@@ -100,7 +99,7 @@ test("Stage 8 import rejects malformed JSON secrets and unsupported schema witho
   assert.equal(invalid.session.session_id, current.session_id);
 });
 
-test("Stage 8 delete hide and clear controls update session safely", () => {
+test("Stage 8 delete hide and clear controls update session safely", async () => {
   const session = sessionFixture();
   const hiddenForecast = hideFactFromForecast(session, "family_001");
   assert.equal(hiddenForecast.context_box.find((fact) => fact.fact_id === "family_001")?.visibility.use_in_forecast, false);
@@ -115,7 +114,7 @@ test("Stage 8 delete hide and clear controls update session safely", () => {
 
   const store = new MemorySessionStore();
   store.save(session);
-  const cleared = clearAllLocalData(store, session, "2026-06-07T00:00:00.000Z") as SessionState;
+  const cleared = await clearAllLocalData(store, session, "2026-06-07T00:00:00.000Z") as SessionState;
   assert.equal(store.load(), null);
   assert.equal(cleared.context_box.length, 0);
   assert.equal(cleared.privacy_metadata.last_cleared_at, "2026-06-07T00:00:00.000Z");
@@ -147,18 +146,23 @@ test("Stage 8 hide_from_export and deleted values are redacted from export", () 
 
 test("Stage 8 redaction catches API-key-like strings and local paths", () => {
   assert.equal(containsSensitiveValue("OPENAI_API_KEY=sk-test-placeholder"), true);
+  assert.equal(containsSensitiveValue(`sk-proj-${"a".repeat(24)}`), true);
+  assert.equal(containsSensitiveValue(`github_pat_${"b".repeat(24)}`), true);
+  assert.equal(containsSensitiveValue(`ghp_${"c".repeat(24)}`), true);
+  assert.equal(containsSensitiveValue(`Bearer ${"d".repeat(24)}`), true);
   assert.equal(redactString("C:/Users/theod/private/file.txt").value, "[REDACTED:local_path]");
 });
 
-test("Stage 8 privacy notice and UI controls are present", async () => {
+test("Stage 8 privacy notice and canonical public privacy controls are present", async () => {
   assert.ok(buildPrivacyNotice().includes("local-first"));
   assert.ok(buildPrivacyNotice().includes("no server-side data store"));
 
   await withServer(async (baseUrl) => {
     const html = await fetch(`${baseUrl}/`).then((response) => response.text());
-    for (const text of ["Save Session", "Load Session", "Export Session JSON", "Import Session JSON", "Clear All Local Data", "Hide from Forecast", "Hide from Export", "Delete Fact", "Session storage is local-first"]) {
+    for (const text of ["仅在当前标签页", "退出并清除", "导出会话 JSON", "不会把出生资料", "当前公开版本没有账户"]) {
       assert.equal(html.includes(text), true, `missing UI text: ${text}`);
     }
+    assert.equal(html.includes("localStorage.setItem"), false);
   });
 });
 

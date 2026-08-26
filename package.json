@@ -5,9 +5,10 @@
   "type": "module",
   "scripts": {
     "build:site": "node scripts/buildPublicConfig.ts",
+    "check:type": "tsc --noEmit",
     "check:generated": "node scripts/buildPublicConfig.ts --check",
     "check:site": "node scripts/validatePublicSite.ts",
-    "check": "npm run check:generated && npm run check:site && npm test",
+    "check": "npm run check:type && npm run check:generated && npm run check:site && npm test",
     "demo": "node src/demo.ts",
     "preview": "node scripts/servePublicSite.ts",
     "ui": "node src/server.ts",
@@ -15,5 +16,9 @@
   },
   "engines": {
     "node": ">=24"
+  },
+  "devDependencies": {
+    "@types/node": "24.13.3",
+    "typescript": "7.0.2"
   }
 }

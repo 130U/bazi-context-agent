@@ -27,7 +27,7 @@ test("event backtest returns stable per-candidate interface", () => {
   assert.equal(result.length, 1);
   assert.equal(result[0].candidate_id, "candidate_Zi");
   assert.equal(result[0].per_event_scores.length, 2);
-  assert.match(result[0].warning, /deterministic stub/);
+  assert.match(result[0].warning, /deterministic year-branch/);
 });
 
 test("event backtest result exposes required Round 02 output fields", () => {

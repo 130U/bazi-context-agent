@@ -121,6 +121,8 @@ export interface ChartGenerationPolicy {
   full_day_candidate_limit: number;
   unknown_date_day_span: number;
   recorded_time_prior_scores: Record<BirthTimeCertainty, number>;
+  expanded_candidate_prior_penalty: number;
+  minimum_candidate_prior: number;
   part_of_day_windows: Record<string, string[]>;
   metadata: {
     ai_allowed: false;

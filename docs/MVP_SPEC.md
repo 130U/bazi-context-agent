@@ -1,26 +1,20 @@
-# MVP_SPEC
+# MVP Specification / MVP 规格
 
-## Product
+`bazi-context-agent` 是一个八字出生时辰校准与现实上下文增强预测的研究型 MVP。
 
-`bazi-context-agent` is an MVP for BaZi birth-hour rectification plus context-box enhanced prediction.
+## Implemented / 已实现
 
-## Round 01 Scope
+1. 配置驱动的出生信息、传统弱先验、重大年份与现实上下文问卷。
+2. 不确定时间和边界标记驱动的确定性候选生成。
+3. 传统线索、事件回测、矛盾项、缺失信息与 Top 3 可解释排序。
+4. 稳定或暂定的工作时辰锁定，且上下文不能修改锁定结果。
+5. 公开浏览器端的本地月度支持/调整窗口与报告导出。
+6. 本地 TypeScript API、可选下游 provider、报告、脱敏和离线 A/B/C/D 评估。
+7. 严格类型检查、配置一致性检查、静态站点安全检查与自动化测试。
 
-Round 01 creates the project skeleton and deterministic ranking core:
+## Deliberate limits / 主动保留的边界
 
-1. TypeScript data types.
-2. Config loading.
-3. Symbol prior scoring.
-4. Candidate generation stub.
-5. Event backtest scoring stub.
-6. Candidate ranking.
-7. Tests proving config loading, deterministic behavior, Top 3 output, and no AI provider usage.
-
-## Out Of Scope
-
-- full BaZi calendar calculation;
-- final metaphysical report generation;
-- OpenAI or other AI provider integration;
-- web UI;
-- login, payment, user system;
-- Zi Wei Dou Shu, Qi Men Dun Jia, Feng Shui.
+- 公开预测使用“公历月份到季节支”的近似关系，不是完整大运、流年或精确节气历法引擎。
+- 静态适配器只规范化已提供的四柱，不会伪造缺失的派生数据。
+- 没有账户、云同步、数据库、支付或真实用户案例。
+- 没有其他术数或确定性人生结论。

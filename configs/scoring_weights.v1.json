@@ -72,6 +72,179 @@
     "boundary_expanded": 0.55,
     "symbol_prior_added": 0.45
   },
+  "legacy_event_backtest": {
+    "neutral_score": 0.5,
+    "childbearing_score": 0.5,
+    "fallback_relation_score": 0.2,
+    "default_event_confidence": 1,
+    "contradiction_threshold": 0.3,
+    "score_precision_digits": 4,
+    "event_type_profiles": {
+      "major_turning": "change",
+      "migration": "change",
+      "career_transition": "change",
+      "health_accident": "change",
+      "family_change": "change",
+      "worst_year": "change",
+      "education": "flow",
+      "best_year": "flow",
+      "relationship": "relationship",
+      "career": "career",
+      "childbearing": "childbearing"
+    },
+    "relation_scores": {
+      "change": { "clash": 0.85, "harm": 0.7, "same_branch": 0.55, "triad_same_group": 0.45, "six_harmony": 0.35, "none": 0.2 },
+      "flow": { "six_harmony": 0.8, "triad_same_group": 0.7, "same_branch": 0.55, "clash": 0.45, "harm": 0.3, "none": 0.2 },
+      "relationship": { "six_harmony": 0.8, "triad_same_group": 0.65, "clash": 0.55, "same_branch": 0.5, "harm": 0.4, "none": 0.2 },
+      "career": { "triad_same_group": 0.7, "six_harmony": 0.65, "clash": 0.6, "same_branch": 0.5, "harm": 0.45, "none": 0.2 },
+      "neutral": { "clash": 0.6, "six_harmony": 0.55, "triad_same_group": 0.55, "same_branch": 0.5, "harm": 0.45, "none": 0.2 }
+    }
+  },
+  "symbol_prior_policy": {
+    "fetal_order_match_score": 1,
+    "normalization_precision_digits": 6
+  },
+  "legacy_ranking": {
+    "neutral_component_score": 0.5,
+    "uniform_group_prior": 0.3333333333333333,
+    "contradiction_penalty_per_item": 0.03,
+    "maximum_contradiction_penalty": 0.15,
+    "single_hour_score_margin": 0.08,
+    "single_hour_confidence_margin": 0.1,
+    "score_precision_digits": 6,
+    "confidence_precision_digits": 4
+  },
+  "rectification_v2": {
+    "weights": {
+      "version": "rectification.v2",
+      "candidate_rectification_score_weights": {
+        "recorded_time_prior": 0.35,
+        "event_timing_fit": 0.45,
+        "symbol_prior_fit": 0.1,
+        "chart_profile_fit": 0.1
+      },
+      "contradiction_penalty_enabled": true,
+      "clamp_scores_to": [0, 1],
+      "context_box_allowed_for_rectification": false,
+      "ai_allowed_for_rectification": false,
+      "profile_scoring": {
+        "missing_profile": 0.2,
+        "base": 0.25,
+        "annual_fortunes": 0.25,
+        "luck_cycles": 0.2,
+        "relations": 0.15,
+        "ten_gods": 0.1,
+        "no_warnings": 0.05
+      },
+      "fallback_scores": {
+        "default_recorded_time_prior": 0.8,
+        "candidate_recorded_time_prior": 0.45,
+        "symbol_prior": 0.5,
+        "maximum_contradiction_penalty": 0.35,
+        "profile_confidence": 0.75,
+        "missing_profile_confidence": 0.35,
+        "missing_evidence_confidence": 0.4
+      },
+      "result_policy": {
+        "confidence_component_count": 2,
+        "penalty_confidence_divisor": 2,
+        "contradiction_evidence_weight": 1,
+        "alternative_count": 3,
+        "score_precision_digits": 4
+      }
+    },
+    "event_scoring": {
+      "version": "rectification.v2",
+      "event_score_components": {
+        "domain_signal_match": { "max": 0.4 },
+        "timing_relation_match": { "max": 0.25 },
+        "intensity_match": { "max": 0.2 },
+        "generic_change_signal": { "max": 0.15 }
+      },
+      "parameters": {
+        "domain_missing_score": 0.12,
+        "domain_empty_score": 0.12,
+        "timing_missing_score": 0.08,
+        "timing_base_score": 0.1,
+        "timing_change_match_score": 0.25,
+        "timing_flow_match_score": 0.24,
+        "timing_related_score": 0.16,
+        "intensity_missing_high_score": 0.08,
+        "intensity_missing_other_score": 0.12,
+        "intensity_high_threshold": 0.65,
+        "intensity_medium_threshold": 0.35,
+        "intensity_high_match_score": 0.2,
+        "intensity_high_miss_score": 0.08,
+        "intensity_medium_match_score": 0.17,
+        "intensity_medium_miss_score": 0.09,
+        "intensity_low_score": 0.12,
+        "generic_annual_present_score": 0.12,
+        "generic_annual_missing_score": 0.05,
+        "domain_contradiction_threshold": 0.05,
+        "high_importance_contradiction_penalty": 0.05,
+        "other_contradiction_penalty": 0.03,
+        "neutral_event_score": 0.5,
+        "no_event_confidence": 0.25,
+        "high_importance_multiplier": 1.25,
+        "medium_importance_multiplier": 1,
+        "low_importance_multiplier": 0.75,
+        "high_importance_match_threshold": 0.62,
+        "confidence_minimum": 0.2,
+        "confidence_maximum": 0.95,
+        "confidence_base": 0.35,
+        "confidence_per_event": 0.1,
+        "confidence_per_missing_signal": 0.04
+      },
+      "event_types": {
+        "education": { "domains": ["education", "resource", "study", "exam", "overseas_study"], "importance_default": "medium" },
+        "career": { "domains": ["career", "officer", "wealth", "authority", "job_change"], "importance_default": "medium" },
+        "migration": { "domains": ["migration", "travel", "movement", "relocation", "external_change"], "importance_default": "medium" },
+        "relationship": { "domains": ["relationship", "spouse", "union", "separation", "peach_blossom"], "importance_default": "medium" },
+        "health": { "domains": ["health", "surgery", "accident", "injury", "stress", "imbalance"], "importance_default": "high" },
+        "family": { "domains": ["family", "parent", "home", "housing", "elder"], "importance_default": "medium" },
+        "wealth": { "domains": ["wealth", "income", "asset", "investment", "volatility"], "importance_default": "medium" },
+        "childbearing": { "domains": ["children", "offspring", "pregnancy", "family_expansion"], "importance_default": "high" },
+        "major_turning_point": { "domains": ["change", "turning_point", "pressure", "opportunity"], "importance_default": "high" },
+        "best_year": { "domains": ["opportunity", "support", "breakthrough"], "importance_default": "medium" },
+        "worst_year": { "domains": ["pressure", "loss", "conflict", "blockage"], "importance_default": "high" }
+      }
+    },
+    "default_chart_protection": {
+      "version": "rectification.v2",
+      "minimum_major_events_to_override_default": 3,
+      "lead_thresholds": {
+        "keep_default_if_lead_lte": 0.05,
+        "uncertain_if_lead_lte": 0.15,
+        "candidate_preferred_if_lead_gt": 0.15
+      },
+      "minimum_high_importance_event_matches_for_override": 3,
+      "recommendations": {
+        "use_default_chart": "DefaultChart remains selected.",
+        "default_protected_uncertain": "DefaultChart remains selected but alternatives are serious possibilities.",
+        "candidate_preferred": "A candidate may be preferred over DefaultChart.",
+        "insufficient_evidence": "Not enough dated events to override DefaultChart."
+      }
+    }
+  },
+  "chart_generation": {
+    "recorded_time_prior_scores": {
+      "exact_to_minute": 1,
+      "within_1_hour": 0.85,
+      "approximate_hour": 0.7,
+      "time_range": 0.6,
+      "part_of_day": 0.45,
+      "unknown_time": 0.2,
+      "unknown_date": 0.05
+    },
+    "expanded_candidate_prior_penalty": 0.15,
+    "minimum_candidate_prior": 0.05
+  },
+  "legacy_candidate_generation": {
+    "maximum_candidates": 6,
+    "minimum_candidates": 2,
+    "adjacent_1_shichen_radius": 1,
+    "adjacent_2_shichen_radius": 2
+  },
   "browser_rectification": {
     "candidate_component_weights": {
       "birth_record": 0.2,
@@ -82,6 +255,7 @@
       "recorded": 1,
       "adjacent": 0.68,
       "uncertain_range": 0.58,
+      "boundary_expanded": 0.55,
       "unknown_symmetric": 0.5
     },
     "neutral_component_scores": {
@@ -147,6 +321,13 @@
     "selection": {
       "unknown_candidate_count": 12,
       "adjacent_branch_radius": 1,
+      "radius_by_uncertainty": {
+        "recorded_only": 0,
+        "adjacent_1_shichen": 1,
+        "adjacent_2_shichen": 2,
+        "auto": 1
+      },
+      "boundary_expansion_radius": 1,
       "locked_alternative_count": 2,
       "score_precision_digits": 6
     },

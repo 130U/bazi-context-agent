@@ -4,7 +4,6 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { getBaziEngineAdapter, getStaticBaziAdapter } from "../src/baziAdapterFactory.ts";
 import { REQUIRED_BAZI_DERIVED_PROFILE_FIELDS, validateBaziDerivedProfile } from "../src/baziEngineAdapter.ts";
-import { LunarJavascriptAdapter } from "../src/lunarJavascriptAdapter.ts";
 import { StaticBaziAdapter } from "../src/staticBaziAdapter.ts";
 import { generateCandidateHours } from "../src/candidateGeneration.ts";
 import { loadScoringConfig } from "../src/config.ts";
@@ -84,7 +83,6 @@ test("adapter modules do not import AI providers or read API keys", () => {
     "../src/baziTypes.ts",
     "../src/baziEngineAdapter.ts",
     "../src/staticBaziAdapter.ts",
-    "../src/lunarJavascriptAdapter.ts",
     "../src/baziAdapterFactory.ts"
   ];
   const source = files.map((path) => readFileSync(fileURLToPath(new URL(path, import.meta.url)), "utf8").toLowerCase()).join("\n");
@@ -109,23 +107,10 @@ test("adapter modules do not import AI providers or read API keys", () => {
   }
 });
 
-test("adapter factory falls back to StaticBaziAdapter when lunar dependency is absent", async () => {
+test("adapter factory selects the production static adapter", async () => {
   const adapter = await getBaziEngineAdapter();
-  assert.ok(adapter instanceof StaticBaziAdapter || adapter instanceof LunarJavascriptAdapter);
-  if (adapter instanceof StaticBaziAdapter) assert.equal(adapter.source_library, "static-adapter");
-});
-
-test("LunarJavascriptAdapter wrapper is safe when dependency is unavailable", async () => {
-  const adapter = new LunarJavascriptAdapter();
-  if (!(await adapter.isAvailable())) {
-    await assert.rejects(
-      () => adapter.deriveFromRecordedBirthTime({ date: "1998-05-10", time: "22:30", timezone: "Asia/Shanghai", certainty: "exact" }),
-      /lunar-javascript is not installed/
-    );
-  }
-  const profile = adapter.deriveFromFixedPillars(fixture.fixed_pillars, { sourceChartId: fixture.chart_id });
-  assert.ok(profile.source_libraries.includes("static-adapter"));
-  assert.deepEqual(validateBaziDerivedProfile(profile), []);
+  assert.ok(adapter instanceof StaticBaziAdapter);
+  assert.equal(adapter.source_library, "static-adapter");
 });
 
 test("adding adapter modules does not change ranking output", () => {

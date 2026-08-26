@@ -2,18 +2,18 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { createPublicPreviewServer } from "../scripts/servePublicSite.ts";
 
-async function withServer(run) {
+async function withServer<T>(run: (origin: string) => Promise<T>): Promise<T> {
   const server = createPublicPreviewServer();
-  await new Promise((resolve, reject) => {
+  await new Promise<void>((resolve, reject) => {
     server.once("error", reject);
     server.listen(0, "127.0.0.1", resolve);
   });
   const address = server.address();
   assert.ok(address && typeof address === "object");
   try {
-    await run(`http://127.0.0.1:${address.port}`);
+    return await run(`http://127.0.0.1:${address.port}`);
   } finally {
-    await new Promise((resolve) => server.close(resolve));
+    await new Promise<void>((resolve, reject) => server.close((error) => (error ? reject(error) : resolve())));
   }
 }
 

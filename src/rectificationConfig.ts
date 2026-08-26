@@ -1,10 +1,11 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { loadScoringConfig } from "./config.ts";
 import type { DefaultChartProtectionConfig, EventTypeScoringConfig, RectificationPolicyConfig, RectificationWeightsConfig } from "./rectificationTypes.ts";
 
-export const RECTIFICATION_WEIGHTS_SOURCE = "configs/rectification_weights.stage5d.json";
-export const EVENT_TYPE_SCORING_SOURCE = "configs/event_type_scoring.stage5d.json";
-export const DEFAULT_CHART_PROTECTION_SOURCE = "configs/default_chart_protection.stage5d.json";
+export const RECTIFICATION_WEIGHTS_SOURCE = "configs/scoring_weights.v1.json#rectification_v2.weights";
+export const EVENT_TYPE_SCORING_SOURCE = "configs/scoring_weights.v1.json#rectification_v2.event_scoring";
+export const DEFAULT_CHART_PROTECTION_SOURCE = "configs/scoring_weights.v1.json#rectification_v2.default_chart_protection";
 export const RECTIFICATION_POLICY_SOURCE = "configs/rectification_policy.stage5d.json";
 
 function configPath(relativePath: string): string {
@@ -16,22 +17,23 @@ function readJson<T>(relativePath: string): T {
 }
 
 export function loadRectificationWeights(): RectificationWeightsConfig {
-  return readJson<RectificationWeightsConfig>(RECTIFICATION_WEIGHTS_SOURCE);
+  return loadScoringConfig().rectification_v2.weights;
 }
 
 export function loadEventTypeScoringConfig(): EventTypeScoringConfig {
-  return readJson<EventTypeScoringConfig>(EVENT_TYPE_SCORING_SOURCE);
+  return loadScoringConfig().rectification_v2.event_scoring;
 }
 
 export function loadDefaultChartProtectionConfig(): DefaultChartProtectionConfig {
-  return readJson<DefaultChartProtectionConfig>(DEFAULT_CHART_PROTECTION_SOURCE);
+  return loadScoringConfig().rectification_v2.default_chart_protection;
 }
 
 export function loadRectificationPolicyConfig(): RectificationPolicyConfig {
   return readJson<RectificationPolicyConfig>(RECTIFICATION_POLICY_SOURCE);
 }
 
-export function clampScore(value: number, range: [number, number] = [0, 1]): number {
-  const [min, max] = range;
-  return Number(Math.min(max, Math.max(min, value)).toFixed(4));
+export function clampScore(value: number, range?: [number, number]): number {
+  const weights = loadRectificationWeights();
+  const [min, max] = range ?? weights.clamp_scores_to;
+  return Number(Math.min(max, Math.max(min, value)).toFixed(weights.result_policy.score_precision_digits));
 }

@@ -5,9 +5,9 @@ function zeroScores(): HourGroupPriorMap {
   return { G1_zi_wu_mao_you: 0, G2_yin_shen_si_hai: 0, G3_chen_xu_chou_wei: 0 };
 }
 
-export function normalizeHourGroupScores(raw: HourGroupPriorMap): HourGroupPriorMap {
+export function normalizeHourGroupScores(raw: HourGroupPriorMap, uniformPrior: number): HourGroupPriorMap {
   const total = HOUR_GROUPS.reduce((sum, group) => sum + raw[group], 0);
-  if (total <= 0) return { G1_zi_wu_mao_you: 1 / 3, G2_yin_shen_si_hai: 1 / 3, G3_chen_xu_chou_wei: 1 / 3 };
+  if (total <= 0) return { G1_zi_wu_mao_you: uniformPrior, G2_yin_shen_si_hai: uniformPrior, G3_chen_xu_chou_wei: uniformPrior };
   return {
     G1_zi_wu_mao_you: raw.G1_zi_wu_mao_you / total,
     G2_yin_shen_si_hai: raw.G2_yin_shen_si_hai / total,
@@ -38,7 +38,7 @@ function addScore(
   reason: string
 ): void {
   raw[group] += value;
-  evidence.push({ code: "symbol_prior", questionId, answerId, group, message: reason, value });
+  evidence.push({ code: "symbol_prior", message: `${questionId}:${answerId}:${group}:${reason}`, value });
 }
 
 function scoreFetalOrder(
@@ -46,6 +46,7 @@ function scoreFetalOrder(
   evidence: EvidenceItem[],
   chartSex: ChartSex,
   rules: SymbolPriorInput["scoringConfig"]["fetal_order_rules"],
+  matchScore: number,
   answer: SymbolAnswer,
   missing: string[]
 ): void {
@@ -57,7 +58,7 @@ function scoreFetalOrder(
   if (!order) return;
   for (const group of HOUR_GROUPS) {
     if (rules[chartSex]?.[group]?.includes(order)) {
-      addScore(raw, evidence, group, 1, answer.questionId, answer.answerId, `fetal order matched ${chartSex} chart-sex rule`);
+      addScore(raw, evidence, group, matchScore, answer.questionId, answer.answerId, `fetal order matched ${chartSex} chart-sex rule`);
     }
   }
 }
@@ -78,17 +79,25 @@ export function scoreSymbolPrior(inputOrAnswers: SymbolPriorInput | SymbolAnswer
       if (value > 0) addScore(raw_scores, evidence, group, value, answer.questionId, answer.answerId, "configured traditional symbol supports this hour group");
     }
     if (answer.questionId === "B2_fetal_order") {
-      scoreFetalOrder(raw_scores, evidence, input.chartSex, input.scoringConfig.fetal_order_rules, answer, missing_information);
+      scoreFetalOrder(
+        raw_scores,
+        evidence,
+        input.chartSex,
+        input.scoringConfig.fetal_order_rules,
+        input.scoringConfig.symbol_prior_policy.fetal_order_match_score,
+        answer,
+        missing_information
+      );
     }
   }
 
   if (evidence.length === 0) missing_information.push("usable symbol prior answers");
-  const prior = normalizeHourGroupScores(raw_scores);
+  const prior = normalizeHourGroupScores(raw_scores, input.scoringConfig.legacy_ranking.uniform_group_prior);
   const entries: HourGroupPrior[] = HOUR_GROUPS.map((group) => ({
     group,
     label: GROUP_LABELS[group],
-    prior: Number(prior[group].toFixed(6)),
-    evidence: evidence.filter((item) => item.group === group)
+    prior: Number(prior[group].toFixed(input.scoringConfig.symbol_prior_policy.normalization_precision_digits)),
+    evidence: evidence.filter((item) => item.message.includes(`:${group}:`))
   }));
 
   return {

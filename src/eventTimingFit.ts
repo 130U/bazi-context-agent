@@ -67,7 +67,12 @@ function hourBranch(profile: BaziDerivedProfile | undefined): EarthlyBranch | nu
   return CHINESE_TO_BRANCH[raw] ?? null;
 }
 
-function domainMatch(profile: BaziDerivedProfile | undefined, annual: Record<string, unknown> | null, domains: string[]): { score: number; matched: string[]; missing: string[] } {
+function domainMatch(
+  profile: BaziDerivedProfile | undefined,
+  annual: Record<string, unknown> | null,
+  domains: string[],
+  parameters: Record<string, number>
+): { score: number; matched: string[]; missing: string[] } {
   const candidateSignals = new Set([
     ...valuesFrom(annual?.domains),
     ...valuesFrom(annual?.signals),
@@ -77,42 +82,52 @@ function domainMatch(profile: BaziDerivedProfile | undefined, annual: Record<str
   ]);
   const normalizedDomains = domains.map((item) => item.toLowerCase());
   const matched = normalizedDomains.filter((domain) => candidateSignals.has(domain));
-  if (!annual && candidateSignals.size === 0) return { score: 0.12, matched, missing: ["annual_fortunes", "domain_signals"] };
+  if (!annual && candidateSignals.size === 0) return { score: parameters.domain_missing_score, matched, missing: ["annual_fortunes", "domain_signals"] };
   return {
-    score: domains.length > 0 ? Math.min(0.4, (matched.length / Math.max(domains.length, 1)) * 0.4) : 0.12,
+    score: domains.length > 0
+      ? Math.min(configuredMaximum(parameters, "domain_signal_match"), (matched.length / Math.max(domains.length, 1)) * configuredMaximum(parameters, "domain_signal_match"))
+      : parameters.domain_empty_score,
     matched,
     missing: annual ? [] : ["annual_fortunes"]
   };
 }
 
-function timingMatch(profile: BaziDerivedProfile | undefined, event: RectificationLifeEvent): { score: number; matched: string[]; contradictions: string[] } {
+function configuredMaximum(parameters: Record<string, number>, key: string): number {
+  return parameters[`${key}_maximum`] ?? parameters.domain_empty_score;
+}
+
+function timingMatch(profile: BaziDerivedProfile | undefined, event: RectificationLifeEvent, parameters: Record<string, number>): { score: number; matched: string[]; contradictions: string[] } {
   const branch = hourBranch(profile);
-  if (!branch) return { score: 0.08, matched: [], contradictions: [] };
+  if (!branch) return { score: parameters.timing_missing_score, matched: [], contradictions: [] };
   const yearBranch = getYearBranch(event.year);
   const relations = getBranchRelations(branch, yearBranch);
   const type = eventType(event);
   const changeEvent = ["migration", "career", "health", "family", "worst_year", "major_turning_point"].includes(type);
   const flowEvent = ["education", "best_year", "relationship"].includes(type);
   const relationSet = new Set(relations);
-  let score = 0.1;
-  if (changeEvent && (relationSet.has("clash") || relationSet.has("harm"))) score = 0.25;
-  else if (flowEvent && (relationSet.has("six_harmony") || relationSet.has("triad_same_group") || relationSet.has("same_branch"))) score = 0.24;
-  else if (relations.length > 0) score = 0.16;
+  let score = parameters.timing_base_score;
+  if (changeEvent && (relationSet.has("clash") || relationSet.has("harm"))) score = parameters.timing_change_match_score;
+  else if (flowEvent && (relationSet.has("six_harmony") || relationSet.has("triad_same_group") || relationSet.has("same_branch"))) score = parameters.timing_flow_match_score;
+  else if (relations.length > 0) score = parameters.timing_related_score;
   const contradictions = relations.length === 0 && event.importance === "high" ? ["weak_hour_year_relation_for_high_importance_event"] : [];
   return { score, matched: relations, contradictions };
 }
 
-function intensityScore(annual: Record<string, unknown> | null, event: RectificationLifeEvent, importanceLevel: RectificationEventImportance): number {
+function intensityScore(annual: Record<string, unknown> | null, importanceLevel: RectificationEventImportance, parameters: Record<string, number>): number {
   const intensity = typeof annual?.intensity === "number" ? annual.intensity : null;
-  if (intensity === null) return importanceLevel === "high" ? 0.08 : 0.12;
-  if (importanceLevel === "high") return intensity >= 0.65 ? 0.2 : 0.08;
-  if (importanceLevel === "medium") return intensity >= 0.35 ? 0.17 : 0.09;
-  return 0.12;
+  if (intensity === null) return importanceLevel === "high" ? parameters.intensity_missing_high_score : parameters.intensity_missing_other_score;
+  if (importanceLevel === "high") return intensity >= parameters.intensity_high_threshold ? parameters.intensity_high_match_score : parameters.intensity_high_miss_score;
+  if (importanceLevel === "medium") return intensity >= parameters.intensity_medium_threshold ? parameters.intensity_medium_match_score : parameters.intensity_medium_miss_score;
+  return parameters.intensity_low_score;
 }
 
 export function scoreEventTimingFit(chart: ChartLike, events: RectificationLifeEvent[], profile = chart.derived_profile, config = loadEventTypeScoringConfig()): EventTimingFitResult {
   const candidate_id = chartId(chart);
-  const warnings: string[] = ["Stage 5D EventTimingFit is deterministic v2 scoring, not full metaphysical precision."];
+  const parameters: Record<string, number> = {
+    ...config.parameters,
+    domain_signal_match_maximum: config.event_score_components.domain_signal_match.max
+  };
+  const warnings: string[] = ["Event timing fit uses deterministic heuristic scoring, not full metaphysical precision."];
   const missing = new Set<string>();
   if (!profile) missing.add("BaziDerivedProfile");
   if (!Array.isArray(profile?.annual_fortunes) || profile.annual_fortunes.length === 0) missing.add("annual_fortunes");
@@ -123,13 +138,13 @@ export function scoreEventTimingFit(chart: ChartLike, events: RectificationLifeE
     return {
       candidate_id,
       event_scores: [],
-      event_timing_fit: 0.5,
+      event_timing_fit: parameters.neutral_event_score,
       matched_rules: ["No dated life events supplied; neutral timing score."],
       contradictions: [],
       missing_information: ["life_events"],
       warnings,
       high_importance_matches: 0,
-      confidence: 0.25
+      confidence: parameters.no_event_confidence
     };
   }
 
@@ -139,13 +154,13 @@ export function scoreEventTimingFit(chart: ChartLike, events: RectificationLifeE
     const typeConfig = config.event_types[type] ?? config.event_types.major_turning_point;
     const annual = annualFortuneForYear(profile, event.year);
     const importanceLevel = importance(event, type, config);
-    const domain = domainMatch(profile, annual, typeConfig?.domains ?? []);
-    const timing = timingMatch(profile, event);
-    const intensity = intensityScore(annual, event, importanceLevel);
-    const genericChange = annual ? 0.12 : 0.05;
+    const domain = domainMatch(profile, annual, typeConfig?.domains ?? [], parameters);
+    const timing = timingMatch(profile, event, parameters);
+    const intensity = intensityScore(annual, importanceLevel, parameters);
+    const genericChange = annual ? parameters.generic_annual_present_score : parameters.generic_annual_missing_score;
     for (const item of domain.missing) missing.add(item);
     const eventContradictions = [...timing.contradictions];
-    if (domain.score <= 0.05 && importanceLevel === "high") eventContradictions.push("weak_domain_match_for_high_importance_event");
+    if (domain.score <= parameters.domain_contradiction_threshold && importanceLevel === "high") eventContradictions.push("weak_domain_match_for_high_importance_event");
     const fit_score = clampScore(domain.score + timing.score + intensity + genericChange);
     const id = eventId(event, index);
     if (eventContradictions.length > 0) {
@@ -154,7 +169,7 @@ export function scoreEventTimingFit(chart: ChartLike, events: RectificationLifeE
         event_id: id,
         severity: importanceLevel === "high" ? "high" : "medium",
         description: eventContradictions.join("; "),
-        penalty: importanceLevel === "high" ? 0.05 : 0.03
+        penalty: importanceLevel === "high" ? parameters.high_importance_contradiction_penalty : parameters.other_contradiction_penalty
       });
     }
     return {
@@ -173,15 +188,26 @@ export function scoreEventTimingFit(chart: ChartLike, events: RectificationLifeE
     };
   });
 
-  const weight = event_scores.reduce((sum, item) => sum + (item.importance === "high" ? 1.25 : item.importance === "medium" ? 1 : 0.75), 0);
-  const weighted = event_scores.reduce((sum, item) => sum + item.fit_score * (item.importance === "high" ? 1.25 : item.importance === "medium" ? 1 : 0.75), 0);
-  const high_importance_matches = event_scores.filter((item) => item.importance === "high" && item.fit_score >= 0.62).length;
-  const confidence = clampScore(Math.max(0.2, Math.min(0.95, 0.35 + events.length * 0.1 - missing.size * 0.04)));
+  const importanceWeight = (level: RectificationEventImportance) => (
+    level === "high" ? parameters.high_importance_multiplier
+      : level === "medium" ? parameters.medium_importance_multiplier
+        : parameters.low_importance_multiplier
+  );
+  const weight = event_scores.reduce((sum, item) => sum + importanceWeight(item.importance), 0);
+  const weighted = event_scores.reduce((sum, item) => sum + item.fit_score * importanceWeight(item.importance), 0);
+  const high_importance_matches = event_scores.filter((item) => item.importance === "high" && item.fit_score >= parameters.high_importance_match_threshold).length;
+  const confidence = clampScore(Math.max(
+    parameters.confidence_minimum,
+    Math.min(
+      parameters.confidence_maximum,
+      parameters.confidence_base + events.length * parameters.confidence_per_event - missing.size * parameters.confidence_per_missing_signal
+    )
+  ));
 
   return {
     candidate_id,
     event_scores,
-    event_timing_fit: clampScore(weighted / Math.max(weight, 1)),
+    event_timing_fit: clampScore(weighted / Math.max(weight, parameters.medium_importance_multiplier)),
     matched_rules: event_scores.flatMap((item) => item.matched_rules.map((rule) => `${item.event_id}:${rule}`)),
     contradictions,
     missing_information: [...missing],

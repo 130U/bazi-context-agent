@@ -47,7 +47,7 @@ function domainForecast(domain: Stage6ForecastDomain, prompt: FutureForecastProm
     derivative_basis: derivativeBasis,
     initial_value_basis: initialBasis,
     time_windows: [`${prompt.current_date} + broad early window`, `${prompt.current_date} + broad later window`],
-    caveats: ["Mock forecast for Stage 6 tests.", "Known facts are not predictions.", "Avoid medical, legal, or financial certainty."]
+    caveats: ["This is an offline mock forecast.", "Known facts are not predictions.", "Avoid medical, legal, or financial certainty."]
   };
 }
 
@@ -98,7 +98,7 @@ function actions(domains: Stage6ForecastDomain[]): RecommendedAction[] {
       rationale: `Applies to ${domains.join(", ")} without changing the selected chart.`
     },
     {
-      action: "记录实际反馈，作为 Stage 7 之后的评估材料，而不是回头改定盘。",
+      action: "记录实际反馈，作为后续评估材料，而不是回头改定盘。",
       priority: "medium",
       timeframe: "ongoing",
       rationale: "Preserves the boundary between forecast and rectification."
@@ -118,7 +118,7 @@ export function createMockFutureForecastProvider(): FutureForecastProvider {
         generated_at: `${prompt.current_date}T00:00:00.000Z`,
         current_date: prompt.current_date,
         forecast_horizon: prompt.forecast_horizon,
-        executive_summary: "这是 Stage 6 mock 未来预测结果：只消费 ForecastInput，不修改定盘、校盘、ranking 或 ForecastInput。",
+        executive_summary: "这是离线 mock 未来预测结果：只消费 ForecastInput，不修改定盘、校盘、候选盘排序或 ForecastInput。",
         domain_forecasts: domains.map((domain) => domainForecast(domain, prompt)),
         timeline_windows: request.options?.include_timeline === false ? [] : timeline(prompt, domains),
         opportunity_windows: forecastWindows.opportunities,

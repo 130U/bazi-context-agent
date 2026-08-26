@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { getBaziEngineAdapter } from "./baziAdapterFactory.ts";
+import { loadScoringConfig } from "./config.ts";
 import { getHourBranchForTime, wrapBranchIndex } from "./hourDefinitions.ts";
 import { EARTHLY_BRANCHES, type EarthlyBranch } from "./types.ts";
 import type {
@@ -18,34 +19,6 @@ import type {
   RecordedBirthCertainty,
   RecordedBirthTime
 } from "./baziTypes.ts";
-
-const DEFAULT_POLICY: ChartGenerationPolicy = {
-  version: "stage5c.v1",
-  default_candidate_limit: 6,
-  full_day_candidate_limit: 12,
-  unknown_date_day_span: 1,
-  recorded_time_prior_scores: {
-    exact_to_minute: 1,
-    within_1_hour: 0.85,
-    approximate_hour: 0.7,
-    time_range: 0.6,
-    part_of_day: 0.45,
-    unknown_time: 0.2,
-    unknown_date: 0.05
-  },
-  part_of_day_windows: {
-    morning: ["Mao", "Chen", "Si"],
-    afternoon: ["Wu", "Wei", "Shen"],
-    evening: ["You", "Xu", "Hai"],
-    night: ["Hai", "Zi", "Chou"],
-    unknown: []
-  },
-  metadata: {
-    ai_allowed: false,
-    context_box_allowed: false,
-    ranking_allowed: false
-  }
-};
 
 const BRANCH_WINDOWS: Record<EarthlyBranch, Array<[number, number]>> = {
   Zi: [
@@ -96,24 +69,17 @@ function jsonPolicyPath(): string {
 }
 
 export function loadChartGenerationPolicy(): ChartGenerationPolicy {
-  try {
-    const parsed = JSON.parse(readFileSync(jsonPolicyPath(), "utf8")) as Partial<ChartGenerationPolicy>;
-    return {
-      ...DEFAULT_POLICY,
-      ...parsed,
-      recorded_time_prior_scores: {
-        ...DEFAULT_POLICY.recorded_time_prior_scores,
-        ...(parsed.recorded_time_prior_scores ?? {})
-      },
-      part_of_day_windows: {
-        ...DEFAULT_POLICY.part_of_day_windows,
-        ...(parsed.part_of_day_windows ?? {})
-      },
-      metadata: DEFAULT_POLICY.metadata
-    };
-  } catch {
-    return DEFAULT_POLICY;
+  const parsed = JSON.parse(readFileSync(jsonPolicyPath(), "utf8")) as Omit<ChartGenerationPolicy, "recorded_time_prior_scores" | "expanded_candidate_prior_penalty" | "minimum_candidate_prior">;
+  if (!parsed.metadata || parsed.metadata.ai_allowed || parsed.metadata.context_box_allowed || parsed.metadata.ranking_allowed) {
+    throw new Error("Chart generation policy violates deterministic boundaries.");
   }
+  const scoring = loadScoringConfig().chart_generation;
+  return {
+    ...parsed,
+    recorded_time_prior_scores: scoring.recorded_time_prior_scores as Record<BirthTimeCertainty, number>,
+    expanded_candidate_prior_penalty: scoring.expanded_candidate_prior_penalty,
+    minimum_candidate_prior: scoring.minimum_candidate_prior
+  };
 }
 
 export function normalizeBirthTimeCertainty(certainty: RecordedBirthCertainty | undefined): BirthTimeCertainty {
@@ -161,7 +127,9 @@ function normalizedRecordedBirthTime(input: RecordedBirthTime, overrides: Partia
 }
 
 function priorScore(certainty: BirthTimeCertainty, policy: ChartGenerationPolicy): number {
-  return policy.recorded_time_prior_scores[certainty] ?? DEFAULT_POLICY.recorded_time_prior_scores[certainty] ?? 0.5;
+  const score = policy.recorded_time_prior_scores[certainty];
+  if (!Number.isFinite(score)) throw new Error(`Missing recorded-time prior for ${certainty}.`);
+  return score;
 }
 
 function branchIndex(branch: EarthlyBranch): number {
@@ -205,16 +173,13 @@ function branchesForRange(start: string, end: string): EarthlyBranch[] {
 
 function branchesForPartOfDay(partOfDay: string | undefined, policy: ChartGenerationPolicy): EarthlyBranch[] {
   const configured = policy.part_of_day_windows[partOfDay ?? "unknown"] ?? [];
-  const roman = configured.filter((branch): branch is EarthlyBranch => (EARTHLY_BRANCHES as readonly string[]).includes(branch));
-  if (roman.length > 0) return roman;
-  const fallback: Record<string, EarthlyBranch[]> = {
-    morning: ["Mao", "Chen", "Si"],
-    afternoon: ["Wu", "Wei", "Shen"],
-    evening: ["You", "Xu", "Hai"],
-    night: ["Hai", "Zi", "Chou"],
-    unknown: []
+  const aliases: Record<string, EarthlyBranch> = {
+    "子": "Zi", "丑": "Chou", "寅": "Yin", "卯": "Mao", "辰": "Chen", "巳": "Si",
+    "午": "Wu", "未": "Wei", "申": "Shen", "酉": "You", "戌": "Xu", "亥": "Hai"
   };
-  return fallback[partOfDay ?? "unknown"] ?? [];
+  return configured.map((branch) => (
+    (EARTHLY_BRANCHES as readonly string[]).includes(branch) ? branch as EarthlyBranch : aliases[branch]
+  )).filter((branch): branch is EarthlyBranch => Boolean(branch));
 }
 
 function addDays(date: string, offset: number): string {
@@ -289,7 +254,7 @@ export async function createDefaultChart(
   const chartId = "default_chart";
   const derived = await deriveProfile(selectedAdapter, chartId, normalized, timeBranch, "recorded_time");
   const warnings = [...derived.warnings];
-  if (boundaryFlags.includes("near_solar_term")) warnings.push("near_solar_term_stub: exact solar-term expansion is deferred in Stage 5C.");
+  if (boundaryFlags.includes("near_solar_term")) warnings.push("near_solar_term_not_calculated: exact solar-term expansion is not available.");
   return {
     chart_id: chartId,
     chart_role: "default",
@@ -359,7 +324,12 @@ async function buildCandidate(input: {
     fixed_pillars: derived.fixed_pillars,
     derived_profile: derived.profile,
     is_default_chart: input.isDefault ?? false,
-    recorded_time_prior_score: input.isDefault ? priorScore(input.certainty, input.policy) : Math.max(0.05, priorScore(input.certainty, input.policy) - 0.15),
+    recorded_time_prior_score: input.isDefault
+      ? priorScore(input.certainty, input.policy)
+      : Math.max(
+          input.policy.minimum_candidate_prior,
+          priorScore(input.certainty, input.policy) - input.policy.expanded_candidate_prior_penalty
+        ),
     generation_reasons: unique([input.reason, ...(input.isDefault ? ["default_chart_candidate"] : [])]),
     boundary_flags: input.boundaryFlags,
     assumptions: ["candidate_generated_without_rectification_scoring"],
@@ -417,9 +387,9 @@ export async function generateCandidateChartsV2(input: CandidateGenerationInput)
   const defaultChart = input.default_chart ?? (await createDefaultChart(normalized, adapter, policy));
   const baseDate = birthDate(normalized);
   const branches = candidateBranches(normalized, certainty, boundaryFlags, policy);
-  if (boundaryFlags.includes("near_solar_term")) warnings.push("near_solar_term_stub: exact solar-term expansion is deferred in Stage 5C.");
-  if (boundaryFlags.includes("possible_timezone_issue")) warnings.push("timezone_issue_stub: timezone correction is deferred in Stage 5C.");
-  if (boundaryFlags.includes("possible_dst_issue")) warnings.push("dst_issue_stub: daylight-saving correction is deferred in Stage 5C.");
+  if (boundaryFlags.includes("near_solar_term")) warnings.push("near_solar_term_not_calculated: exact solar-term expansion is not available.");
+  if (boundaryFlags.includes("possible_timezone_issue")) warnings.push("timezone_correction_required: confirm the birthplace time zone before interpreting candidates.");
+  if (boundaryFlags.includes("possible_dst_issue")) warnings.push("dst_correction_required: confirm daylight-saving time before interpreting candidates.");
 
   const candidateSpecs: Array<{ branch: EarthlyBranch; reason: string; date: string; warnings?: string[] }> = [];
   if (certainty === "unknown_date") {
@@ -446,7 +416,7 @@ export async function generateCandidateChartsV2(input: CandidateGenerationInput)
 
   if (boundaryFlags.includes("near_solar_term")) {
     const branch = birthTime(normalized) ? getHourBranchForTime(birthTime(normalized) as string) ?? "Zi" : "Zi";
-    candidateSpecs.push({ branch, date: baseDate, reason: "solar_term", warnings: ["near_solar_term_stub"] });
+    candidateSpecs.push({ branch, date: baseDate, reason: "solar_term", warnings: ["near_solar_term_not_calculated"] });
   }
 
   const seen = new Set<string>();

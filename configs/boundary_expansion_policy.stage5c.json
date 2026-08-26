@@ -19,7 +19,7 @@
     {
       "id": "near_solar_term",
       "label": "节气边界风险",
-      "required_behavior": "return solar-term warning or stub in Stage 5C"
+      "required_behavior": "return a solar-term boundary warning when exact expansion is unavailable"
     },
     {
       "id": "possible_timezone_issue",

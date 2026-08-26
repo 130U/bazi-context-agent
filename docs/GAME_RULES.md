@@ -1,4 +1,4 @@
-# GAME_RULES
+# Game Rules / 运行规则
 
 ## Core Rule
 
@@ -23,4 +23,13 @@ Before candidate hour ranking is complete, the system must behave like a determi
 
 ## Allowed After Candidate Ranking
 
-AI can be added later to organize context, explain uncertainty, and draft prediction reports from an already-ranked deterministic result.
+AI may organize context, explain uncertainty, and draft prediction reports only from an immutable deterministic result. The public browser forecast remains local and deterministic.
+
+## Invariants
+
+- All question definitions come from `configs/question_bank.v1.json`.
+- All scoring weights come from `configs/scoring_weights.v1.json`.
+- Unknown birth time produces a symmetric full-day candidate set.
+- Context cannot change candidates, scores, ranking, or the selected chart.
+- Missing derived data produces explicit warnings rather than invented values.
+- No secret, real user case, or private identifying benchmark data may be committed.
