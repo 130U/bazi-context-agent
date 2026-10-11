@@ -1,22 +1,32 @@
-# BaZi Context Agent / 八字上下文研究原型
+# BaZi Context Agent
 
-**Compare uncertain birth-hour candidates and explore contextual reports through explicit, deterministic rules.**
+**A deterministic decision engine that turns uncertain birth times, dated life events, and personal context into an inspectable traditional BaZi interpretation.**
 
-一个将出生时间不确定性、传统八字规则、人生事件和用户上下文分层处理的研究原型。
+I designed the system around a concrete architectural problem: compare candidate birth hours reproducibly, then introduce personal context without letting it rewrite the selection. The result combines a configurable scoring engine, an immutable working-chart lock, a browser reporting experience, and a TypeScript research pipeline.
 
-[Public experience](https://www.theodoreoy.com/bazi-context-agent/) · [Architecture](docs/ARCHITECTURE.md) · [Evaluation](docs/EVALUATION.md) · [AI boundary](docs/AI_BOUNDARY.md)
+[Try the experience](https://www.theodoreoy.com/bazi-context-agent/) · [Architecture](docs/ARCHITECTURE.md) · [Evaluation design](docs/EVALUATION.md) · [Source and quality audit](docs/report-source.md)
 
-## Try the public experience
+## What I built
 
-The browser guides you through a configured 15–17 question birth-hour comparison, ranks candidate structures using dated life events, and lets you lock a working candidate before adding personal context. It then produces month-by-month branch-cycle interpretations with dated support and transition windows, alternative-candidate sensitivity, and a downloadable report.
+**A staged reasoning workflow.** Unknown birth times begin with **12 symmetric hour-branch candidates**. An adaptive **15–17 question** comparison combines configured symbolic priors and dated-event scoring, surfaces candidate evidence, and locks a working selection. Context questions then shape the report through a separate input layer.
 
-The public experience requires no login or API key and makes no model call. Both ranking and reporting are deterministic. Its monthly interpretation relates the selected hour branch to an approximate seasonal branch for each Gregorian month; it does not compute a complete four-pillar chart, luck cycle, or exact solar-term calendar.
+**An explicit contract between rules and context.** Questions and scoring weights come from two authoritative JSON configurations. Pure core modules handle candidates, branch relations, scoring, and interpretation; UI modules render their structured outputs. In the research APIs, `BaziDerivedProfile` represents derived structure and `ForecastInput` adds user-supplied facts with provenance. Tests verify that downstream context and optional model providers preserve the upstream ranking.
 
-A working candidate is a result of the configured rules, not an established true birth time. Deterministic output makes the software inspectable and repeatable; it does not validate BaZi prediction.
+**A complete public reporting experience.** The browser generates month-by-month support and transition windows, compares alternative-candidate sensitivity, and exports a readable report. Its interpretation uses deterministic seasonal branch rules mapped to Gregorian months. Public ranking and reporting run locally, with **no login, API key, or model call**; active answers remain in the tab's memory.
 
-## Quick start
+**An evaluation framework with four controlled input modes.** The offline harness separates chart-only, context-only, recorded-time chart plus context, and selected chart plus context. Holdout construction, temporal filtering, and leakage checks make each comparison inspectable. The [mode configuration](configs/evaluation_modes.stage7.json) and [evaluation tests](tests/stage7Evaluation.test.ts) expose the experiment design directly.
 
-Requires **Node.js 24+**. Runtime code has no third-party package dependency; development dependencies are locked for type checking.
+## Engineering evidence
+
+- **146 automated tests passed** in the Node.js 24 test run on October 11, 2026, covering deterministic scoring, context isolation, API contracts, report generation, session controls, and provider boundaries. Run `npm test` to reproduce the software checks.
+- The [recorded interface audit](docs/report-source.md) covers **9 viewport configurations, from 320 to 1920 pixels wide**, including navigation, validation focus, report generation, privacy-dialog behavior, and print fallbacks.
+- One canonical `site/` interface serves GitHub Pages, the local preview, and the API server. The release gate checks strict types, generated-config parity, the public module graph, unsafe rendering patterns, and the test suite.
+
+Inspect the [deterministic browser engine](site/core/rectification.js), [context input builder](src/forecastInputBuilder.ts), and [ranking invariant tests](tests/noAiBoundary.test.ts) to follow the implementation.
+
+## Run locally
+
+Requires **Node.js 24+**. Runtime code has no third-party package dependency.
 
 ```bash
 git clone https://github.com/130U/bazi-context-agent.git
@@ -26,49 +36,6 @@ npm run check
 npm run preview
 ```
 
-Open [http://127.0.0.1:4173](http://127.0.0.1:4173) for the public browser interface.
+Open [localhost:4173](http://127.0.0.1:4173). For the same interface with local research APIs, stop the preview and run `npm run ui`, then open [localhost:3000](http://127.0.0.1:3000). Windows PowerShell users can invoke `npm.cmd`.
 
-For the same interface with local research APIs, stop the preview server and run `npm run ui`, then open [http://127.0.0.1:3000](http://127.0.0.1:3000). In Windows PowerShell, use `npm.cmd` if execution policy blocks `npm`.
-
-## Design boundaries
-
-| Layer | Implemented behavior |
-|---|---|
-| Candidate comparison | Deterministic generation, configured scoring, dated-event comparison, and protection of the recorded-time default |
-| Context intake | User-provided facts enter downstream forecast input after the working chart is fixed; they do not change ranking |
-| Public reports | Browser rules generate branch-cycle windows and expose calendar approximations and candidate uncertainty |
-| Optional model integration | The local server has a mock-by-default prediction provider and an opt-in OpenAI adapter; neither can change upstream ranking or the selected chart |
-
-The TypeScript research pipeline represents chart structure as a `BaziDerivedProfile` and combines it with user-controlled context in `ForecastInput`, keeping deterministic chart calculations separate from supplied personal facts.
-
-See [`src/forecastInputBuilder.ts`](src/forecastInputBuilder.ts) for context isolation, [`site/core/forecast.js`](site/core/forecast.js) for the public interpretation, and [`tests/noAiBoundary.test.ts`](tests/noAiBoundary.test.ts) for the upstream AI boundary. Optional provider configuration is documented in [the example environment file](examples/stage4b.env.example).
-
-## Evaluation scope
-
-The offline harness compares four input modes:
-
-| Mode | Inputs |
-|---|---|
-| A | Derived chart structure |
-| B | User context |
-| C | Recorded-time default chart + context |
-| D | Selected chart + context |
-
-Holdout construction and leakage checks keep hidden target answers out of the inputs under evaluation. Tests exercise the mode boundaries, scoring, and benchmark API.
-
-The published [benchmark result fixture](fixtures/stage7_benchmark_result.mock.json) contains **two mock cases** and explicitly concludes `insufficient_data`. It demonstrates the reporting format, not measured predictive accuracy or an advantage for the full system. See [evaluation policy](docs/EVALUATION.md) and [evaluation tests](tests/stage7Evaluation.test.ts).
-
-## Privacy and status
-
-Public-session answers and reports remain in the current tab's memory. The interface does not save or resume them through browser storage, and it clears only this application's known legacy storage keys. Export is explicit and may contain personal information.
-
-The local research layer separately supports session storage, redaction, import/export, and user controls. If an optional model provider is enabled, its requests follow that provider's data flow; the public browser experience does not use that integration. See [privacy policy](docs/PRIVACY.md) and [session tests](tests/stage8Session.test.ts).
-
-This is a research prototype for structured traditional interpretation. Its engineering tests cover software behavior, input boundaries, and privacy controls; they do not establish the validity of BaZi or future-event predictions. Reports should not guide medical, legal, financial, or safety-critical decisions.
-
-## Further reading
-
-- [Architecture](docs/ARCHITECTURE.md): browser modules, local APIs, and extension points.
-- [AI boundary](docs/AI_BOUNDARY.md): permitted downstream use and protected upstream inputs.
-- [Quality audit](docs/report-source.md): recorded interface and security checks, with residual limitations.
-- [Research examples](examples/stage7_usage.md): offline evaluation usage.
+Optional downstream provider configuration is in [the environment example](examples/stage4b.env.example); [privacy controls](docs/PRIVACY.md) and [research examples](examples/stage7_usage.md) document the corresponding workflows.
