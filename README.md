@@ -1,32 +1,28 @@
 # BaZi Context Agent
 
-**A deterministic decision engine that turns uncertain birth times, dated life events, and personal context into an inspectable traditional BaZi interpretation.**
+**Explore traditional BaZi interpretations through birth-hour comparison and personal context.**
 
-I designed the system around a concrete architectural problem: compare candidate birth hours reproducibly, then introduce personal context without letting it rewrite the selection. The result combines a configurable scoring engine, an immutable working-chart lock, a browser reporting experience, and a TypeScript research pipeline.
+[Try it](https://www.theodoreoy.com/bazi-context-agent/) · [How it works](docs/ARCHITECTURE.md)
 
-[Try the experience](https://www.theodoreoy.com/bazi-context-agent/) · [Architecture](docs/ARCHITECTURE.md) · [Evaluation design](docs/EVALUATION.md) · [Source and quality audit](docs/report-source.md)
+I built this project around a simple idea: comparing possible birth hours and understanding someone's present circumstances are different tasks. The application handles them in sequence, so personal context can shape an interpretation without changing how the birth-hour candidates were ranked.
 
-## What I built
+## The experience
 
-**A staged reasoning workflow.** Unknown birth times begin with **12 symmetric hour-branch candidates**. An adaptive **15–17 question** comparison combines configured symbolic priors and dated-event scoring, surfaces candidate evidence, and locks a working selection. Context questions then shape the report through a separate input layer.
+Start with your recorded birth time or a range of possible times. The questionnaire compares hour-branch candidates using traditional symbolic rules and dated life events, then shows the reasons behind their ranking. You choose a working candidate before moving on to questions about your current situation.
 
-**An explicit contract between rules and context.** Questions and scoring weights come from two authoritative JSON configurations. Pure core modules handle candidates, branch relations, scoring, and interpretation; UI modules render their structured outputs. In the research APIs, `BaziDerivedProfile` represents derived structure and `ForecastInput` adds user-supplied facts with provenance. Tests verify that downstream context and optional model providers preserve the upstream ranking.
+The report brings those two inputs together. It offers monthly support and transition windows, shows how an alternative candidate would change the interpretation, and gives you a downloadable record. Seasonal branch rules mapped to Gregorian months provide the calendar for the public experience.
 
-**A complete public reporting experience.** The browser generates month-by-month support and transition windows, compares alternative-candidate sensitivity, and exports a readable report. Its interpretation uses deterministic seasonal branch rules mapped to Gregorian months. Public ranking and reporting run locally, with **no login, API key, or model call**; active answers remain in the tab's memory.
+Everything runs in the browser without an account or API key. Answers stay in the current tab, and you decide when to export them.
 
-**An evaluation framework with four controlled input modes.** The offline harness separates chart-only, context-only, recorded-time chart plus context, and selected chart plus context. Holdout construction, temporal filtering, and leakage checks make each comparison inspectable. The [mode configuration](configs/evaluation_modes.stage7.json) and [evaluation tests](tests/stage7Evaluation.test.ts) expose the experiment design directly.
+## The design
 
-## Engineering evidence
+The candidate comparison is deterministic: the same answers and configuration produce the same ranking. Questions and scoring weights live in editable configuration files, while personal context enters through a separate layer after selection.
 
-- **146 automated tests passed** in the Node.js 24 test run on October 11, 2026, covering deterministic scoring, context isolation, API contracts, report generation, session controls, and provider boundaries. Run `npm test` to reproduce the software checks.
-- The [recorded interface audit](docs/report-source.md) covers **9 viewport configurations, from 320 to 1920 pixels wide**, including navigation, validation focus, report generation, privacy-dialog behavior, and print fallbacks.
-- One canonical `site/` interface serves GitHub Pages, the local preview, and the API server. The release gate checks strict types, generated-config parity, the public module graph, unsafe rendering patterns, and the test suite.
-
-Inspect the [deterministic browser engine](site/core/rectification.js), [context input builder](src/forecastInputBuilder.ts), and [ranking invariant tests](tests/noAiBoundary.test.ts) to follow the implementation.
+The local TypeScript application extends that design with structured reports, optional model providers, and an evaluation harness that compares chart inputs and personal context separately. The [context input builder](src/forecastInputBuilder.ts) and [evaluation design](docs/EVALUATION.md) show how those pieces fit together.
 
 ## Run locally
 
-Requires **Node.js 24+**. Runtime code has no third-party package dependency.
+Requires Node.js 24+.
 
 ```bash
 git clone https://github.com/130U/bazi-context-agent.git
@@ -36,6 +32,6 @@ npm run check
 npm run preview
 ```
 
-Open [localhost:4173](http://127.0.0.1:4173). For the same interface with local research APIs, stop the preview and run `npm run ui`, then open [localhost:3000](http://127.0.0.1:3000). Windows PowerShell users can invoke `npm.cmd`.
+Open [localhost:4173](http://127.0.0.1:4173). To use the local research APIs, stop the preview and run `npm run ui`, then open [localhost:3000](http://127.0.0.1:3000). In Windows PowerShell, use `npm.cmd` if needed.
 
-Optional downstream provider configuration is in [the environment example](examples/stage4b.env.example); [privacy controls](docs/PRIVACY.md) and [research examples](examples/stage7_usage.md) document the corresponding workflows.
+[Architecture](docs/ARCHITECTURE.md) · [Provider setup](examples/stage4b.env.example) · [Privacy](docs/PRIVACY.md)
