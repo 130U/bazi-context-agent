@@ -32,7 +32,7 @@ The separation is the contribution. A derivative without an initial value is gen
 
 **Models arrive last.** The public ranking and report run entirely in the browser without calling a model. In the local research pipeline, optional providers join only after the lock.
 
-**The answers stay with the person.** No account, no API key, no backend. The session lives in the tab's memory until the person chooses to export it.
+**The answers stay with the person.** The public experience has no account, no API key, and no backend. The session lives in the tab's memory until the person chooses to export it.
 
 ![The ranked birth-hour comparison and the dated report, from a session with sample answers](.github/readme/product.jpg)
 
