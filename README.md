@@ -1,37 +1,58 @@
 # BaZi Context Agent
 
-**Explore traditional BaZi interpretations through birth-hour comparison and personal context.**
+**Which hour were you born, and what is happening in your life now? I built a system where the second answer can never change the first.**
 
-[Try it](https://www.theodoreoy.com/bazi-context-agent/) · [How it works](docs/ARCHITECTURE.md)
+**[Open the experience](https://www.theodoreoy.com/bazi-context-agent/)** · [中文](README.zh-CN.md)
 
-I built this project around a simple idea: comparing possible birth hours and understanding someone's present circumstances are different tasks. The application handles them in sequence, so personal context can shape an interpretation without changing how the birth-hour candidates were ranked.
+When an uncertain birth hour is settled by someone who already knows your story, the story can quietly choose the hour that fits it. I made that contamination structurally impossible. The comparison of birth hours runs as deterministic code and locks before the first question about your present life is asked.
 
-## The experience
+![Two stages divided by a working-chart lock. The deterministic stage narrows the birth hour without any model or context. Context enters only after the lock and has no path back to candidates, scores or the selection](.github/readme/one-way-wall.svg)
 
-Start with your recorded birth time or a range of possible times. The questionnaire compares hour-branch candidates using traditional symbolic rules and dated life events, then shows the reasons behind their ranking. You choose a working candidate before moving on to questions about your current situation.
+## The Idea
 
-The report brings those two inputs together. It offers monthly support and transition windows, shows how an alternative candidate would change the interpretation, and gives you a downloadable record. Seasonal branch rules mapped to Gregorian months provide the calendar for the public experience.
+A chart describes how a life tends to move. It cannot say where that life stands today. That is the structure of a differential equation, so I built the system as one.
 
-Everything runs in the browser without an account or API key. Answers stay in the current tab, and you decide when to export them.
+| | In mathematics | In this system |
+|---|---|---|
+| **Derivative** | How the state changes | BaZi variables and their derived structure |
+| **Initial value** | Where the state begins | Real-world context the person controls |
+| **Solution** | The trajectory from that start | A forecast at a given date and horizon |
 
-## The design
+The separation is the contribution. A derivative without an initial value is generic, and an initial value allowed to edit the derivative would be fitting its own answer.
 
-The candidate comparison is deterministic: the same answers and configuration produce the same ranking. Questions and scoring weights live in editable configuration files, while personal context enters through a separate layer after selection.
+## Why It Is Built This Way
 
-The local TypeScript application extends that design with structured reports, optional model providers, and an evaluation harness that compares chart inputs and personal context separately. The [context input builder](src/forecastInputBuilder.ts) and [evaluation design](docs/EVALUATION.md) show how those pieces fit together.
+**Ranking is code, never a model.** The same answers and configuration always produce the same ranking. Every question lives in one configuration file and every weight in another, so the whole method can be read and challenged line by line. Dated life events carry 55% of the score, symbolic priors 25%, and the birth record 20%.
 
-## Run locally
+**An unknown time stays unknown.** A missing birth time opens all twelve hour branches symmetrically, with no arbitrary default.
 
-Requires Node.js 24+.
+**Confidence is earned and shown.** The adaptive sequence stops between 15 and 17 questions, once the leading margin and event coverage clear a configured gate. A candidate that falls short locks as visibly provisional, and even a stable lock is presented as a working structure for the session, never as objective truth.
 
-```bash
-git clone https://github.com/130U/bazi-context-agent.git
-cd bazi-context-agent
-npm ci --ignore-scripts
-npm run check
-npm run preview
-```
+**Context has no way back.** After the lock, context shapes interpretation only. Tests enforce this at the engine, the server, and the source level.
 
-Open [localhost:4173](http://127.0.0.1:4173). To use the local research APIs, stop the preview and run `npm run ui`, then open [localhost:3000](http://127.0.0.1:3000). In Windows PowerShell, use `npm.cmd` if needed.
+**Models arrive last.** The public ranking and report run entirely in the browser without calling a model. In the local research pipeline, optional providers join only after the lock.
 
-[Architecture](docs/ARCHITECTURE.md) · [Provider setup](examples/stage4b.env.example) · [Privacy](docs/PRIVACY.md)
+**The answers stay with the person.** The public experience has no account, no API key, and no backend. The session lives in the tab's memory until the person chooses to export it.
+
+![The ranked birth-hour comparison and the dated report, from a session with sample answers](.github/readme/product.jpg)
+
+*The ranking and the report, from a session with sample answers. Monthly windows are derived deterministically from the locked hour branch and seasonal branches mapped to Gregorian months.*
+
+## How It Is Measured
+
+I built an offline harness that isolates what each input contributes.
+
+| Mode | Chart | Context | Against D, it shows |
+|---|---|---|---|
+| **A** | Selected | None | What context adds |
+| **B** | None | Supplied | What the chart adds |
+| **C** | Recorded time | Supplied | What rectification adds |
+| **D** | Selected | Supplied | The full system |
+
+Holdout construction and temporal filtering keep known facts out of each prediction, and a leakage guard penalizes any mode whose input already contains its target, so recall cannot pass for forecasting. Any claim about accuracy has to be earned through this harness.
+
+## The Engineering
+
+**146 automated tests** cover deterministic scoring, context isolation, API contracts, report generation, session controls, and provider boundaries. Strict types, generated-config parity, and static security checks form the release gate. One interface serves GitHub Pages, the local preview, and the API server, with no third-party runtime dependency, and its welcome and report states pass at **nine viewport sizes from 320 to 1920 pixels wide**.
+
+[Architecture](docs/ARCHITECTURE.md) · [Evaluation design](docs/EVALUATION.md) · [Privacy](docs/PRIVACY.md) · [Deterministic engine](site/core/rectification.js) · [Ranking invariants](tests/noAiBoundary.test.ts)

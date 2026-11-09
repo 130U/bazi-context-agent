@@ -1,24 +1,17 @@
 # BaZi Context Agent
 
-A deterministic-first BaZi rectification and context-aware forecasting research prototype.
+**Which hour were you born, and what is happening in your life now? I built a system where the second answer can never change the first.**
 
-Interactive experience: https://www.theodoreoy.com/bazi-context-agent/
-
-## Core Formula
+[Open the experience](https://www.theodoreoy.com/bazi-context-agent/) · [Full story](README.md) · [中文](README.zh-CN.md)
 
 ```text
 Derivative function = BaZi variables + derived BaZi structure
-Initial value = user-controlled real-world context
-Forecast = derivative function + initial value + current date + forecast horizon
+Initial value       = user-controlled real-world context
+Forecast            = derivative function + initial value + current date + forecast horizon
 ```
 
-## Differentiators
-
-- Chart derivation, candidate generation, and rectification are deterministic.
-- AI is used only after chart selection for forecasting, explanation, and reports.
-- The context box can inform forecasts, but cannot leak back into ranking or rectification.
-- A/B/C/D evaluation modes help separate recall of known facts from forecasting.
-- The public Pages app is memory-only; local preview and API servers reuse the same canonical interface instead of maintaining a second UI.
-- Strict TypeScript checks, generated-config parity, static-site validation, and 140+ automated tests form the release gate.
-
-See the main README for the full bilingual version.
+- Chart derivation, candidate generation, and ranking are deterministic code.
+- Context enters after the working-chart lock and has no path back to the ranking.
+- Models join only after the lock, and the public experience calls none.
+- Four evaluation modes and a leakage guard separate recall of known facts from forecasting.
+- 146 automated tests, strict types, generated-config parity, and static security checks form the release gate.
