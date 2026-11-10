@@ -272,7 +272,7 @@ test("engine keeps hostile text as data and has no DOM, HTML, network, or AI pro
   }
 });
 
-test("public UI removes the ornamental memory cards and renders forecast windows instead of a planning checklist", () => {
+test("public UI presents forecast windows and configured report sections", () => {
   const html = readFileSync(indexPath, "utf8");
   const styles = readFileSync(stylesPath, "utf8");
 

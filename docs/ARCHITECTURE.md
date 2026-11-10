@@ -64,12 +64,12 @@ Hard invariants:
 | `site/core/forecast.js` | Dated local forecast from an immutable lock and context | Candidate mutation, DOM, network |
 | `site/engine.js` | Stable exports and compatibility aliases | Product logic |
 | `site/app.js` | In-memory session state, navigation and event coordination | Scoring rules |
-| `site/ui/*` | Config-driven forms, safe DOM construction, labels, legacy-key removal and forecast presentation | Core state mutation |
+| `site/ui/*` | Config-driven forms, safe DOM construction, labels, scoped storage cleanup and forecast presentation | Core state mutation |
 
 ## Runtime safety and privacy / 运行安全与隐私
 
 - The public app keeps the active session in JavaScript memory. It does not write answers to `localStorage`, `sessionStorage`, cookies, or a backend.
-- Entry, exit and page-hide lifecycle hooks remove only the project's known legacy storage keys; they never call broad storage `clear()` methods.
+- Entry, exit and page-hide lifecycle hooks remove only the project's explicitly named storage keys; they never call broad storage `clear()` methods.
 - User values are rendered with `textContent` and element construction. HTML injection sinks and inline scripts/events are rejected by `scripts/validatePublicSite.ts`.
 - `index.html` sets a restrictive document-level Content Security Policy and referrer policy. Because the site is static, the validator treats this as one defense layer rather than a substitute for safe DOM code.
 - Runtime config is same-origin, size-limited, JSON-parsed and schema-checked before the UI is enabled.
@@ -90,7 +90,7 @@ npm run check           # strict types + generated parity + static security chec
 - Add a new deterministic rectification component in `site/core/rectification.js`, with every numeric weight first added to the authority scoring config.
 - Add a forecast provider only after the working-chart lock. Any networked or AI provider belongs behind a server-side boundary, never in the public browser bundle with a secret.
 - Add UI views under `site/ui/`; pass structured data into renderers and keep scoring in core modules.
-- Keep the `site/engine.js` facade backward compatible or version it explicitly before removing an export.
+- Keep the `site/engine.js` export contract consistent with its callers and tests.
 
 The current public forecast remains a Gregorian-month-to-seasonal-branch approximation. It is not a full four-pillars, luck-cycle, or solar-term calendar engine.
 
