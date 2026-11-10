@@ -72,7 +72,7 @@ forbidPattern(coreSource, /\bfetch\s*\(|XMLHttpRequest|WebSocket/, "deterministi
 forbidPattern(coreSource, /openai|anthropic|api[_-]?key/i, "deterministic core references an AI provider or secret");
 
 const privacySource = source(join(siteRoot, "ui", "privacy.js"));
-forbidPattern(privacySource, /(?:localStorage|sessionStorage)\.(?:setItem|getItem|clear)\s*\(/, "privacy module may only remove known legacy keys");
+forbidPattern(privacySource, /(?:localStorage|sessionStorage)\.(?:setItem|getItem|clear)\s*\(/, "privacy module may only remove explicitly named project keys");
 requirePattern(privacySource, /localStorage\.removeItem\(key\)/, "privacy module must clear known localStorage keys");
 requirePattern(privacySource, /sessionStorage\.removeItem\(key\)/, "privacy module must clear known sessionStorage keys");
 

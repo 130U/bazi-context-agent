@@ -44,7 +44,7 @@ configs/scoring_weights.v1.json
 
 ## Preferred Stack
 
-If the repo is empty, create a TypeScript project. Round 01 uses a minimal Node.js + TypeScript package with no AI provider integration.
+Use Node.js 24 and strict TypeScript. The static browser experience uses native JavaScript modules; optional model providers belong to the local research pipeline after the ranking lock.
 
 ## Implementation Style
 

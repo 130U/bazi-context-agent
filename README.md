@@ -55,4 +55,4 @@ Holdout construction and temporal filtering keep known facts out of each predict
 
 **146 automated tests** cover deterministic scoring, context isolation, API contracts, report generation, session controls, and provider boundaries. Strict types, generated-config parity, and static security checks form the release gate. One interface serves GitHub Pages, the local preview, and the API server, with no third-party runtime dependency, and its welcome and report states pass at **nine viewport sizes from 320 to 1920 pixels wide**.
 
-[Architecture](docs/ARCHITECTURE.md) · [Evaluation design](docs/EVALUATION.md) · [Privacy](docs/PRIVACY.md) · [Deterministic engine](site/core/rectification.js) · [Ranking invariants](tests/noAiBoundary.test.ts)
+[Architecture](docs/ARCHITECTURE.md) · [Validation](docs/VALIDATION.md) · [Evaluation design](docs/EVALUATION.md) · [Privacy](docs/PRIVACY.md) · [Deterministic engine](site/core/rectification.js) · [Ranking invariants](tests/noAiBoundary.test.ts)
