@@ -2,11 +2,11 @@
 
 **你生在哪个时辰？你现在的生活正在发生什么？我构建的这套系统，让第二个答案永远改变不了第一个。**
 
-**[打开体验](https://www.theodoreoy.com/bazi-context-agent/)** · [English](README.md)
+**[打开体验](https://www.theodoreoy.com/bazi-context-agent/)** · [English](../README.md)
 
 当一个不确定的出生时辰，由已经知道你人生故事的人来判定时，故事就可能悄悄选中与它相符的时辰。我从结构上杜绝了这种污染：时辰比较全部由确定性代码完成，并在第一个关于你当下生活的问题出现之前锁定。
 
-![时辰比较与现实情境被工作盘锁定隔开：确定性阶段不使用模型和情境信息，情境只在锁定后进入，且无法回流影响候选、分数或选择](.github/readme/one-way-wall.svg)
+![时辰比较与现实情境被工作盘锁定隔开：确定性阶段不使用模型和情境信息，情境只在锁定后进入，且无法回流影响候选、分数或选择](../.github/readme/one-way-wall.svg)
 
 ## 核心思想
 
@@ -34,7 +34,7 @@
 
 **答案始终属于本人。** 公开版无需账号，无需 API key，也没有后端。会话只存在于标签页内存中，由本人决定何时导出。
 
-![候选时辰排序与带日期的推演报告，使用示例答案生成](.github/readme/product.jpg)
+![候选时辰排序与带日期的推演报告，使用示例答案生成](../.github/readme/product.jpg)
 
 *排序与报告，使用示例答案生成。逐月窗口由锁定时支与映射到公历月份的季节支确定性推导。*
 
@@ -55,4 +55,4 @@
 
 **146 个自动化测试**覆盖确定性评分、情境隔离、API 契约、报告生成、会话控制与模型边界。严格类型检查、生成配置一致性和静态安全检查共同构成发布门禁。GitHub Pages、本地预览和 API 服务共用一套界面，运行时没有第三方依赖，欢迎页与报告页在 **320 到 1920 像素宽的九种视口**下全部通过检查。
 
-[架构](docs/ARCHITECTURE.md) · [评测设计](docs/EVALUATION.md) · [隐私](docs/PRIVACY.md) · [确定性引擎](site/core/rectification.js) · [排序不变性测试](tests/noAiBoundary.test.ts)
+[架构](ARCHITECTURE.md) · [评测设计](EVALUATION.md) · [隐私](PRIVACY.md) · [确定性引擎](../site/core/rectification.js) · [排序不变性测试](../tests/noAiBoundary.test.ts)

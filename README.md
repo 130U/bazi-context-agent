@@ -2,7 +2,7 @@
 
 **Which hour were you born, and what is happening in your life now? I built a system where the second answer can never change the first.**
 
-**[Open the experience](https://www.theodoreoy.com/bazi-context-agent/)** · [中文](README.zh-CN.md)
+**[Open the experience](https://www.theodoreoy.com/bazi-context-agent/)** · [中文](docs/README.zh-CN.md)
 
 When an uncertain birth hour is settled by someone who already knows your story, the story can quietly choose the hour that fits it. I made that contamination structurally impossible. The comparison of birth hours runs as deterministic code and locks before the first question about your present life is asked.
 

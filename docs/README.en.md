@@ -2,7 +2,7 @@
 
 **Which hour were you born, and what is happening in your life now? I built a system where the second answer can never change the first.**
 
-[Open the experience](https://www.theodoreoy.com/bazi-context-agent/) · [Full story](README.md) · [中文](README.zh-CN.md)
+[Open the experience](https://www.theodoreoy.com/bazi-context-agent/) · [Full story](../README.md) · [中文](README.zh-CN.md)
 
 ```text
 Derivative function = BaZi variables + derived BaZi structure
