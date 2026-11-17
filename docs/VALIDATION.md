@@ -25,4 +25,4 @@ The interaction sequence covered generated intake fields, invalid-field focus, a
 
 ## Deployment
 
-The `Deploy GitHub Pages demo` workflow publishes `site/` from `master`. It can also be dispatched manually after documentation-only changes. The public entry is [BaZi Context Agent](https://www.theodoreoy.com/bazi-context-agent/).
+The `Deploy GitHub Pages demo` workflow publishes `site/` from `master`. It can also be dispatched manually after documentation-only changes. The public entry is [BaZi Context Agent](https://www.theodoreoy.com/ENGINEERING-BaZi-Context-Agent/).

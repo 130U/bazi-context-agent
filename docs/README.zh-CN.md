@@ -2,7 +2,7 @@
 
 **你生在哪个时辰？你现在的生活正在发生什么？我构建的这套系统，让第二个答案永远改变不了第一个。**
 
-**[打开体验](https://www.theodoreoy.com/bazi-context-agent/)** · [English](../README.md)
+**[打开体验](https://www.theodoreoy.com/ENGINEERING-BaZi-Context-Agent/)** · [English](../README.md)
 
 当一个不确定的出生时辰，由已经知道你人生故事的人来判定时，故事就可能悄悄选中与它相符的时辰。我从结构上杜绝了这种污染：时辰比较全部由确定性代码完成，并在第一个关于你当下生活的问题出现之前锁定。
 
