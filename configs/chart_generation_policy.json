@@ -1,0 +1,48 @@
+{
+  "version": "chart-generation.v1",
+  "default_candidate_limit": 6,
+  "full_day_candidate_limit": 12,
+  "unknown_date_day_span": 1,
+  "hour_branches": [
+    "子",
+    "丑",
+    "寅",
+    "卯",
+    "辰",
+    "巳",
+    "午",
+    "未",
+    "申",
+    "酉",
+    "戌",
+    "亥"
+  ],
+  "part_of_day_windows": {
+    "morning": [
+      "卯",
+      "辰",
+      "巳"
+    ],
+    "afternoon": [
+      "午",
+      "未",
+      "申"
+    ],
+    "evening": [
+      "酉",
+      "戌",
+      "亥"
+    ],
+    "night": [
+      "子",
+      "丑",
+      "亥"
+    ],
+    "unknown": []
+  },
+  "metadata": {
+    "ai_allowed": false,
+    "context_box_allowed": false,
+    "ranking_allowed": false
+  }
+}

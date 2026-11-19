@@ -1,0 +1,173 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PredictionResult",
+  "type": "object",
+  "required": [
+    "domain",
+    "conclusion",
+    "known_facts",
+    "chart_signals",
+    "context_adjustments",
+    "prediction",
+    "confidence",
+    "uncertainty",
+    "next_questions",
+    "policy"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "domain": {
+      "type": "string",
+      "enum": [
+        "education",
+        "career",
+        "wealth",
+        "relationship",
+        "health",
+        "migration",
+        "personality",
+        "family",
+        "general"
+      ]
+    },
+    "conclusion": {
+      "type": "string"
+    },
+    "known_facts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "fact",
+          "source"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "fact": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          }
+        }
+      }
+    },
+    "chart_signals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "signal",
+          "source_candidate_id",
+          "confidence"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "signal": {
+            "type": "string"
+          },
+          "source_candidate_id": {
+            "type": "string"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          }
+        }
+      }
+    },
+    "context_adjustments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "adjustment",
+          "basis"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "adjustment": {
+            "type": "string"
+          },
+          "basis": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "prediction": {
+      "type": "object",
+      "required": [
+        "answer",
+        "confidence"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "answer": {
+          "type": "string"
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "timeframe": {
+          "type": "string"
+        }
+      }
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "uncertainty": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "next_questions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "policy": {
+      "type": "object",
+      "required": [
+        "ai_used_for_ranking",
+        "ranking_modified_by_ai",
+        "provider"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "ai_used_for_ranking": {
+          "const": false
+        },
+        "ranking_modified_by_ai": {
+          "const": false
+        },
+        "provider": {
+          "type": "string",
+          "enum": [
+            "mock",
+            "openai"
+          ]
+        },
+        "schema_version": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

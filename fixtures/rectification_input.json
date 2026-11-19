@@ -1,0 +1,341 @@
+{
+  "default_chart": {
+    "chart_id": "default_chart_001",
+    "chart_role": "default",
+    "source": "recorded_birth_time",
+    "recorded_time_prior_score": 0.95,
+    "birth_input": {
+      "calendar_type": "solar",
+      "birth_date": "1998-05-10",
+      "birth_time": "22:30",
+      "timezone": "Asia/Shanghai",
+      "certainty": "within_1_hour",
+      "boundary_flags": [
+        "near_hour_boundary"
+      ],
+      "assumptions": [
+        "recorded time used as default"
+      ]
+    },
+    "fixed_pillars": {
+      "year": {
+        "stem": "甲",
+        "branch": "子"
+      },
+      "month": {
+        "stem": "丙",
+        "branch": "寅"
+      },
+      "day": {
+        "stem": "戊",
+        "branch": "辰"
+      },
+      "hour": {
+        "stem": "壬",
+        "branch": "戌"
+      }
+    },
+    "derived_profile": {
+      "profile_id": "profile_default_001",
+      "source_chart_id": "default_chart_001",
+      "source_libraries": [
+        "static_test_adapter"
+      ],
+      "calculation_mode": "recorded_time",
+      "pillars": {
+        "year": {
+          "stem": "甲",
+          "branch": "子"
+        },
+        "month": {
+          "stem": "丙",
+          "branch": "寅"
+        },
+        "day": {
+          "stem": "戊",
+          "branch": "辰"
+        },
+        "hour": {
+          "stem": "壬",
+          "branch": "戌"
+        }
+      },
+      "day_master": "戊",
+      "five_elements": {
+        "wood": 2,
+        "fire": 1,
+        "earth": 2,
+        "metal": 0,
+        "water": 2
+      },
+      "ten_gods": [
+        {
+          "pillar": "year",
+          "god": "wealth"
+        }
+      ],
+      "hidden_stems": [],
+      "nayin": [],
+      "stars": [],
+      "shensha": [],
+      "relations": {
+        "clashes": [],
+        "combinations": [],
+        "punishments": [],
+        "harms": []
+      },
+      "luck_cycles": [
+        {
+          "start_year": 2016,
+          "end_year": 2025,
+          "signals": [
+            "education",
+            "migration",
+            "pressure"
+          ]
+        }
+      ],
+      "annual_fortunes": [
+        {
+          "year": 2018,
+          "domains": [
+            "education",
+            "migration"
+          ],
+          "intensity": 0.8,
+          "signals": [
+            "overseas_study",
+            "movement"
+          ]
+        },
+        {
+          "year": 2021,
+          "domains": [
+            "career",
+            "change"
+          ],
+          "intensity": 0.6,
+          "signals": [
+            "job_change"
+          ]
+        },
+        {
+          "year": 2024,
+          "domains": [
+            "family",
+            "pressure"
+          ],
+          "intensity": 0.7,
+          "signals": [
+            "family_change"
+          ]
+        }
+      ],
+      "assumptions": [
+        "test fixture"
+      ],
+      "warnings": [],
+      "raw": null
+    },
+    "boundary_flags": [
+      "near_hour_boundary"
+    ],
+    "assumptions": [
+      "DefaultChart from recorded birth time"
+    ],
+    "warnings": []
+  },
+  "candidates": [
+    {
+      "candidate_id": "candidate_chart_002",
+      "chart_role": "candidate",
+      "source": "adjacent_hour",
+      "birth_input": {
+        "calendar_type": "solar",
+        "birth_date": "1998-05-10",
+        "birth_time": "23:30",
+        "timezone": "Asia/Shanghai",
+        "certainty": "within_1_hour",
+        "boundary_flags": [
+          "near_hour_boundary",
+          "near_zi_hour"
+        ],
+        "assumptions": [
+          "adjacent hour expansion"
+        ]
+      },
+      "fixed_pillars": {
+        "year": {
+          "stem": "甲",
+          "branch": "子"
+        },
+        "month": {
+          "stem": "丙",
+          "branch": "寅"
+        },
+        "day": {
+          "stem": "戊",
+          "branch": "辰"
+        },
+        "hour": {
+          "stem": "癸",
+          "branch": "亥"
+        }
+      },
+      "derived_profile": {
+        "profile_id": "profile_candidate_002",
+        "source_chart_id": "candidate_chart_002",
+        "source_libraries": [
+          "static_test_adapter"
+        ],
+        "calculation_mode": "candidate_time",
+        "pillars": {
+          "year": {
+            "stem": "甲",
+            "branch": "子"
+          },
+          "month": {
+            "stem": "丙",
+            "branch": "寅"
+          },
+          "day": {
+            "stem": "戊",
+            "branch": "辰"
+          },
+          "hour": {
+            "stem": "壬",
+            "branch": "戌"
+          }
+        },
+        "day_master": "戊",
+        "five_elements": {
+          "wood": 2,
+          "fire": 1,
+          "earth": 2,
+          "metal": 0,
+          "water": 2
+        },
+        "ten_gods": [
+          {
+            "pillar": "year",
+            "god": "wealth"
+          }
+        ],
+        "hidden_stems": [],
+        "nayin": [],
+        "stars": [],
+        "shensha": [],
+        "relations": {
+          "clashes": [],
+          "combinations": [],
+          "punishments": [],
+          "harms": []
+        },
+        "luck_cycles": [
+          {
+            "start_year": 2016,
+            "end_year": 2025,
+            "signals": [
+              "education",
+              "migration",
+              "pressure"
+            ]
+          }
+        ],
+        "annual_fortunes": [
+          {
+            "year": 2018,
+            "domains": [
+              "relationship"
+            ],
+            "intensity": 0.3,
+            "signals": [
+              "minor_social"
+            ]
+          },
+          {
+            "year": 2021,
+            "domains": [
+              "career",
+              "migration"
+            ],
+            "intensity": 0.9,
+            "signals": [
+              "major_change",
+              "movement"
+            ]
+          },
+          {
+            "year": 2024,
+            "domains": [
+              "family",
+              "health",
+              "pressure"
+            ],
+            "intensity": 0.9,
+            "signals": [
+              "family_change",
+              "stress"
+            ]
+          }
+        ],
+        "assumptions": [
+          "test fixture"
+        ],
+        "warnings": [],
+        "raw": null
+      },
+      "recorded_time_prior_score": 0.7,
+      "symbol_prior_score": 0.55,
+      "generation_reasons": [
+        "adjacent hour due to boundary uncertainty"
+      ],
+      "boundary_flags": [
+        "near_hour_boundary",
+        "near_zi_hour"
+      ],
+      "assumptions": [
+        "Candidate from adjacent hour"
+      ],
+      "warnings": []
+    }
+  ],
+  "life_events": [
+    {
+      "event_id": "event_2018_education",
+      "year": 2018,
+      "event_type": "education",
+      "description": "出国读书",
+      "importance": "high"
+    },
+    {
+      "event_id": "event_2021_career",
+      "year": 2021,
+      "event_type": "career",
+      "description": "职业转向",
+      "importance": "medium"
+    },
+    {
+      "event_id": "event_2024_family",
+      "year": 2024,
+      "event_type": "family",
+      "description": "家庭重大变化",
+      "importance": "high"
+    }
+  ],
+  "symbol_prior": {
+    "G1_zi_wu_mao_you": 0.4,
+    "G2_yin_shen_si_hai": 0.4,
+    "G3_chen_xu_chou_wei": 0.2
+  },
+  "context_box": [
+    {
+      "field": "parental_education",
+      "value": "highly_educated"
+    }
+  ],
+  "options": {
+    "include_evidence_table": true,
+    "include_alternatives": true
+  }
+}

@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-src 'none'; worker-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <meta name="color-scheme" content="light" />
+  <meta name="theme-color" content="#f7f7f5" />
+  <meta name="description" content="A private, evidence-led BaZi birth-hour rectification and context-aware forecast app." />
+  <meta property="og:title" content="BaZi Context Agent" />
+  <meta property="og:description" content="Rectify the remembered birth hour before forecasting from the selected structure and real-world context." />
+  <meta property="og:type" content="website" />
+  <title>BaZi Context Agent · 先校时，再推演</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='29' fill='%23191a17'/%3E%3Ctext x='32' y='43' text-anchor='middle' font-size='32' fill='white'%3E%E5%85%AB%3C/text%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <a class="skip-link" href="#main-content">跳到主要内容</a>
+
+  <header class="topbar">
+    <a class="brand" href="#welcome" data-action="home" aria-label="BaZi Context Agent 首页">
+      <span class="brand-glyph" aria-hidden="true">八</span>
+      <span class="brand-name">BaZi Context Agent</span>
+    </a>
+
+    <nav class="phase-nav" aria-label="体验阶段">
+      <button class="phase-link is-active" type="button" data-phase-link="stage1" aria-current="step">
+        <span>01</span>
+        <strong>校准出生时辰</strong>
+      </button>
+      <span class="phase-line" aria-hidden="true"></span>
+      <button class="phase-link" type="button" data-phase-link="stage2" disabled>
+        <span>02</span>
+        <strong>推演未来情景</strong>
+      </button>
+    </nav>
+
+    <div class="topbar-actions">
+      <button class="quiet-button privacy-button" type="button" data-action="open-privacy">
+        仅在当前标签页
+      </button>
+      <button class="exit-button" type="button" data-action="exit-session">
+        退出并清除
+      </button>
+    </div>
+  </header>
+
+  <main id="main-content">
+    <section class="view welcome-view is-active" id="welcome" data-view="welcome" aria-labelledby="welcome-title">
+      <div class="welcome-hero">
+        <h1 id="welcome-title">预测未来之前，先让出生时辰值得相信。</h1>
+        <p class="welcome-copy">
+          记忆中的时间只是一个起点。系统会用配置化问题、重大年份回测和可解释评分，
+          比较候选时辰；锁定本次会话的工作结构后，现实处境才进入未来情景。
+        </p>
+        <div class="welcome-actions">
+          <button class="primary-button" type="button" data-action="begin" disabled aria-busy="true">开始私密校时</button>
+        </div>
+        <p class="trust-note">
+          无需登录，不写入浏览器存储，退出即清除。校时排序不使用 AI。
+        </p>
+      </div>
+
+      <aside class="welcome-method" aria-label="两阶段方法">
+        <ol>
+          <li><span>01</span><div><strong>先校时</strong><p>记录时间是起点；有日期的人生事件承担主要回测权重。</p></div></li>
+          <li><span>02</span><div><strong>再推演</strong><p>锁定工作时辰后，按月给出未来的支持窗口与调整窗口。</p></div></li>
+        </ol>
+        <p class="ephemeral-note">信息只存在于当前标签页的内存中。退出、关闭或刷新后不会恢复。</p>
+      </aside>
+    </section>
+
+    <section class="view intake-view" data-view="intake" aria-labelledby="intake-title" hidden>
+      <div class="view-shell intake-shell">
+        <button class="back-button" type="button" data-action="back-welcome">← 返回</button>
+        <div class="intake-heading">
+          <h1 id="intake-title">先告诉我，你记得的出生信息。</h1>
+          <p>不确定是有效答案。系统会扩大候选范围，而不是替你猜一个时间。</p>
+        </div>
+
+        <form class="intake-form" id="intake-form" autocomplete="off" novalidate aria-describedby="intake-error">
+          <div class="intake-fields" data-intake-fields></div>
+          <div class="form-error" id="intake-error" role="alert"></div>
+          <button class="primary-button wide-button" type="submit">建立候选时辰</button>
+        </form>
+      </div>
+    </section>
+
+    <section class="view question-view" data-view="questions" aria-labelledby="question-title" hidden>
+      <div class="question-layout">
+        <div class="question-main">
+          <div class="question-progress">
+            <div>
+              <span id="question-counter">证据问题 1 / 17</span>
+              <strong id="question-stage-label">建立弱先验</strong>
+            </div>
+            <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="17" aria-valuenow="0" aria-label="校时问题进度">
+              <span id="question-progress-bar"></span>
+            </div>
+          </div>
+
+          <div class="reasoning-status" aria-live="polite">
+            <span class="thinking-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+            <p id="reasoning-copy">候选时辰已建立。下一题将补充区分度最高的证据。</p>
+          </div>
+
+          <article class="question-card" id="question-card">
+            <p class="question-purpose" id="question-purpose">为什么问这个</p>
+            <h1 id="question-title">正在载入问题…</h1>
+            <p class="question-help" id="question-help"></p>
+            <form id="question-form" class="answer-form" autocomplete="off"></form>
+          </article>
+
+          <div class="question-actions">
+            <button class="back-button" type="button" data-action="previous-question">← 上一题</button>
+            <button class="text-button" type="button" data-action="skip-question">暂不回答</button>
+            <button class="primary-button" type="button" data-action="submit-answer">继续</button>
+          </div>
+        </div>
+
+        <aside class="evidence-desk" aria-labelledby="candidate-heading">
+          <div class="desk-header">
+            <div>
+              <p class="section-index">实时证据</p>
+              <h2 id="candidate-heading">候选时辰正在收敛</h2>
+            </div>
+            <span class="engine-badge">确定性引擎</span>
+          </div>
+
+          <div class="candidate-summary">
+            <div><span>候选数</span><strong id="candidate-count">12</strong></div>
+            <div><span>有效事件</span><strong id="event-count">0</strong></div>
+            <div><span>证据覆盖</span><strong id="evidence-coverage">0%</strong></div>
+          </div>
+
+          <div class="candidate-list" id="candidate-list" aria-live="polite"></div>
+
+          <div class="evidence-note" id="evidence-note">
+            <span aria-hidden="true">i</span>
+            <p>传统外观与习惯只构成弱先验；有年份的真实事件在配置权重中占比最高。</p>
+          </div>
+
+          <button class="desk-toggle" type="button" data-action="toggle-evidence" aria-expanded="false">
+            查看本题带来的证据变化 <span>＋</span>
+          </button>
+          <div class="evidence-delta" id="evidence-delta" hidden></div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="view review-view" data-view="review" aria-labelledby="review-title" hidden>
+      <div class="view-shell review-shell">
+        <div class="review-heading">
+          <div>
+            <h1 id="review-title">本次会话的时辰结构已经形成。</h1>
+            <p id="review-intro">这不是宣称客观真值，而是由当前答案、配置权重和事件回测生成的可复现工作结构。</p>
+          </div>
+          <span class="stability-badge" id="stability-badge">评估中</span>
+        </div>
+
+        <div class="selected-structure">
+          <div class="selected-orbit" aria-hidden="true">
+            <span id="selected-branch-glyph">待生成</span>
+          </div>
+          <div class="selected-copy">
+            <p>本次采用的工作结构</p>
+            <h2 id="selected-branch-name">尚未选择</h2>
+            <p id="selected-window"></p>
+            <div class="selected-metrics">
+              <div><span>相对支持度</span><strong id="selected-confidence">待生成</strong></div>
+              <div><span>领先差</span><strong id="selected-gap">待生成</strong></div>
+              <div><span>回答问题</span><strong id="selected-answers">待生成</strong></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="review-grid">
+          <section class="review-panel">
+            <p class="section-index">候选比较</p>
+            <h2>候选比较</h2>
+            <div id="review-candidates" class="review-candidates"></div>
+          </section>
+          <section class="review-panel">
+            <p class="section-index">稳定性边界</p>
+            <h2>为什么停在这里</h2>
+            <ul id="stability-reasons" class="reason-list"></ul>
+          </section>
+        </div>
+
+        <div class="review-actions">
+          <button class="text-button" type="button" data-action="review-answers">检查并修改答案</button>
+          <button class="primary-button" type="button" data-action="lock-chart">锁定为本次预测结构</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="view context-view" data-view="context" aria-labelledby="context-title" hidden>
+      <div class="context-layout">
+        <div class="context-intro">
+          <h1 id="context-title">八字结构是导函数，现实处境是初始值。</h1>
+          <p>
+            这些答案不会回流修改校时排名。它们只让未来情景更贴近你现在拥有的资源、
+            约束和真正想去的方向。
+          </p>
+          <div class="formula-card" aria-label="预测概念公式">
+            <span>Forecast</span>
+            <strong>f</strong>
+            <span>(稳定结构，现实初值，预测时点)</span>
+          </div>
+        </div>
+
+        <div class="context-question-panel">
+          <div class="context-progress">
+            <span id="context-counter">现实问题 1 / 10</span>
+            <button class="text-button" type="button" data-action="skip-context">跳过这一题</button>
+          </div>
+          <article class="question-card compact-question-card">
+            <p class="question-purpose">只用于未来情景</p>
+            <h2 id="context-question-title">正在载入问题…</h2>
+            <p class="question-help" id="context-question-help"></p>
+            <form id="context-form" class="answer-form" autocomplete="off"></form>
+          </article>
+          <div class="question-actions">
+            <button class="back-button" type="button" data-action="previous-context">← 上一题</button>
+            <button class="primary-button" type="button" data-action="submit-context">继续</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="view forecast-intake-view" data-view="forecast-intake" aria-labelledby="forecast-intake-title" hidden>
+      <div class="view-shell forecast-intake-shell">
+        <h1 id="forecast-intake-title">你想把未来的注意力放在哪里？</h1>
+        <p>预测从今天出发，结合已锁定结构、你提供的现实初值和既有事件；不会反向修改校时结果。</p>
+
+        <form id="forecast-form" class="forecast-form" autocomplete="off" novalidate aria-describedby="forecast-error">
+          <label class="field forecast-question-field">
+            <span>你的问题</span>
+            <textarea id="forecast-question" rows="3" maxlength="240" placeholder="例如：未来一年，我应该如何安排职业方向与重要合作？" required></textarea>
+          </label>
+          <fieldset class="choice-field horizon-field">
+            <legend>观察周期</legend>
+            <label><input type="radio" name="horizon" value="6_months" /><span><strong>未来 6 个月</strong></span></label>
+            <label><input type="radio" name="horizon" value="12_months" checked /><span><strong>未来 12 个月</strong></span></label>
+            <label><input type="radio" name="horizon" value="24_months" /><span><strong>未来 24 个月</strong></span></label>
+          </fieldset>
+          <div class="form-error" id="forecast-error" role="alert"></div>
+          <button class="primary-button wide-button" type="submit">生成未来情景</button>
+        </form>
+      </div>
+    </section>
+
+    <section class="view forecast-view" data-view="forecast" aria-labelledby="forecast-title" hidden>
+      <div class="report-hero">
+        <div>
+          <h1 id="forecast-title">未来不是一句结论，而是一组可以验证的窗口。</h1>
+        </div>
+        <div class="report-meta">
+          <div><span>生成时间</span><strong id="forecast-generated-at">待生成</strong></div>
+          <div><span>工作时辰</span><strong id="forecast-chart">待生成</strong></div>
+          <div><span>模式</span><strong id="forecast-mode">本地情景推演</strong></div>
+        </div>
+      </div>
+
+      <div class="report-shell">
+        <aside class="report-rail" aria-label="报告导航">
+          <a href="#forecast-summary">摘要</a>
+          <a href="#forecast-timeline">时间窗口</a>
+          <a href="#forecast-domains">领域判断</a>
+          <a href="#forecast-basis">推演依据</a>
+          <a href="#forecast-uncertainty">不确定性</a>
+        </aside>
+
+        <article class="forecast-report">
+          <section id="forecast-summary" class="report-section report-summary">
+            <p class="section-index">摘要</p>
+            <h2 id="forecast-question-display"></h2>
+            <p class="lead-report-copy" id="forecast-summary-copy"></p>
+          </section>
+
+          <section id="forecast-timeline" class="report-section">
+            <p class="section-index">时间窗口</p>
+            <h2>未来的支持与调整窗口</h2>
+            <div class="timeline" id="forecast-timeline-list"></div>
+          </section>
+
+          <section id="forecast-domains" class="report-section">
+            <p class="section-index">领域判断</p>
+            <h2>不同领域会怎样表现</h2>
+            <div class="domain-forecast-list" id="forecast-domain-list"></div>
+          </section>
+
+          <section id="forecast-basis" class="report-section">
+            <div class="section-heading">
+              <div><p class="section-index">推演依据</p><h2>这份推演用了什么</h2></div>
+              <p>把已知事实、确定性推导和现实关注点分开呈现。</p>
+            </div>
+            <div class="basis-grid">
+              <div class="basis-card"><span>工作时辰</span><ul id="derivative-basis"></ul></div>
+              <div class="basis-card"><span>现实初值</span><ul id="initial-basis"></ul></div>
+              <div class="basis-card"><span>已知事件</span><ul id="event-basis"></ul></div>
+            </div>
+          </section>
+
+          <section id="forecast-uncertainty" class="report-section uncertainty-section">
+            <p class="section-index">不确定性</p>
+            <h2>这份结果不能代表什么</h2>
+            <ul id="forecast-uncertainty-list"></ul>
+          </section>
+
+          <div class="report-actions">
+            <button class="secondary-button" type="button" data-action="export-session">导出会话 JSON</button>
+            <button class="secondary-button" type="button" data-action="print-report">打印 / 保存 PDF</button>
+            <button class="primary-button" type="button" data-action="new-forecast">调整问题</button>
+          </div>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div>
+      <strong>BaZi Context Agent</strong>
+      <p>先校时，再推演。不是医疗、法律、财务或确定性人生建议。</p>
+    </div>
+    <div>
+      <a href="https://github.com/130U/ENGINEERING-BaZi-Context-Agent" target="_blank" rel="noreferrer">源代码</a>
+      <a href="https://github.com/130U/ENGINEERING-BaZi-Context-Agent/blob/master/docs/AI_BOUNDARY.md" target="_blank" rel="noreferrer">AI 使用边界</a>
+      <button class="footer-button" type="button" data-action="open-privacy">隐私说明</button>
+    </div>
+  </footer>
+
+  <dialog class="privacy-dialog" id="privacy-dialog">
+    <form method="dialog">
+      <button class="dialog-close" value="close">关闭</button>
+      <h2>你的会话只存在于当前标签页的内存中。</h2>
+      <ul>
+        <li>校时排名全部在浏览器本地执行，不调用 AI。</li>
+        <li>应用不会把出生资料、人生事件或报告写入 localStorage 或 sessionStorage。</li>
+        <li>点击“退出并清除”、关闭标签页或刷新页面后，本次信息不可恢复。</li>
+        <li>导出内容可能包含你填写的敏感人生事件，请自行保管。</li>
+        <li>公开应用没有账户、云同步、遥测或远程数据库。</li>
+      </ul>
+      <div class="dialog-actions">
+        <button class="secondary-button" value="close">知道了</button>
+        <button class="danger-button" type="button" data-action="exit-session">立即退出并清除</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

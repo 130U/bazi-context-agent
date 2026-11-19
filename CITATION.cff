@@ -1,0 +1,27 @@
+cff-version: 1.2.0
+message: "If you use this work, please cite it as below."
+type: software
+title: "BaZi Context Agent"
+version: "V_202611"
+date-released: 2026-11-19
+abstract: "Which hour was a person born, and what is happening in that life now? I built a system in which the second answer can never change the first. The app, its deterministic engine, the evaluation harness and tests."
+authors:
+  - family-names: Ouyang
+    given-names: "Letao (Theodore)"
+repository-code: "https://github.com/130U/ENGINEERING-BaZi-Context-Agent"
+url: "https://www.theodoreoy.com/ENGINEERING-BaZi-Context-Agent/"
+keywords:
+  - bazi
+  - astrology
+  - typescript
+  - forecasting
+  - evaluation
+  - privacy
+preferred-citation:
+  type: software
+  title: "BaZi Context Agent"
+  authors:
+    - family-names: Ouyang
+      given-names: "Letao (Theodore)"
+  year: 2026
+  url: "https://www.theodoreoy.com/ENGINEERING-BaZi-Context-Agent/"
